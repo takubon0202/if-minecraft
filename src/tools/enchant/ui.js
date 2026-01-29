@@ -793,8 +793,9 @@ function renderSelectedEnchants(container) {
     const isCurse = e.id.includes('curse');
     const defaultMax = info?.defaultMax || e.defaultMax || 5;
     const isOverDefault = e.level > defaultMax;
+    const isMaxLevel = e.level === 255;
     return `
-      <div class="selected-enchant ${isCurse ? 'curse' : ''} ${isOverDefault ? 'over-default' : ''}">
+      <div class="selected-enchant ${isCurse ? 'curse' : ''} ${isOverDefault ? 'over-default' : ''} ${isMaxLevel ? 'max-level' : ''}">
         <span class="enchant-label">${info?.name || e.id}</span>
         <div class="enchant-level-wrapper">
           <input type="number" class="enchant-level mc-input" data-enchant="${e.id}"
@@ -884,10 +885,12 @@ function updatePreview(container) {
         const info = findEnchantInfo(e.id);
         const isCurse = e.id.includes('curse');
         const isOverDefault = e.level > (info?.defaultMax || 5);
+        const isMaxLevel = e.level === 255;
         return `
-          <div class="preview-enchant ${isCurse ? 'curse' : ''} ${isOverDefault ? 'over-default' : ''}">
+          <div class="preview-enchant ${isCurse ? 'curse' : ''} ${isOverDefault ? 'over-default' : ''} ${isMaxLevel ? 'max-level' : ''}">
             ${info?.name || e.id} ${toRoman(e.level)}
             ${isOverDefault ? '<span class="over-badge">+</span>' : ''}
+            ${isMaxLevel ? '<span class="max-badge">MAX</span>' : ''}
           </div>
         `;
       }).join('');
@@ -1494,6 +1497,39 @@ style.textContent = `
   /* プレビューの超過レベル表示 */
   .preview-enchant.over-default {
     text-shadow: 0 0 10px rgba(255, 170, 0, 0.7);
+  }
+
+  /* レベル255（MAX）選択時のゴールドシマーエフェクト */
+  @keyframes gold-shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+
+  .selected-enchant.max-level {
+    background: linear-gradient(90deg,
+      rgba(255, 215, 0, 0.1) 0%,
+      rgba(255, 255, 255, 0.3) 50%,
+      rgba(255, 215, 0, 0.1) 100%);
+    background-size: 200% 100%;
+    animation: gold-shimmer 3s infinite linear, gold-pulse 2s ease-in-out infinite;
+    border-left-color: #ffd700 !important;
+  }
+
+  .preview-enchant.max-level {
+    color: #ffd700;
+    font-weight: bold;
+    text-shadow: 0 0 15px rgba(255, 215, 0, 0.8), 0 0 5px rgba(255, 255, 255, 0.5);
+  }
+
+  .preview-enchant .max-badge {
+    font-size: 0.6rem;
+    color: #ffd700;
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.3) 0%, rgba(255, 170, 0, 0.2) 100%);
+    padding: 1px 4px;
+    border-radius: 3px;
+    margin-left: 4px;
+    vertical-align: middle;
+    animation: gold-pulse 1.5s ease-in-out infinite;
   }
 
   .text-muted {
