@@ -502,7 +502,7 @@ export function render(manifest) {
   return `
     <div class="tool-panel" id="block-ids-panel">
       <div class="tool-header">
-        <span class="tool-icon">${manifest.icon}</span>
+        <img src="${getInviconUrl(manifest.iconItem || 'grass_block')}" class="tool-header-icon mc-wiki-image" width="32" height="32" alt="">
         <h2>${manifest.title}</h2>
         <span class="version-badge">MC ${manifest.minecraftVersion}</span>
       </div>

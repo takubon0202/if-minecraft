@@ -9,6 +9,7 @@ export const manifest = {
   category: 'generator',
   keywords: ['summon', 'entity', 'mob', 'spawn', 'nbt'],
   icon: '👾',
+  iconItem: 'command_block',
   version: '1.0.0',
 };
 

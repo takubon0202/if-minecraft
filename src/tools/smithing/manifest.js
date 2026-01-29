@@ -9,6 +9,7 @@ export const manifest = {
   category: 'generator',
   keywords: ['smithing', 'trim', 'armor', 'pattern', 'template'],
   icon: '🔨',
+  iconItem: 'smithing_table',
   version: '1.0.0',
 };
 

@@ -9,6 +9,7 @@ export const manifest = {
   category: 'text',
   keywords: ['title', 'subtitle', 'actionbar', 'display', 'screen'],
   icon: '📺',
+  iconItem: 'name_tag',
   version: '1.0.0',
 };
 

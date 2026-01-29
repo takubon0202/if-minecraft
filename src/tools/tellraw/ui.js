@@ -9,6 +9,7 @@ import {
   initJsonTextEditor,
   componentsToJson,
 } from '../../components/json-text-editor.js';
+import { getInviconUrl } from '../../core/wiki-images.js';
 
 let editorInstance = null;
 
@@ -19,7 +20,7 @@ export function render(manifest) {
   return `
     <div class="tool-panel" id="tellraw-panel">
       <div class="tool-header">
-        <span class="tool-icon">${manifest.icon}</span>
+        <img src="${getInviconUrl(manifest.iconItem || 'paper')}" class="tool-header-icon mc-wiki-image" width="32" height="32" alt="">
         <h2>${manifest.title}</h2>
       </div>
 

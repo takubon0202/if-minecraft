@@ -9,6 +9,7 @@ export const manifest = {
   category: 'generator',
   keywords: ['potion', 'effect', 'splash', 'lingering', 'arrow'],
   icon: '🧪',
+  iconItem: 'potion',
   version: '1.0.0',
 };
 

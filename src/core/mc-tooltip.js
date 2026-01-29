@@ -109,7 +109,7 @@ export function initTooltip() {
       font-family: 'Minecraft', 'Segoe UI', sans-serif;
       font-size: 14px;
       line-height: 1.4;
-      white-space: nowrap;
+      white-space: normal;
 
       /* Minecraft風背景 */
       background: linear-gradient(180deg, #100010 0%, #1a0a1a 100%);
@@ -121,7 +121,7 @@ export function initTooltip() {
         4px 4px 0 rgba(0, 0, 0, 0.5);
 
       padding: 8px 12px;
-      max-width: 300px;
+      max-width: 280px;
 
       /* Minecraft風テクスチャ */
       background-image:
@@ -208,7 +208,7 @@ export function initTooltip() {
     .mc-tooltip-equipped {
       color: #555555;
       font-size: 12px;
-      margin-top: 4px;
+      margin-bottom: 4px;
     }
 
     .mc-tooltip-desc {
@@ -298,6 +298,15 @@ function showTooltip(itemId, data, event) {
   // ステータスがある場合
   if (data.attack || data.armor || data.speed || data.durability) {
     html += '<div class="mc-tooltip-divider"></div>';
+
+    // 「利き手に持ったとき:」または「装備したとき:」を先に表示
+    if (data.attack || data.speed) {
+      html += '<div class="mc-tooltip-equipped">利き手に持ったとき:</div>';
+    } else if (data.armor) {
+      html += '<div class="mc-tooltip-equipped">装備したとき:</div>';
+    }
+
+    // ステータスを表示
     html += '<div class="mc-tooltip-stats">';
 
     if (data.attack) {
@@ -340,7 +349,11 @@ function showTooltip(itemId, data, event) {
       `;
     }
 
+    html += '</div>';
+
+    // 耐久値は別セクション
     if (data.durability) {
+      html += '<div class="mc-tooltip-divider"></div>';
       html += `
         <div class="mc-tooltip-stat">
           <span class="mc-tooltip-stat-icon durability"></span>
@@ -348,15 +361,6 @@ function showTooltip(itemId, data, event) {
           <span class="mc-tooltip-stat-label">耐久値</span>
         </div>
       `;
-    }
-
-    html += '</div>';
-
-    // 装備スロット
-    if (data.attack || data.speed) {
-      html += '<div class="mc-tooltip-equipped">利き手に持ったとき:</div>';
-    } else if (data.armor) {
-      html += '<div class="mc-tooltip-equipped">装備したとき:</div>';
     }
   }
 

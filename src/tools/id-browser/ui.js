@@ -5,6 +5,7 @@
 import { $, $$, createElement, debounce, delegate } from '../../core/dom.js';
 import { dataStore } from '../../core/store.js';
 import { copyToClipboard, showCopyFeedback } from '../../core/clipboard.js';
+import { getInviconUrl } from '../../core/wiki-images.js';
 
 const CATEGORIES = [
   { id: 'items', label: 'アイテム', icon: '🎁' },
@@ -24,7 +25,7 @@ export function render(manifest) {
   return `
     <div class="tool-panel" id="id-browser-panel">
       <div class="tool-header">
-        <span class="tool-icon">${manifest.icon}</span>
+        <img src="${getInviconUrl(manifest.iconItem || 'book')}" class="tool-header-icon mc-wiki-image" width="32" height="32" alt="">
         <h2>${manifest.title}</h2>
       </div>
 

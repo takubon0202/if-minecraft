@@ -304,8 +304,13 @@
   font-size: 1rem;
   color: var(--mc-text-muted);
   margin-bottom: var(--mc-space-md);
+  margin-top: var(--mc-space-xl);
   text-transform: uppercase;
   letter-spacing: 2px;
+}
+
+.quick-start h3:first-of-type {
+  margin-top: 0;
 }
 
 .quick-tools {
@@ -341,6 +346,15 @@
 
 .quick-tool-btn .icon {
   font-size: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.quick-tool-btn .icon .mc-wiki-icon {
+  image-rendering: pixelated;
+  width: 32px;
+  height: 32px;
 }
 
 .quick-tool-btn .label {
@@ -559,6 +573,13 @@
   margin: 0;
   font-size: 1.25rem;
   text-shadow: 2px 2px 0px var(--mc-border-darker);
+}
+
+.tool-header-icon {
+  width: 32px;
+  height: 32px;
+  image-rendering: pixelated;
+  filter: drop-shadow(2px 2px 0 rgba(0,0,0,0.5));
 }
 
 .tool-form {

@@ -361,7 +361,7 @@ export function render(manifest) {
   return `
     <div class="tool-panel summon-zombie-tool" id="summon-zombie-panel">
       <div class="tool-header">
-        <span class="tool-icon">${manifest.icon}</span>
+        <img src="${getInviconUrl(manifest.iconItem || 'zombie_head')}" class="tool-header-icon mc-wiki-image" width="32" height="32" alt="">
         <h2>${manifest.title}</h2>
         <span class="version-badge">1.21.5+</span>
       </div>

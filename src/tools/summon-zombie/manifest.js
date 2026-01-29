@@ -10,6 +10,7 @@ export const manifest = {
   category: 'generator',
   keywords: ['summon', 'zombie', 'mob', 'undead', 'equipment', 'boss'],
   icon: '🧟',
+  iconItem: 'zombie_head',
   version: '1.0.0',
 };
 

@@ -9,6 +9,7 @@ export const manifest = {
   category: 'text',
   keywords: ['tellraw', 'chat', 'message', 'json', 'text', 'color'],
   icon: '💬',
+  iconItem: 'paper',
   version: '1.0.0',
 };
 

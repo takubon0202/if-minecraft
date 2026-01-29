@@ -9,6 +9,7 @@ export const manifest = {
   category: 'reference',
   keywords: ['target', 'selector', '@a', '@p', '@e', '@s', '@r'],
   icon: '🎯',
+  iconItem: 'compass',
   version: '1.0.0',
 };
 

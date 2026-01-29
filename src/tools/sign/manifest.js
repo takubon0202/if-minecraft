@@ -9,6 +9,7 @@ export const manifest = {
   category: 'text',
   keywords: ['sign', 'oak', 'birch', 'text', 'display'],
   icon: '🪧',
+  iconItem: 'oak_sign',
   version: '1.0.0',
 };
 

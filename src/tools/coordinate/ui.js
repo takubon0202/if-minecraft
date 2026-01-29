@@ -5,6 +5,7 @@
 import { $, $$, delegate, debounce } from '../../core/dom.js';
 import { copyToClipboard } from '../../core/clipboard.js';
 import { setOutput } from '../../app/sidepanel.js';
+import { getInviconUrl } from '../../core/wiki-images.js';
 
 /**
  * UIをレンダリング
@@ -13,7 +14,7 @@ export function render(manifest) {
   return `
     <div class="tool-panel" id="coordinate-panel">
       <div class="tool-header">
-        <span class="tool-icon">${manifest.icon}</span>
+        <img src="${getInviconUrl(manifest.iconItem || 'filled_map')}" class="tool-header-icon mc-wiki-image" width="32" height="32" alt="">
         <h2>${manifest.title}</h2>
       </div>
 

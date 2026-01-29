@@ -4,6 +4,7 @@
 
 import { $, delegate } from '../../core/dom.js';
 import { copyToClipboard } from '../../core/clipboard.js';
+import { getInviconUrl } from '../../core/wiki-images.js';
 
 // Minecraftカラーコード
 const COLOR_CODES = [
@@ -42,7 +43,7 @@ export function render(manifest) {
   return `
     <div class="tool-panel" id="color-codes-panel">
       <div class="tool-header">
-        <span class="tool-icon">${manifest.icon}</span>
+        <img src="${getInviconUrl(manifest.iconItem || 'red_dye')}" class="tool-header-icon mc-wiki-image" width="32" height="32" alt="">
         <h2>${manifest.title}</h2>
       </div>
 

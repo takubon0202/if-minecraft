@@ -6,6 +6,7 @@ import { $, $$, createElement, debounce } from '../../core/dom.js';
 import { dataStore } from '../../core/store.js';
 import { setOutput } from '../../app/sidepanel.js';
 import { generateGiveCommand } from './engine.js';
+import { getInviconUrl } from '../../core/wiki-images.js';
 
 // フォーム状態
 let formState = {
@@ -26,7 +27,7 @@ export function render(manifest) {
   return `
     <div class="tool-panel" id="give-panel">
       <div class="tool-header">
-        <span class="tool-icon">${manifest.icon}</span>
+        <img src="${getInviconUrl(manifest.iconItem || 'chest')}" class="tool-header-icon mc-wiki-image" width="32" height="32" alt="">
         <h2>${manifest.title}</h2>
       </div>
 

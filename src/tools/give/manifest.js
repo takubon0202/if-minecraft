@@ -9,6 +9,7 @@ export const manifest = {
   category: 'generator',
   keywords: ['give', 'item', 'enchant', 'nbt', 'component'],
   icon: '🎁',
+  iconItem: 'chest',
   version: '1.0.0',
 };
 

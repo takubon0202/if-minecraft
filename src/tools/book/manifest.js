@@ -9,6 +9,7 @@ export const manifest = {
   category: 'text',
   keywords: ['book', 'written_book', 'page', 'author', 'title'],
   icon: '📖',
+  iconItem: 'written_book',
   version: '1.0.0',
 };
 

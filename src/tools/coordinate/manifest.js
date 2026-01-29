@@ -9,6 +9,7 @@ export const manifest = {
   category: 'reference',
   keywords: ['coordinate', 'xyz', 'nether', 'overworld', 'distance', 'teleport'],
   icon: '📍',
+  iconItem: 'filled_map',
   version: '1.0.0',
 };
 

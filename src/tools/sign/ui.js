@@ -5,6 +5,7 @@
 import { $, $$, debounce } from '../../core/dom.js';
 import { setOutput } from '../../app/sidepanel.js';
 import { MC_COLORS } from '../../components/json-text-editor.js';
+import { getInviconUrl } from '../../core/wiki-images.js';
 
 // 看板の種類
 const SIGN_TYPES = [
@@ -45,7 +46,7 @@ export function render(manifest) {
   return `
     <div class="tool-panel" id="sign-panel">
       <div class="tool-header">
-        <span class="tool-icon">${manifest.icon}</span>
+        <img src="${getInviconUrl(manifest.iconItem || 'oak_sign')}" class="tool-header-icon mc-wiki-image" width="32" height="32" alt="">
         <h2>${manifest.title}</h2>
       </div>
 

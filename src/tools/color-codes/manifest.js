@@ -9,6 +9,7 @@ export const manifest = {
   category: 'reference',
   keywords: ['color', 'formatting', 'code', 'text', 'style'],
   icon: '🎨',
+  iconItem: 'red_dye',
   version: '1.0.0',
 };
 

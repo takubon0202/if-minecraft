@@ -101,7 +101,7 @@ export function render(manifest) {
   return `
     <div class="tool-panel potion-tool" id="potion-panel">
       <div class="tool-header">
-        <span class="tool-icon">${manifest.icon}</span>
+        <img src="${getInviconUrl(manifest.iconItem || 'potion')}" class="tool-header-icon mc-wiki-image" width="32" height="32" alt="">
         <h2>${manifest.title}</h2>
         <span class="version-badge">1.21.11</span>
       </div>

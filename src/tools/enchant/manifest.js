@@ -9,6 +9,7 @@ export const manifest = {
   category: 'generator',
   keywords: ['enchant', 'enchantment', 'sharpness', 'protection', 'fortune'],
   icon: '✨',
+  iconItem: 'enchanted_book',
   version: '1.0.0',
 };
 

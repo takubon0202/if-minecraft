@@ -11,6 +11,7 @@ import {
   getEditorData,
   componentsToJson,
 } from '../../components/json-text-editor.js';
+import { getInviconUrl } from '../../core/wiki-images.js';
 
 let pages = [];
 let currentPage = 0;
@@ -22,7 +23,7 @@ export function render(manifest) {
   return `
     <div class="tool-panel" id="book-panel">
       <div class="tool-header">
-        <span class="tool-icon">${manifest.icon}</span>
+        <img src="${getInviconUrl(manifest.iconItem || 'written_book')}" class="tool-header-icon mc-wiki-image" width="32" height="32" alt="">
         <h2>${manifest.title}</h2>
       </div>
 

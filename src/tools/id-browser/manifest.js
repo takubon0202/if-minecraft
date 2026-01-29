@@ -9,6 +9,7 @@ export const manifest = {
   category: 'reference',
   keywords: ['id', 'item', 'block', 'entity', 'effect', 'enchantment', 'search'],
   icon: '📚',
+  iconItem: 'book',
   version: '1.0.0',
 };
 

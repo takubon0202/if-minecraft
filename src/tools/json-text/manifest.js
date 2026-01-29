@@ -9,6 +9,7 @@ export const manifest = {
   category: 'text',
   keywords: ['json', 'text', 'tellraw', 'title', 'color', 'format', 'click', 'hover', 'selector'],
   icon: '\uD83D\uDCDC',
+  iconItem: 'writable_book',
   version: '1.0.0',
 };
 

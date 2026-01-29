@@ -10,6 +10,7 @@ export const manifest = {
   category: 'reference',
   keywords: ['block', 'id', 'list', 'search', 'ブロック', '一覧', '検索'],
   icon: '🧱',
+  iconItem: 'grass_block',
   version: '1.0.0',
   minecraftVersion: '1.21.5',
 };
