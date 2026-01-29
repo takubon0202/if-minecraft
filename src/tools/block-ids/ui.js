@@ -936,6 +936,111 @@ style.textContent = `
     transform: translateX(-50%) translateY(0);
     opacity: 1;
   }
+
+  /* ダークモードでのコントラスト改善（茶/緑テーマ - 土/草ブロック） */
+  @media (prefers-color-scheme: dark) {
+    #block-ids-panel .category-tab {
+      background: #252520;
+      color: #e0e0e0;
+      border-color: #555;
+    }
+
+    #block-ids-panel .category-tab:hover {
+      background: rgba(92, 183, 70, 0.2);
+    }
+
+    #block-ids-panel .category-tab.active {
+      background: #5cb746;
+      color: white;
+    }
+
+    #block-ids-panel .search-box input {
+      background: #252520;
+      color: #e8e8e8;
+      border-color: #555;
+    }
+
+    #block-ids-panel .search-box input:focus {
+      border-color: #5cb746;
+      box-shadow: 0 0 0 2px rgba(92, 183, 70, 0.3);
+    }
+
+    #block-ids-panel .search-hint {
+      color: #888;
+    }
+
+    #block-ids-panel .view-btn {
+      background: #252520;
+      color: #e0e0e0;
+      border-color: #555;
+    }
+
+    #block-ids-panel .view-btn:hover {
+      background: rgba(92, 183, 70, 0.2);
+    }
+
+    #block-ids-panel .view-btn.active {
+      background: #5cb746;
+      color: white;
+    }
+
+    #block-ids-panel .block-results {
+      background: #1a1a1a;
+      border-color: #555;
+    }
+
+    #block-ids-panel .block-grid .block-item {
+      background: #252520;
+      border-color: #444;
+    }
+
+    #block-ids-panel .block-grid .block-item:hover {
+      background: #5cb746;
+    }
+
+    #block-ids-panel .block-grid .block-name {
+      color: #e8e8e8;
+    }
+
+    #block-ids-panel .block-grid .block-id {
+      color: #b0b0b0;
+    }
+
+    #block-ids-panel .block-list .block-item {
+      background: #252520;
+      border-color: #444;
+    }
+
+    #block-ids-panel .block-list .block-item:hover {
+      background: #5cb746;
+    }
+
+    #block-ids-panel .block-list .block-name {
+      color: #e8e8e8;
+    }
+
+    #block-ids-panel .block-list .block-id {
+      color: #b0b0b0;
+    }
+
+    #block-ids-panel .block-list .block-desc {
+      color: #888;
+    }
+
+    #block-ids-panel .block-ids-footer {
+      color: #888;
+    }
+
+    #block-ids-panel .empty-message,
+    #block-ids-panel .more-hint {
+      color: #888;
+    }
+
+    #block-ids-panel .copy-toast {
+      background: #333;
+      color: #e8e8e8;
+    }
+  }
 `;
 document.head.appendChild(style);
 

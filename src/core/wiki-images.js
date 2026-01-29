@@ -20,6 +20,16 @@ const ITEM_FILE_MAP = {
 };
 
 /**
+ * Inviconが存在しないエンティティ用のEntitySprite画像マッピング
+ * EntitySprite_形式のURLを返す
+ */
+const ENTITY_SPRITE_MAP = {
+  'experience_orb': 'experience-orb',
+  'lightning_bolt': 'lightning',
+  'falling_block': 'falling-block',
+};
+
+/**
  * アイテムID → Wiki画像名のマッピング
  * Wiki上の名前がアイテムIDと異なる場合に使用
  */
@@ -287,6 +297,12 @@ function toPascalCase(itemId) {
  */
 export function getInviconUrl(itemId) {
   if (!itemId) return `${WIKI_BASE}/Invicon_Barrier.png`;
+
+  // EntitySprite形式のエンティティを確認（Inviconが存在しないもの）
+  const entitySprite = ENTITY_SPRITE_MAP[itemId];
+  if (entitySprite) {
+    return `${WIKI_BASE}/EntitySprite_${entitySprite}.png`;
+  }
 
   // GIF形式などファイル名が特殊な場合を確認
   const fileMapping = ITEM_FILE_MAP[itemId];

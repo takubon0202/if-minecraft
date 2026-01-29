@@ -1536,6 +1536,70 @@ style.textContent = `
       grid-template-columns: 1fr 1fr;
     }
   }
+
+  /* ダークモードでのコントラスト改善（緑/暗緑テーマ - ゾンビ肌） */
+  @media (prefers-color-scheme: dark) {
+    .summon-zombie-tool .modal-content {
+      background: #252520;
+      border-color: #555;
+    }
+
+    .summon-zombie-tool .modal-header {
+      border-bottom-color: #444;
+    }
+
+    .summon-zombie-tool .modal-header h3 {
+      color: #e0e0e0;
+    }
+
+    .summon-zombie-tool .modal-close {
+      color: #b0b0b0;
+    }
+
+    .summon-zombie-tool .modal-close:hover {
+      color: #ff5555;
+    }
+
+    .summon-zombie-tool .modal-body {
+      background: #1a1a1a;
+    }
+
+    .summon-zombie-tool .modal-footer {
+      border-top-color: #444;
+    }
+
+    .summon-zombie-tool .enchant-category h4 {
+      color: #5cb746;
+    }
+
+    .summon-zombie-tool .enchant-row {
+      background: #2a2a2a;
+    }
+
+    .summon-zombie-tool .enchant-row .enchant-name {
+      color: #e0e0e0;
+    }
+
+    .summon-zombie-tool .enchant-row .enchant-max {
+      color: #888;
+    }
+
+    .summon-zombie-tool .enchant-row .mc-input {
+      background: #1a1a1a;
+      color: #e8e8e8;
+      border-color: #444;
+    }
+
+    .summon-zombie-tool .mc-btn {
+      background: linear-gradient(180deg, #5cb746 0%, #3a8128 100%);
+      color: white;
+      border-color: #2d5016;
+    }
+
+    .summon-zombie-tool .mc-btn:hover {
+      background: linear-gradient(180deg, #6dc756 0%, #4a9138 100%);
+    }
+  }
 `;
 document.head.appendChild(style);
 
