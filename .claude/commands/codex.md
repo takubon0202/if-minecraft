@@ -51,6 +51,10 @@ codex
 - SEO最適化コードの生成
 - バグ修正・エラー解決
 
+## 使用モデル
+
+- **gpt-5.2-codex-high** - 高性能推論モード
+
 ## セットアップ
 
 ```bash
@@ -62,6 +66,7 @@ codex --login
 
 - **ChatGPT Plus** ($20/月)
 - Node.js
+- Codex CLI v0.92.0以上
 
 ## 使用量上限について
 

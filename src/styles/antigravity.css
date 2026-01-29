@@ -1,0 +1,165 @@
+/**
+ * Antigravity.css - 物理演出用スタイル
+ */
+
+/* Antigravityコンテナ */
+#antigravity-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+#antigravity-container canvas {
+  pointer-events: auto;
+}
+
+/* Antigravityアクティブ時のbody */
+body.antigravity-active {
+  overflow: hidden;
+}
+
+/* 重力反転時のエフェクト */
+body.antigravity-reversed {
+  animation: gravity-reverse-flash 0.3s ease-out;
+}
+
+@keyframes gravity-reverse-flash {
+  0% {
+    filter: invert(0);
+  }
+  50% {
+    filter: invert(1);
+  }
+  100% {
+    filter: invert(0);
+  }
+}
+
+/* 爆発エフェクト */
+body.antigravity-explode {
+  animation: explode-shake 0.5s ease-out;
+}
+
+@keyframes explode-shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  10%, 30%, 50%, 70%, 90% {
+    transform: translateX(-5px);
+  }
+  20%, 40%, 60%, 80% {
+    transform: translateX(5px);
+  }
+}
+
+/* Antigravity発動ボタン（オプション） */
+.antigravity-trigger {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+  transition: transform 0.3s, box-shadow 0.3s;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.antigravity-trigger:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+}
+
+.antigravity-trigger:active {
+  transform: scale(0.95);
+}
+
+.antigravity-trigger svg {
+  width: 30px;
+  height: 30px;
+  fill: white;
+}
+
+/* 減衰モーション対応 */
+@media (prefers-reduced-motion: reduce) {
+  #antigravity-container {
+    display: none !important;
+  }
+
+  body.antigravity-active,
+  body.antigravity-reversed,
+  body.antigravity-explode {
+    animation: none !important;
+  }
+
+  .antigravity-trigger {
+    display: none !important;
+  }
+}
+
+/* Minecraftテーマ - ブロック風デザイン */
+.minecraft-antigravity {
+  --block-border: 3px solid #000;
+  --block-shadow:
+    inset -3px -3px 0 rgba(0,0,0,0.3),
+    inset 3px 3px 0 rgba(255,255,255,0.3);
+}
+
+.minecraft-antigravity .antigravity-trigger {
+  border-radius: 0;
+  background: #8B4513;
+  border: var(--block-border);
+  box-shadow: var(--block-shadow);
+  image-rendering: pixelated;
+}
+
+.minecraft-antigravity .antigravity-trigger:hover {
+  background: #A0522D;
+}
+
+/* ダークモード対応 */
+@media (prefers-color-scheme: dark) {
+  #antigravity-container canvas {
+    filter: none;
+  }
+}
+
+/* Konami Code ヒント */
+.konami-hint {
+  position: fixed;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 8px 16px;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  border-radius: 20px;
+  font-size: 12px;
+  opacity: 0;
+  transition: opacity 0.3s;
+  z-index: 10001;
+  pointer-events: none;
+}
+
+.konami-hint.visible {
+  opacity: 1;
+}
+
+.konami-hint kbd {
+  display: inline-block;
+  padding: 2px 6px;
+  margin: 0 2px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+  font-family: monospace;
+}

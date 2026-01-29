@@ -14,7 +14,7 @@ Google Gemini CLIを使用してコード生成・エラー解決を行います
 $ARGUMENTS を受け取り、Gemini CLIを実行します：
 
 ```bash
-gemini -m gemini-3-pro-preview "$ARGUMENTS"
+gemini -m gemini-3-pro "$ARGUMENTS"
 ```
 
 ## 利用可能なモデル
@@ -35,14 +35,23 @@ gemini -m gemini-3-pro-preview "$ARGUMENTS"
 
 > **注意**: 2.5系は通常使用しません。Gemini 3系でエラーが発生した場合のみフォールバックとして使用してください。
 
+## 特殊機能: Antigravity Mode
+
+Google Antigravity（https://antigravity.google/）インスパイアの物理演出機能。
+ページ要素に重力を適用し、インタラクティブに操作可能にします。
+
+```bash
+/gemini --antigravity  # Antigravityモードを有効化
+```
+
 ## コマンド例
 
 ```bash
-# 推奨：Gemini 3 Pro（デフォルト）
+# 推奨：Gemini 3 Pro Preview（デフォルト）
 gemini "Minecraftのgiveコマンドを解説して"
 gemini -m gemini-3-pro-preview "複雑なコマンドブロックシステムを設計"
 
-# 高速処理：Gemini 3 Flash
+# 高速処理：Gemini 3 Flash Preview
 gemini -m gemini-3-flash-preview "エンチャントIDの一覧を教えて"
 
 # 自動承認モード（YOLO）
@@ -51,6 +60,9 @@ gemini --yolo "テストを実行"
 
 # 対話モード
 gemini
+
+# Antigravityモード（物理演出）
+gemini --antigravity "ページにAntigravity効果を追加"
 ```
 
 ## このプロジェクトでの主な用途
