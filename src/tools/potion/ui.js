@@ -1,64 +1,125 @@
 /**
  * Potion Generator - UI (minecraft-blog.net参考)
  * 全33種エフェクト対応、検索機能、無限効果、バージョン対応
+ * Minecraft Wiki画像使用
  */
 
 import { $, $$, debounce, delegate } from '../../core/dom.js';
 import { setOutput } from '../../app/sidepanel.js';
 
-// 全エフェクト一覧（33種類+）
+// Minecraft Wiki画像ベースURL
+const WIKI_IMG_BASE = 'https://minecraft.wiki/images/';
+
+// エフェクトアイコンURL生成（ステータスエフェクト）
+function getEffectIconUrl(effectId) {
+  // エフェクトIDからWiki画像名へのマッピング
+  const effectIconMap = {
+    'speed': 'Effect_Speed',
+    'haste': 'Effect_Haste',
+    'strength': 'Effect_Strength',
+    'instant_health': 'Effect_Instant_Health',
+    'jump_boost': 'Effect_Jump_Boost',
+    'regeneration': 'Effect_Regeneration',
+    'resistance': 'Effect_Resistance',
+    'fire_resistance': 'Effect_Fire_Resistance',
+    'water_breathing': 'Effect_Water_Breathing',
+    'invisibility': 'Effect_Invisibility',
+    'night_vision': 'Effect_Night_Vision',
+    'health_boost': 'Effect_Health_Boost',
+    'absorption': 'Effect_Absorption',
+    'saturation': 'Effect_Saturation',
+    'luck': 'Effect_Luck',
+    'slow_falling': 'Effect_Slow_Falling',
+    'conduit_power': 'Effect_Conduit_Power',
+    'dolphins_grace': 'Effect_Dolphin%27s_Grace',
+    'hero_of_the_village': 'Effect_Hero_of_the_Village',
+    'slowness': 'Effect_Slowness',
+    'mining_fatigue': 'Effect_Mining_Fatigue',
+    'instant_damage': 'Effect_Instant_Damage',
+    'nausea': 'Effect_Nausea',
+    'blindness': 'Effect_Blindness',
+    'hunger': 'Effect_Hunger',
+    'weakness': 'Effect_Weakness',
+    'poison': 'Effect_Poison',
+    'wither': 'Effect_Wither',
+    'levitation': 'Effect_Levitation',
+    'unluck': 'Effect_Bad_Luck',
+    'bad_omen': 'Effect_Bad_Omen',
+    'darkness': 'Effect_Darkness',
+    'infested': 'Effect_Infested',
+    'oozing': 'Effect_Oozing',
+    'weaving': 'Effect_Weaving',
+    'wind_charged': 'Effect_Wind_Charged',
+    'glowing': 'Effect_Glowing',
+    'trial_omen': 'Effect_Trial_Omen',
+    'raid_omen': 'Effect_Raid_Omen',
+  };
+  const iconName = effectIconMap[effectId];
+  return iconName ? `${WIKI_IMG_BASE}${iconName}.png` : null;
+}
+
+// 全エフェクト一覧（33種類+）- colorは色付き円のフォールバック用
 const EFFECTS = [
   // 有益（Beneficial）
-  { id: 'speed', name: '移動速度上昇', en: 'Speed', type: 'beneficial', color: '#7CAFC6', icon: '💨' },
-  { id: 'haste', name: '採掘速度上昇', en: 'Haste', type: 'beneficial', color: '#D9C043', icon: '⛏️' },
-  { id: 'strength', name: '攻撃力上昇', en: 'Strength', type: 'beneficial', color: '#932423', icon: '💪' },
-  { id: 'instant_health', name: '即時回復', en: 'Instant Health', type: 'beneficial', color: '#F82423', icon: '❤️' },
-  { id: 'jump_boost', name: '跳躍力上昇', en: 'Jump Boost', type: 'beneficial', color: '#22FF4C', icon: '🦘' },
-  { id: 'regeneration', name: '再生', en: 'Regeneration', type: 'beneficial', color: '#CD5CAB', icon: '💗' },
-  { id: 'resistance', name: '耐性', en: 'Resistance', type: 'beneficial', color: '#99453A', icon: '🛡️' },
-  { id: 'fire_resistance', name: '火炎耐性', en: 'Fire Resistance', type: 'beneficial', color: '#E49A3A', icon: '🔥' },
-  { id: 'water_breathing', name: '水中呼吸', en: 'Water Breathing', type: 'beneficial', color: '#2E5299', icon: '🫧' },
-  { id: 'invisibility', name: '透明化', en: 'Invisibility', type: 'beneficial', color: '#7F8392', icon: '👻' },
-  { id: 'night_vision', name: '暗視', en: 'Night Vision', type: 'beneficial', color: '#1F1FA1', icon: '👁️' },
-  { id: 'health_boost', name: '体力増強', en: 'Health Boost', type: 'beneficial', color: '#F87D23', icon: '💛' },
-  { id: 'absorption', name: '衝撃吸収', en: 'Absorption', type: 'beneficial', color: '#2552A5', icon: '🔶' },
-  { id: 'saturation', name: '満腹度回復', en: 'Saturation', type: 'beneficial', color: '#F82423', icon: '🍖' },
-  { id: 'luck', name: '幸運', en: 'Luck', type: 'beneficial', color: '#339900', icon: '🍀' },
-  { id: 'slow_falling', name: '低速落下', en: 'Slow Falling', type: 'beneficial', color: '#FFEFD1', icon: '🪶' },
-  { id: 'conduit_power', name: 'コンジットパワー', en: 'Conduit Power', type: 'beneficial', color: '#1DC2D1', icon: '🌊' },
-  { id: 'dolphins_grace', name: 'イルカの好意', en: "Dolphin's Grace", type: 'beneficial', color: '#88A3BE', icon: '🐬' },
-  { id: 'hero_of_the_village', name: '村の英雄', en: 'Hero of the Village', type: 'beneficial', color: '#44FF44', icon: '🏆' },
+  { id: 'speed', name: '移動速度上昇', en: 'Speed', type: 'beneficial', color: '#7CAFC6' },
+  { id: 'haste', name: '採掘速度上昇', en: 'Haste', type: 'beneficial', color: '#D9C043' },
+  { id: 'strength', name: '攻撃力上昇', en: 'Strength', type: 'beneficial', color: '#932423' },
+  { id: 'instant_health', name: '即時回復', en: 'Instant Health', type: 'beneficial', color: '#F82423' },
+  { id: 'jump_boost', name: '跳躍力上昇', en: 'Jump Boost', type: 'beneficial', color: '#22FF4C' },
+  { id: 'regeneration', name: '再生', en: 'Regeneration', type: 'beneficial', color: '#CD5CAB' },
+  { id: 'resistance', name: '耐性', en: 'Resistance', type: 'beneficial', color: '#99453A' },
+  { id: 'fire_resistance', name: '火炎耐性', en: 'Fire Resistance', type: 'beneficial', color: '#E49A3A' },
+  { id: 'water_breathing', name: '水中呼吸', en: 'Water Breathing', type: 'beneficial', color: '#2E5299' },
+  { id: 'invisibility', name: '透明化', en: 'Invisibility', type: 'beneficial', color: '#7F8392' },
+  { id: 'night_vision', name: '暗視', en: 'Night Vision', type: 'beneficial', color: '#1F1FA1' },
+  { id: 'health_boost', name: '体力増強', en: 'Health Boost', type: 'beneficial', color: '#F87D23' },
+  { id: 'absorption', name: '衝撃吸収', en: 'Absorption', type: 'beneficial', color: '#2552A5' },
+  { id: 'saturation', name: '満腹度回復', en: 'Saturation', type: 'beneficial', color: '#F82423' },
+  { id: 'luck', name: '幸運', en: 'Luck', type: 'beneficial', color: '#339900' },
+  { id: 'slow_falling', name: '低速落下', en: 'Slow Falling', type: 'beneficial', color: '#FFEFD1' },
+  { id: 'conduit_power', name: 'コンジットパワー', en: 'Conduit Power', type: 'beneficial', color: '#1DC2D1' },
+  { id: 'dolphins_grace', name: 'イルカの好意', en: "Dolphin's Grace", type: 'beneficial', color: '#88A3BE' },
+  { id: 'hero_of_the_village', name: '村の英雄', en: 'Hero of the Village', type: 'beneficial', color: '#44FF44' },
   // 有害（Harmful）
-  { id: 'slowness', name: '移動速度低下', en: 'Slowness', type: 'harmful', color: '#5A6C81', icon: '🐌' },
-  { id: 'mining_fatigue', name: '採掘速度低下', en: 'Mining Fatigue', type: 'harmful', color: '#4A4217', icon: '😩' },
-  { id: 'instant_damage', name: '即時ダメージ', en: 'Instant Damage', type: 'harmful', color: '#430A09', icon: '💀' },
-  { id: 'nausea', name: '吐き気', en: 'Nausea', type: 'harmful', color: '#551D4A', icon: '🤢' },
-  { id: 'blindness', name: '盲目', en: 'Blindness', type: 'harmful', color: '#1F1F23', icon: '🙈' },
-  { id: 'hunger', name: '空腹', en: 'Hunger', type: 'harmful', color: '#587653', icon: '🍽️' },
-  { id: 'weakness', name: '弱体化', en: 'Weakness', type: 'harmful', color: '#484D48', icon: '😰' },
-  { id: 'poison', name: '毒', en: 'Poison', type: 'harmful', color: '#4E9331', icon: '☠️' },
-  { id: 'wither', name: 'ウィザー', en: 'Wither', type: 'harmful', color: '#352A27', icon: '💀' },
-  { id: 'levitation', name: '浮遊', en: 'Levitation', type: 'harmful', color: '#CEFFFF', icon: '🎈' },
-  { id: 'unluck', name: '不運', en: 'Bad Luck', type: 'harmful', color: '#C0A44D', icon: '🔮' },
-  { id: 'bad_omen', name: '不吉な予感', en: 'Bad Omen', type: 'harmful', color: '#0B6138', icon: '⚔️' },
-  { id: 'darkness', name: '暗闇', en: 'Darkness', type: 'harmful', color: '#292929', icon: '🌑' },
-  { id: 'infested', name: '蝕み', en: 'Infested', type: 'harmful', color: '#8B8B8B', icon: '🐛' },
-  { id: 'oozing', name: '滲み出し', en: 'Oozing', type: 'harmful', color: '#2E8B57', icon: '💧' },
-  { id: 'weaving', name: '紡糸', en: 'Weaving', type: 'harmful', color: '#666666', icon: '🕸️' },
-  { id: 'wind_charged', name: '風纏い', en: 'Wind Charged', type: 'harmful', color: '#B0E0E6', icon: '💨' },
+  { id: 'slowness', name: '移動速度低下', en: 'Slowness', type: 'harmful', color: '#5A6C81' },
+  { id: 'mining_fatigue', name: '採掘速度低下', en: 'Mining Fatigue', type: 'harmful', color: '#4A4217' },
+  { id: 'instant_damage', name: '即時ダメージ', en: 'Instant Damage', type: 'harmful', color: '#430A09' },
+  { id: 'nausea', name: '吐き気', en: 'Nausea', type: 'harmful', color: '#551D4A' },
+  { id: 'blindness', name: '盲目', en: 'Blindness', type: 'harmful', color: '#1F1F23' },
+  { id: 'hunger', name: '空腹', en: 'Hunger', type: 'harmful', color: '#587653' },
+  { id: 'weakness', name: '弱体化', en: 'Weakness', type: 'harmful', color: '#484D48' },
+  { id: 'poison', name: '毒', en: 'Poison', type: 'harmful', color: '#4E9331' },
+  { id: 'wither', name: 'ウィザー', en: 'Wither', type: 'harmful', color: '#352A27' },
+  { id: 'levitation', name: '浮遊', en: 'Levitation', type: 'harmful', color: '#CEFFFF' },
+  { id: 'unluck', name: '不運', en: 'Bad Luck', type: 'harmful', color: '#C0A44D' },
+  { id: 'bad_omen', name: '不吉な予感', en: 'Bad Omen', type: 'harmful', color: '#0B6138' },
+  { id: 'darkness', name: '暗闇', en: 'Darkness', type: 'harmful', color: '#292929' },
+  { id: 'infested', name: '蝕み', en: 'Infested', type: 'harmful', color: '#8B8B8B' },
+  { id: 'oozing', name: '滲み出し', en: 'Oozing', type: 'harmful', color: '#2E8B57' },
+  { id: 'weaving', name: '紡糸', en: 'Weaving', type: 'harmful', color: '#666666' },
+  { id: 'wind_charged', name: '風纏い', en: 'Wind Charged', type: 'harmful', color: '#B0E0E6' },
   // 中立（Neutral）
-  { id: 'glowing', name: '発光', en: 'Glowing', type: 'neutral', color: '#94A061', icon: '✨' },
-  { id: 'trial_omen', name: 'トライアルの前兆', en: 'Trial Omen', type: 'neutral', color: '#5D3FD3', icon: '🏛️' },
-  { id: 'raid_omen', name: '襲撃の前兆', en: 'Raid Omen', type: 'neutral', color: '#8B0000', icon: '🔔' },
+  { id: 'glowing', name: '発光', en: 'Glowing', type: 'neutral', color: '#94A061' },
+  { id: 'trial_omen', name: 'トライアルの前兆', en: 'Trial Omen', type: 'neutral', color: '#5D3FD3' },
+  { id: 'raid_omen', name: '襲撃の前兆', en: 'Raid Omen', type: 'neutral', color: '#8B0000' },
 ];
 
-// ポーションタイプ
+// ポーションタイプ - Minecraft Wiki画像URL使用
 const POTION_TYPES = [
-  { id: 'potion', name: '通常のポーション', icon: '🧪' },
-  { id: 'splash_potion', name: 'スプラッシュポーション', icon: '💥' },
-  { id: 'lingering_potion', name: '残留ポーション', icon: '☁️' },
-  { id: 'tipped_arrow', name: '効果付きの矢', icon: '🏹' },
+  { id: 'potion', name: '通常のポーション', icon: `${WIKI_IMG_BASE}Invicon_Potion.png` },
+  { id: 'splash_potion', name: 'スプラッシュポーション', icon: `${WIKI_IMG_BASE}Invicon_Splash_Potion.png` },
+  { id: 'lingering_potion', name: '残留ポーション', icon: `${WIKI_IMG_BASE}Invicon_Lingering_Potion.png` },
+  { id: 'tipped_arrow', name: '効果付きの矢', icon: `${WIKI_IMG_BASE}Invicon_Tipped_Arrow.png` },
 ];
+
+// エフェクトアイコンのHTML生成（画像またはカラー円）
+function renderEffectIcon(effectId, color, size = 18) {
+  const iconUrl = getEffectIconUrl(effectId);
+  if (iconUrl) {
+    return `<img src="${iconUrl}" alt="" class="effect-icon-img" width="${size}" height="${size}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='inline-block'"><span class="effect-icon-fallback" style="display:none;background-color:${color}"></span>`;
+  }
+  return `<span class="effect-icon-circle" style="background-color:${color}"></span>`;
+}
 
 // プリセット
 const PRESETS = [
@@ -105,7 +166,7 @@ export function render(manifest) {
           <div class="potion-type-tabs" id="potion-type-tabs">
             ${POTION_TYPES.map((t, i) => `
               <button type="button" class="type-tab ${i === 0 ? 'active' : ''}" data-type="${t.id}">
-                <span class="tab-icon">${t.icon}</span>
+                <img src="${t.icon}" alt="${t.name}" class="tab-icon-img" width="32" height="32" loading="lazy">
                 <span class="tab-name">${t.name}</span>
               </button>
             `).join('')}
@@ -139,7 +200,7 @@ export function render(manifest) {
         <!-- エフェクト検索 -->
         <div class="form-group">
           <label>エフェクトを追加</label>
-          <input type="text" id="effect-search" class="mc-input effect-search" placeholder="🔍 エフェクト名で検索...">
+          <input type="text" id="effect-search" class="mc-input effect-search" placeholder="エフェクト名で検索...">
         </div>
 
         <!-- エフェクトタブとグリッド -->
@@ -359,7 +420,7 @@ function renderEffectGrid(container, type) {
            data-effect="${e.id}"
            style="--effect-color: ${e.color}"
            title="${e.en}">
-        <span class="effect-icon">${e.icon}</span>
+        <span class="effect-icon">${renderEffectIcon(e.id, e.color, 18)}</span>
         <span class="effect-name">${e.name}</span>
       </div>
     `;
@@ -390,9 +451,9 @@ function renderSelectedEffects(container) {
     return `
       <div class="selected-effect" style="--effect-color: ${info?.color || '#888'}">
         <div class="effect-header">
-          <span class="effect-icon">${info?.icon || '?'}</span>
+          <span class="effect-icon">${renderEffectIcon(e.id, info?.color || '#888', 20)}</span>
           <span class="effect-label">${info?.name || e.id}</span>
-          <button type="button" class="effect-remove" data-effect="${e.id}" title="削除">×</button>
+          <button type="button" class="effect-remove" data-effect="${e.id}" title="削除">x</button>
         </div>
         <div class="effect-controls">
           <label class="control-group">
@@ -476,7 +537,7 @@ function updatePreview(container) {
         const time = formatDuration(e.duration);
         return `
           <div class="preview-effect-item" style="color: ${info?.color || '#fff'}">
-            ${info?.icon || ''} ${info?.name || e.id}${level} <span class="time">(${time})</span>
+            ${renderEffectIcon(e.id, info?.color || '#fff', 16)} ${info?.name || e.id}${level} <span class="time">(${time})</span>
           </div>
         `;
       }).join('');
@@ -630,8 +691,10 @@ style.textContent = `
     border-color: var(--mc-color-grass-dark);
   }
 
-  .type-tab .tab-icon {
-    font-size: 1.5rem;
+  .type-tab .tab-icon-img {
+    width: 32px;
+    height: 32px;
+    image-rendering: pixelated;
   }
 
   .type-tab .tab-name {
@@ -737,7 +800,28 @@ style.textContent = `
   }
 
   .effect-item .effect-icon {
-    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+  }
+
+  .effect-item .effect-icon-img,
+  .selected-effect .effect-icon-img,
+  .preview-effect-item .effect-icon-img {
+    image-rendering: pixelated;
+    vertical-align: middle;
+  }
+
+  .effect-icon-fallback,
+  .effect-icon-circle {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    vertical-align: middle;
   }
 
   .effect-item .effect-name {
@@ -772,7 +856,12 @@ style.textContent = `
   }
 
   .effect-header .effect-icon {
-    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
   }
 
   .effect-header .effect-label {
@@ -979,6 +1068,9 @@ style.textContent = `
   }
 
   .preview-effect-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
     padding: 2px 0;
   }
 

@@ -2,10 +2,117 @@
  * Smithing/Trim Generator - UI
  * 全19種トリムパターン、全11種素材、全7種防具素材対応
  * 1.21.5コンポーネント形式出力
+ * Minecraft Wiki画像使用
  */
 
 import { $, $$, debounce, delegate } from '../../core/dom.js';
 import { setOutput } from '../../app/sidepanel.js';
+
+// ======================================
+// Minecraft Wiki画像ヘルパー
+// ======================================
+
+const WIKI_IMAGE_BASE = 'https://minecraft.wiki/images/';
+
+/**
+ * Wiki画像URLを生成
+ * @param {string} itemName - アイテム名（スペース区切り、例: "Netherite Helmet"）
+ * @returns {string} 画像URL
+ */
+function getWikiImageUrl(itemName) {
+  const formatted = itemName.replace(/ /g, '_');
+  return `${WIKI_IMAGE_BASE}Invicon_${formatted}.png`;
+}
+
+/**
+ * 防具のWiki画像URLを取得
+ * @param {string} material - 素材ID（例: "diamond"）
+ * @param {string} type - 部位ID（例: "helmet"）
+ * @returns {string} 画像URL
+ */
+function getArmorImageUrl(material, type) {
+  const materialNames = {
+    leather: 'Leather',
+    chainmail: 'Chainmail',
+    iron: 'Iron',
+    copper: 'Copper',
+    golden: 'Golden',
+    diamond: 'Diamond',
+    netherite: 'Netherite',
+  };
+  const typeNames = {
+    helmet: 'Helmet',
+    chestplate: 'Chestplate',
+    leggings: 'Leggings',
+    boots: 'Boots',
+  };
+  return getWikiImageUrl(`${materialNames[material] || 'Diamond'}_${typeNames[type] || 'Helmet'}`);
+}
+
+/**
+ * トリムテンプレートのWiki画像URLを取得
+ * @param {string} patternId - パターンID（例: "coast"）
+ * @returns {string} 画像URL
+ */
+function getTrimTemplateImageUrl(patternId) {
+  if (patternId === 'netherite_upgrade') {
+    return getWikiImageUrl('Netherite_Upgrade_Smithing_Template');
+  }
+  const patternNames = {
+    bolt: 'Bolt',
+    coast: 'Coast',
+    dune: 'Dune',
+    eye: 'Eye',
+    flow: 'Flow',
+    host: 'Host',
+    raiser: 'Raiser',
+    rib: 'Rib',
+    sentry: 'Sentry',
+    shaper: 'Shaper',
+    silence: 'Silence',
+    snout: 'Snout',
+    spire: 'Spire',
+    tide: 'Tide',
+    vex: 'Vex',
+    ward: 'Ward',
+    wayfinder: 'Wayfinder',
+    wild: 'Wild',
+  };
+  return getWikiImageUrl(`${patternNames[patternId] || patternId}_Armor_Trim_Smithing_Template`);
+}
+
+/**
+ * 素材アイテムのWiki画像URLを取得
+ * @param {string} itemId - アイテムID（例: "diamond", "gold_ingot"）
+ * @returns {string} 画像URL
+ */
+function getMaterialImageUrl(itemId) {
+  const itemNames = {
+    amethyst_shard: 'Amethyst_Shard',
+    copper_ingot: 'Copper_Ingot',
+    diamond: 'Diamond',
+    emerald: 'Emerald',
+    gold_ingot: 'Gold_Ingot',
+    iron_ingot: 'Iron_Ingot',
+    lapis_lazuli: 'Lapis_Lazuli',
+    netherite_ingot: 'Netherite_Ingot',
+    quartz: 'Nether_Quartz',
+    redstone: 'Redstone_Dust',
+    resin_brick: 'Resin_Brick',
+  };
+  return getWikiImageUrl(itemNames[itemId] || itemId);
+}
+
+/**
+ * Wiki画像要素を生成
+ * @param {string} url - 画像URL
+ * @param {string} alt - 代替テキスト
+ * @param {number} size - サイズ（デフォルト32px）
+ * @returns {string} img HTML
+ */
+function wikiImg(url, alt, size = 32) {
+  return `<img src="${url}" alt="${alt}" class="mc-wiki-icon" width="${size}" height="${size}" loading="lazy">`;
+}
 
 // ======================================
 // データ定義
@@ -64,10 +171,10 @@ const ARMOR_MATERIALS = [
 
 // 防具タイプ（4部位）
 const ARMOR_TYPES = [
-  { id: 'helmet', name: 'ヘルメット', en: 'Helmet', icon: '' },
-  { id: 'chestplate', name: 'チェストプレート', en: 'Chestplate', icon: '' },
-  { id: 'leggings', name: 'レギンス', en: 'Leggings', icon: '' },
-  { id: 'boots', name: 'ブーツ', en: 'Boots', icon: '' },
+  { id: 'helmet', name: 'ヘルメット', en: 'Helmet' },
+  { id: 'chestplate', name: 'チェストプレート', en: 'Chestplate' },
+  { id: 'leggings', name: 'レギンス', en: 'Leggings' },
+  { id: 'boots', name: 'ブーツ', en: 'Boots' },
 ];
 
 // プリセット
@@ -140,7 +247,7 @@ export function render(manifest) {
                   <button type="button" class="armor-material-btn ${m.id === state.armorMaterial ? 'active' : ''}"
                           data-armor-material="${m.id}" title="${m.name}"
                           style="--armor-color: ${m.color}">
-                    <span class="material-swatch" style="background-color: ${m.color}"></span>
+                    ${wikiImg(getArmorImageUrl(m.id, 'chestplate'), m.name, 32)}
                     <span class="material-label">${m.name}</span>
                   </button>
                 `).join('')}
@@ -154,7 +261,7 @@ export function render(manifest) {
                 ${ARMOR_TYPES.map(t => `
                   <button type="button" class="armor-type-btn ${t.id === state.armorType ? 'active' : ''}"
                           data-armor-type="${t.id}" title="${t.name}">
-                    <span class="armor-icon">${t.icon}</span>
+                    ${wikiImg(getArmorImageUrl(state.armorMaterial, t.id), t.name, 32)}
                     <span class="armor-label">${t.name}</span>
                   </button>
                 `).join('')}
@@ -180,7 +287,8 @@ export function render(manifest) {
                 ${TRIM_MATERIALS.map(m => `
                   <button type="button" class="trim-material-btn ${m.id === state.trimMaterial ? 'active' : ''}"
                           data-trim-material="${m.id}" title="${m.name}"
-                          style="background-color: ${m.color}">
+                          style="--trim-color: ${m.color}">
+                    ${wikiImg(getMaterialImageUrl(m.item), m.name, 32)}
                     <span class="material-name">${m.name}</span>
                   </button>
                 `).join('')}
@@ -223,6 +331,7 @@ function renderPatternButtons(filter = '') {
   return filtered.map(p => `
     <button type="button" class="pattern-btn ${p.id === state.pattern ? 'active' : ''} ${p.category === 'upgrade' ? 'upgrade-pattern' : ''}"
             data-pattern="${p.id}" title="${p.name} (${p.en}) - ${p.structure}">
+      ${wikiImg(getTrimTemplateImageUrl(p.id), p.en, 32)}
       <span class="pattern-name">${p.name}</span>
       <span class="pattern-en">${p.en}</span>
     </button>
@@ -242,14 +351,15 @@ function renderArmorPreview() {
 
   // ネザライト強化の場合は特別表示
   if (patternInfo?.category === 'upgrade') {
+    const armorType = ARMOR_TYPES.find(t => t.id === state.armorType);
     return `
       <div class="upgrade-preview">
         <div class="upgrade-icon">
-          <span class="upgrade-before" style="color: ${armorColor}">${ARMOR_TYPES.find(t => t.id === state.armorType)?.icon || ''}</span>
+          <span class="upgrade-before">${wikiImg(getArmorImageUrl('diamond', state.armorType), 'Diamond ' + (armorType?.en || ''), 48)}</span>
           <span class="upgrade-arrow">+</span>
-          <span class="upgrade-material">&#x2B24;</span>
+          <span class="upgrade-material">${wikiImg(getMaterialImageUrl('netherite_ingot'), 'Netherite Ingot', 32)}</span>
           <span class="upgrade-arrow">=</span>
-          <span class="upgrade-after" style="color: ${ARMOR_MATERIALS.find(m => m.id === 'netherite')?.color || '#3D3B3B'}">${ARMOR_TYPES.find(t => t.id === state.armorType)?.icon || ''}</span>
+          <span class="upgrade-after">${wikiImg(getArmorImageUrl('netherite', state.armorType), 'Netherite ' + (armorType?.en || ''), 48)}</span>
         </div>
         <div class="upgrade-label">ネザライト強化</div>
       </div>
@@ -261,10 +371,19 @@ function renderArmorPreview() {
       <div class="armor-figure">
         ${ARMOR_TYPES.map(type => `
           <div class="armor-piece ${type.id} ${state.fullSet || type.id === state.armorType ? 'active' : ''}">
-            <div class="armor-base" style="background-color: ${armorColor}"></div>
-            <div class="armor-trim" style="border-color: ${trimColor}; background: linear-gradient(45deg, transparent 30%, ${trimColor}40 50%, transparent 70%)"></div>
+            ${wikiImg(getArmorImageUrl(state.armorMaterial, type.id), state.armorMaterial + ' ' + type.en, 48)}
           </div>
         `).join('')}
+      </div>
+      <div class="preview-trim-info">
+        <span class="trim-pattern-preview">
+          ${wikiImg(getTrimTemplateImageUrl(state.pattern), patternInfo?.en || '', 24)}
+          <span>${patternInfo?.name || ''}</span>
+        </span>
+        <span class="trim-material-preview" style="color: ${trimColor}">
+          ${wikiImg(getMaterialImageUrl(trimMat?.item || ''), trimMat?.name || '', 24)}
+          <span>${trimMat?.name || ''}</span>
+        </span>
       </div>
     </div>
   `;
@@ -332,6 +451,7 @@ export function init(container) {
   delegate(container, 'click', '.armor-material-btn', (e, target) => {
     state.armorMaterial = target.dataset.armorMaterial;
     updateActiveButton(container, '.armor-material-btn', 'data-armor-material', state.armorMaterial);
+    updateArmorTypeGrid(container);
     updatePreview(container);
     updateCommand();
   });
@@ -394,6 +514,22 @@ function updatePatternGrid(container) {
 }
 
 /**
+ * 防具部位グリッドを更新（素材変更時に画像も更新）
+ */
+function updateArmorTypeGrid(container) {
+  const grid = $('#armor-type-grid', container);
+  if (grid) {
+    grid.innerHTML = ARMOR_TYPES.map(t => `
+      <button type="button" class="armor-type-btn ${t.id === state.armorType ? 'active' : ''}"
+              data-armor-type="${t.id}" title="${t.name}">
+        ${wikiImg(getArmorImageUrl(state.armorMaterial, t.id), t.name, 32)}
+        <span class="armor-label">${t.name}</span>
+      </button>
+    `).join('');
+  }
+}
+
+/**
  * プレビューを更新
  */
 function updatePreview(container) {
@@ -412,7 +548,7 @@ function updatePreview(container) {
  */
 function updateAllUI(container) {
   updateActiveButton(container, '.armor-material-btn', 'data-armor-material', state.armorMaterial);
-  updateActiveButton(container, '.armor-type-btn', 'data-armor-type', state.armorType);
+  updateArmorTypeGrid(container);
   updateActiveButton(container, '.pattern-btn', 'data-pattern', state.pattern);
   updateActiveButton(container, '.trim-material-btn', 'data-trim-material', state.trimMaterial);
   updatePreview(container);
@@ -468,6 +604,14 @@ function updateCommand() {
 
 const style = document.createElement('style');
 style.textContent = `
+  /* Wiki画像アイコン */
+  .mc-wiki-icon {
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+    vertical-align: middle;
+  }
+
   /* メインレイアウト */
   .smithing-panel {
     max-width: 100%;
@@ -555,17 +699,20 @@ style.textContent = `
 
   .armor-material-btn {
     display: flex;
+    flex-direction: column;
     align-items: center;
     gap: var(--mc-space-xs);
-    padding: var(--mc-space-xs) var(--mc-space-sm);
+    padding: var(--mc-space-sm);
     background-color: var(--mc-bg-surface);
     border: 2px solid var(--mc-border-dark);
     cursor: pointer;
     transition: all 0.15s;
+    min-width: 70px;
   }
 
   .armor-material-btn:hover {
     background-color: var(--mc-color-stone-300);
+    transform: translateY(-2px);
   }
 
   .armor-material-btn.active {
@@ -574,16 +721,10 @@ style.textContent = `
     color: white;
   }
 
-  .material-swatch {
-    display: inline-block;
-    width: 20px;
-    height: 20px;
-    border: 1px solid var(--mc-border-darker);
-  }
-
   .material-label {
-    font-size: 0.8rem;
+    font-size: 0.7rem;
     font-weight: 500;
+    text-align: center;
   }
 
   /* 防具部位グリッド */
@@ -599,27 +740,24 @@ style.textContent = `
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    gap: var(--mc-space-xs);
     padding: var(--mc-space-sm);
     background-color: var(--mc-bg-surface);
     border: 2px solid var(--mc-border-dark);
     cursor: pointer;
     transition: all 0.15s;
-    min-height: 60px;
+    min-height: 70px;
   }
 
   .armor-type-btn:hover {
     background-color: var(--mc-color-stone-300);
+    transform: translateY(-2px);
   }
 
   .armor-type-btn.active {
     border-color: var(--mc-color-grass-main);
     background-color: var(--mc-color-grass-light);
     color: white;
-  }
-
-  .armor-icon {
-    font-size: 1.5rem;
-    margin-bottom: var(--mc-space-xs);
   }
 
   .armor-label {
@@ -659,12 +797,13 @@ style.textContent = `
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    gap: var(--mc-space-xs);
     padding: var(--mc-space-sm);
     background-color: var(--mc-bg-surface);
     border: 2px solid var(--mc-border-dark);
     cursor: pointer;
     transition: all 0.15s;
-    min-height: 50px;
+    min-height: 80px;
   }
 
   .pattern-btn:hover {
@@ -688,12 +827,13 @@ style.textContent = `
   }
 
   .pattern-name {
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     font-weight: bold;
+    text-align: center;
   }
 
   .pattern-en {
-    font-size: 0.65rem;
+    font-size: 0.6rem;
     color: var(--mc-text-muted);
   }
 
@@ -716,44 +856,44 @@ style.textContent = `
   }
 
   .trim-material-btn {
-    width: 48px;
-    height: 48px;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
+    gap: var(--mc-space-xs);
+    padding: var(--mc-space-sm);
+    background-color: var(--mc-bg-surface);
     border: 3px solid var(--mc-border-dark);
     cursor: pointer;
     transition: all 0.15s;
     position: relative;
+    min-width: 60px;
   }
 
   .trim-material-btn:hover {
-    transform: scale(1.1);
+    transform: scale(1.05);
     z-index: 1;
+    background-color: var(--mc-color-stone-300);
   }
 
   .trim-material-btn.active {
-    border-color: white;
-    box-shadow: 0 0 0 3px var(--mc-color-grass-main), 0 4px 8px rgba(0,0,0,0.3);
-    transform: scale(1.1);
+    border-color: var(--trim-color, var(--mc-color-grass-main));
+    box-shadow: 0 0 0 2px var(--trim-color, var(--mc-color-grass-main)), 0 4px 8px rgba(0,0,0,0.3);
+    transform: scale(1.05);
     z-index: 2;
+    background-color: var(--mc-color-stone-300);
   }
 
   .trim-material-btn .material-name {
-    position: absolute;
-    bottom: -18px;
-    left: 50%;
-    transform: translateX(-50%);
     font-size: 0.6rem;
     color: var(--mc-text-secondary);
     white-space: nowrap;
-    opacity: 0;
-    transition: opacity 0.15s;
+    text-align: center;
   }
 
-  .trim-material-btn:hover .material-name,
   .trim-material-btn.active .material-name {
-    opacity: 1;
+    color: var(--mc-text-primary);
+    font-weight: bold;
   }
 
   /* プレビューパネル */
@@ -776,6 +916,7 @@ style.textContent = `
     display: flex;
     flex-direction: column;
     align-items: center;
+    gap: var(--mc-space-md);
   }
 
   .armor-figure {
@@ -789,107 +930,85 @@ style.textContent = `
     position: relative;
     opacity: 0.3;
     transition: all 0.2s;
+    filter: grayscale(0.5);
   }
 
   .armor-piece.active {
     opacity: 1;
-    transform: scale(1.05);
+    transform: scale(1.1);
+    filter: none;
   }
 
-  .armor-piece .armor-base {
-    border: 3px solid #333;
-    position: relative;
+  .armor-piece .mc-wiki-icon {
+    display: block;
   }
 
-  .armor-piece .armor-trim {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    border: 3px solid transparent;
-    pointer-events: none;
-  }
-
-  /* 各防具の形状 */
-  .armor-piece.helmet .armor-base {
-    width: 50px;
-    height: 35px;
-    border-radius: 8px 8px 0 0;
-  }
-
-  .armor-piece.helmet .armor-trim {
-    width: 40px;
-    height: 25px;
-    border-radius: 4px 4px 0 0;
-  }
-
-  .armor-piece.chestplate .armor-base {
-    width: 60px;
-    height: 55px;
+  /* プレビュー下部のトリム情報 */
+  .preview-trim-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--mc-space-sm);
+    padding: var(--mc-space-sm);
+    background-color: var(--mc-bg-panel);
+    border: 1px solid var(--mc-border-dark);
     border-radius: 4px;
   }
 
-  .armor-piece.chestplate .armor-trim {
-    width: 50px;
-    height: 45px;
-    border-radius: 2px;
+  .trim-pattern-preview,
+  .trim-material-preview {
+    display: flex;
+    align-items: center;
+    gap: var(--mc-space-xs);
+    font-size: 0.8rem;
   }
 
-  .armor-piece.leggings .armor-base {
-    width: 55px;
-    height: 45px;
-    border-radius: 0 0 4px 4px;
-  }
-
-  .armor-piece.leggings .armor-trim {
-    width: 45px;
-    height: 35px;
-    border-radius: 0 0 2px 2px;
-  }
-
-  .armor-piece.boots .armor-base {
-    width: 48px;
-    height: 30px;
-    border-radius: 0 0 6px 6px;
-  }
-
-  .armor-piece.boots .armor-trim {
-    width: 38px;
-    height: 20px;
-    border-radius: 0 0 4px 4px;
+  .trim-pattern-preview span,
+  .trim-material-preview span {
+    font-weight: 500;
   }
 
   /* ネザライト強化プレビュー */
   .upgrade-preview {
     text-align: center;
+    padding: var(--mc-space-md);
   }
 
   .upgrade-icon {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: var(--mc-space-sm);
-    font-size: 2rem;
+    gap: var(--mc-space-md);
     margin-bottom: var(--mc-space-md);
+    flex-wrap: wrap;
   }
 
   .upgrade-before, .upgrade-after {
-    font-size: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .upgrade-arrow {
     color: var(--mc-text-muted);
     font-size: 1.5rem;
+    font-weight: bold;
   }
 
   .upgrade-material {
-    color: #3D3B3B;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .upgrade-label {
-    font-size: 0.9rem;
+    font-size: 1rem;
     font-weight: bold;
     color: var(--mc-color-gold);
+    padding: var(--mc-space-sm) var(--mc-space-md);
+    background-color: var(--mc-bg-panel);
+    border: 2px solid var(--mc-color-gold);
+    border-radius: 4px;
   }
 
   /* プレビュー情報 */

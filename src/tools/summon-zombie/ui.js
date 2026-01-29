@@ -6,95 +6,167 @@
 import { $, $$, debounce, delegate } from '../../core/dom.js';
 import { setOutput } from '../../app/sidepanel.js';
 
+// Minecraft Wiki画像URLヘルパー
+const WIKI_IMAGE_BASE = 'https://minecraft.wiki/images/';
+
+function getEntityImage(entityName) {
+  return `${WIKI_IMAGE_BASE}${entityName}_JE.png`;
+}
+
+function getItemImage(itemName) {
+  return `${WIKI_IMAGE_BASE}Invicon_${itemName}.png`;
+}
+
 // ゾンビタイプ
 const ZOMBIE_TYPES = [
-  { id: 'zombie', name: 'ゾンビ', icon: '🧟' },
-  { id: 'zombie_villager', name: '村人ゾンビ', icon: '🧟‍♂️' },
-  { id: 'husk', name: 'ハスク', icon: '🏜️' },
-  { id: 'drowned', name: 'ドラウンド', icon: '🌊' },
-  { id: 'zombified_piglin', name: 'ゾンビピグリン', icon: '🐷' },
+  { id: 'zombie', name: 'ゾンビ', image: getEntityImage('Zombie') },
+  { id: 'zombie_villager', name: '村人ゾンビ', image: getEntityImage('Zombie_Villager') },
+  { id: 'husk', name: 'ハスク', image: getEntityImage('Husk') },
+  { id: 'drowned', name: 'ドラウンド', image: getEntityImage('Drowned') },
+  { id: 'zombified_piglin', name: 'ゾンビピグリン', image: getEntityImage('Zombified_Piglin') },
 ];
 
 // 装備スロット
 const EQUIPMENT_SLOTS = [
-  { id: 'head', name: 'ヘルメット', icon: '⛑️', slot: 'head' },
-  { id: 'chest', name: 'チェストプレート', icon: '🦺', slot: 'chest' },
-  { id: 'legs', name: 'レギンス', icon: '👖', slot: 'legs' },
-  { id: 'feet', name: 'ブーツ', icon: '👟', slot: 'feet' },
-  { id: 'mainhand', name: 'メイン手', icon: '⚔️', slot: 'mainhand' },
-  { id: 'offhand', name: 'オフハンド', icon: '🛡️', slot: 'offhand' },
+  { id: 'head', name: 'ヘルメット', image: getItemImage('Iron_Helmet'), slot: 'head' },
+  { id: 'chest', name: 'チェストプレート', image: getItemImage('Iron_Chestplate'), slot: 'chest' },
+  { id: 'legs', name: 'レギンス', image: getItemImage('Iron_Leggings'), slot: 'legs' },
+  { id: 'feet', name: 'ブーツ', image: getItemImage('Iron_Boots'), slot: 'feet' },
+  { id: 'mainhand', name: 'メイン手', image: getItemImage('Iron_Sword'), slot: 'mainhand' },
+  { id: 'offhand', name: 'オフハンド', image: getItemImage('Shield'), slot: 'offhand' },
 ];
+
+// アイテムIDからWiki画像名への変換マップ
+const ITEM_IMAGE_MAP = {
+  'leather_helmet': 'Leather_Helmet',
+  'chainmail_helmet': 'Chainmail_Helmet',
+  'iron_helmet': 'Iron_Helmet',
+  'golden_helmet': 'Golden_Helmet',
+  'diamond_helmet': 'Diamond_Helmet',
+  'netherite_helmet': 'Netherite_Helmet',
+  'turtle_helmet': 'Turtle_Shell',
+  'carved_pumpkin': 'Carved_Pumpkin',
+  'player_head': 'Steve_Head',
+  'zombie_head': 'Zombie_Head',
+  'skeleton_skull': 'Skeleton_Skull',
+  'wither_skeleton_skull': 'Wither_Skeleton_Skull',
+  'creeper_head': 'Creeper_Head',
+  'dragon_head': 'Dragon_Head',
+  'piglin_head': 'Piglin_Head',
+  'leather_chestplate': 'Leather_Tunic',
+  'chainmail_chestplate': 'Chainmail_Chestplate',
+  'iron_chestplate': 'Iron_Chestplate',
+  'golden_chestplate': 'Golden_Chestplate',
+  'diamond_chestplate': 'Diamond_Chestplate',
+  'netherite_chestplate': 'Netherite_Chestplate',
+  'elytra': 'Elytra',
+  'leather_leggings': 'Leather_Pants',
+  'chainmail_leggings': 'Chainmail_Leggings',
+  'iron_leggings': 'Iron_Leggings',
+  'golden_leggings': 'Golden_Leggings',
+  'diamond_leggings': 'Diamond_Leggings',
+  'netherite_leggings': 'Netherite_Leggings',
+  'leather_boots': 'Leather_Boots',
+  'chainmail_boots': 'Chainmail_Boots',
+  'iron_boots': 'Iron_Boots',
+  'golden_boots': 'Golden_Boots',
+  'diamond_boots': 'Diamond_Boots',
+  'netherite_boots': 'Netherite_Boots',
+  'iron_sword': 'Iron_Sword',
+  'golden_sword': 'Golden_Sword',
+  'diamond_sword': 'Diamond_Sword',
+  'netherite_sword': 'Netherite_Sword',
+  'iron_axe': 'Iron_Axe',
+  'golden_axe': 'Golden_Axe',
+  'diamond_axe': 'Diamond_Axe',
+  'netherite_axe': 'Netherite_Axe',
+  'trident': 'Trident',
+  'bow': 'Bow',
+  'crossbow': 'Crossbow',
+  'mace': 'Mace',
+  'shield': 'Shield',
+  'totem_of_undying': 'Totem_of_Undying',
+  'torch': 'Torch',
+  'lantern': 'Lantern',
+  'nautilus_shell': 'Nautilus_Shell',
+};
+
+function getItemImageById(itemId) {
+  if (!itemId) return null;
+  const imageName = ITEM_IMAGE_MAP[itemId];
+  return imageName ? getItemImage(imageName) : null;
+}
 
 // 装備アイテム一覧
 const EQUIPMENT_ITEMS = {
   head: [
-    { id: '', name: '-- なし --' },
-    { id: 'leather_helmet', name: '革のヘルメット' },
-    { id: 'chainmail_helmet', name: 'チェーンのヘルメット' },
-    { id: 'iron_helmet', name: '鉄のヘルメット' },
-    { id: 'golden_helmet', name: '金のヘルメット' },
-    { id: 'diamond_helmet', name: 'ダイヤのヘルメット' },
-    { id: 'netherite_helmet', name: 'ネザライトのヘルメット' },
-    { id: 'turtle_helmet', name: 'カメの甲羅' },
-    { id: 'carved_pumpkin', name: 'くり抜かれたカボチャ' },
-    { id: 'player_head', name: 'プレイヤーの頭' },
-    { id: 'zombie_head', name: 'ゾンビの頭' },
-    { id: 'skeleton_skull', name: 'スケルトンの頭蓋骨' },
-    { id: 'wither_skeleton_skull', name: 'ウィザースケルトンの頭蓋骨' },
-    { id: 'creeper_head', name: 'クリーパーの頭' },
-    { id: 'dragon_head', name: 'ドラゴンの頭' },
-    { id: 'piglin_head', name: 'ピグリンの頭' },
+    { id: '', name: '-- なし --', image: null },
+    { id: 'leather_helmet', name: '革のヘルメット', image: getItemImage('Leather_Helmet') },
+    { id: 'chainmail_helmet', name: 'チェーンのヘルメット', image: getItemImage('Chainmail_Helmet') },
+    { id: 'iron_helmet', name: '鉄のヘルメット', image: getItemImage('Iron_Helmet') },
+    { id: 'golden_helmet', name: '金のヘルメット', image: getItemImage('Golden_Helmet') },
+    { id: 'diamond_helmet', name: 'ダイヤのヘルメット', image: getItemImage('Diamond_Helmet') },
+    { id: 'netherite_helmet', name: 'ネザライトのヘルメット', image: getItemImage('Netherite_Helmet') },
+    { id: 'turtle_helmet', name: 'カメの甲羅', image: getItemImage('Turtle_Shell') },
+    { id: 'carved_pumpkin', name: 'くり抜かれたカボチャ', image: getItemImage('Carved_Pumpkin') },
+    { id: 'player_head', name: 'プレイヤーの頭', image: getItemImage('Steve_Head') },
+    { id: 'zombie_head', name: 'ゾンビの頭', image: getItemImage('Zombie_Head') },
+    { id: 'skeleton_skull', name: 'スケルトンの頭蓋骨', image: getItemImage('Skeleton_Skull') },
+    { id: 'wither_skeleton_skull', name: 'ウィザースケルトンの頭蓋骨', image: getItemImage('Wither_Skeleton_Skull') },
+    { id: 'creeper_head', name: 'クリーパーの頭', image: getItemImage('Creeper_Head') },
+    { id: 'dragon_head', name: 'ドラゴンの頭', image: getItemImage('Dragon_Head') },
+    { id: 'piglin_head', name: 'ピグリンの頭', image: getItemImage('Piglin_Head') },
   ],
   chest: [
-    { id: '', name: '-- なし --' },
-    { id: 'leather_chestplate', name: '革のチェストプレート' },
-    { id: 'chainmail_chestplate', name: 'チェーンのチェストプレート' },
-    { id: 'iron_chestplate', name: '鉄のチェストプレート' },
-    { id: 'golden_chestplate', name: '金のチェストプレート' },
-    { id: 'diamond_chestplate', name: 'ダイヤのチェストプレート' },
-    { id: 'netherite_chestplate', name: 'ネザライトのチェストプレート' },
-    { id: 'elytra', name: 'エリトラ' },
+    { id: '', name: '-- なし --', image: null },
+    { id: 'leather_chestplate', name: '革のチェストプレート', image: getItemImage('Leather_Tunic') },
+    { id: 'chainmail_chestplate', name: 'チェーンのチェストプレート', image: getItemImage('Chainmail_Chestplate') },
+    { id: 'iron_chestplate', name: '鉄のチェストプレート', image: getItemImage('Iron_Chestplate') },
+    { id: 'golden_chestplate', name: '金のチェストプレート', image: getItemImage('Golden_Chestplate') },
+    { id: 'diamond_chestplate', name: 'ダイヤのチェストプレート', image: getItemImage('Diamond_Chestplate') },
+    { id: 'netherite_chestplate', name: 'ネザライトのチェストプレート', image: getItemImage('Netherite_Chestplate') },
+    { id: 'elytra', name: 'エリトラ', image: getItemImage('Elytra') },
   ],
   legs: [
-    { id: '', name: '-- なし --' },
-    { id: 'leather_leggings', name: '革のレギンス' },
-    { id: 'chainmail_leggings', name: 'チェーンのレギンス' },
-    { id: 'iron_leggings', name: '鉄のレギンス' },
-    { id: 'golden_leggings', name: '金のレギンス' },
-    { id: 'diamond_leggings', name: 'ダイヤのレギンス' },
-    { id: 'netherite_leggings', name: 'ネザライトのレギンス' },
+    { id: '', name: '-- なし --', image: null },
+    { id: 'leather_leggings', name: '革のレギンス', image: getItemImage('Leather_Pants') },
+    { id: 'chainmail_leggings', name: 'チェーンのレギンス', image: getItemImage('Chainmail_Leggings') },
+    { id: 'iron_leggings', name: '鉄のレギンス', image: getItemImage('Iron_Leggings') },
+    { id: 'golden_leggings', name: '金のレギンス', image: getItemImage('Golden_Leggings') },
+    { id: 'diamond_leggings', name: 'ダイヤのレギンス', image: getItemImage('Diamond_Leggings') },
+    { id: 'netherite_leggings', name: 'ネザライトのレギンス', image: getItemImage('Netherite_Leggings') },
   ],
   feet: [
-    { id: '', name: '-- なし --' },
-    { id: 'leather_boots', name: '革のブーツ' },
-    { id: 'chainmail_boots', name: 'チェーンのブーツ' },
-    { id: 'iron_boots', name: '鉄のブーツ' },
-    { id: 'golden_boots', name: '金のブーツ' },
-    { id: 'diamond_boots', name: 'ダイヤのブーツ' },
-    { id: 'netherite_boots', name: 'ネザライトのブーツ' },
+    { id: '', name: '-- なし --', image: null },
+    { id: 'leather_boots', name: '革のブーツ', image: getItemImage('Leather_Boots') },
+    { id: 'chainmail_boots', name: 'チェーンのブーツ', image: getItemImage('Chainmail_Boots') },
+    { id: 'iron_boots', name: '鉄のブーツ', image: getItemImage('Iron_Boots') },
+    { id: 'golden_boots', name: '金のブーツ', image: getItemImage('Golden_Boots') },
+    { id: 'diamond_boots', name: 'ダイヤのブーツ', image: getItemImage('Diamond_Boots') },
+    { id: 'netherite_boots', name: 'ネザライトのブーツ', image: getItemImage('Netherite_Boots') },
   ],
   mainhand: [
-    { id: '', name: '-- なし --' },
-    { id: 'iron_sword', name: '鉄の剣' },
-    { id: 'golden_sword', name: '金の剣' },
-    { id: 'diamond_sword', name: 'ダイヤの剣' },
-    { id: 'netherite_sword', name: 'ネザライトの剣' },
-    { id: 'iron_axe', name: '鉄の斧' },
-    { id: 'golden_axe', name: '金の斧' },
-    { id: 'diamond_axe', name: 'ダイヤの斧' },
-    { id: 'netherite_axe', name: 'ネザライトの斧' },
-    { id: 'trident', name: 'トライデント' },
-    { id: 'bow', name: '弓' },
-    { id: 'crossbow', name: 'クロスボウ' },
-    { id: 'mace', name: 'メイス' },
+    { id: '', name: '-- なし --', image: null },
+    { id: 'iron_sword', name: '鉄の剣', image: getItemImage('Iron_Sword') },
+    { id: 'golden_sword', name: '金の剣', image: getItemImage('Golden_Sword') },
+    { id: 'diamond_sword', name: 'ダイヤの剣', image: getItemImage('Diamond_Sword') },
+    { id: 'netherite_sword', name: 'ネザライトの剣', image: getItemImage('Netherite_Sword') },
+    { id: 'iron_axe', name: '鉄の斧', image: getItemImage('Iron_Axe') },
+    { id: 'golden_axe', name: '金の斧', image: getItemImage('Golden_Axe') },
+    { id: 'diamond_axe', name: 'ダイヤの斧', image: getItemImage('Diamond_Axe') },
+    { id: 'netherite_axe', name: 'ネザライトの斧', image: getItemImage('Netherite_Axe') },
+    { id: 'trident', name: 'トライデント', image: getItemImage('Trident') },
+    { id: 'bow', name: '弓', image: getItemImage('Bow') },
+    { id: 'crossbow', name: 'クロスボウ', image: getItemImage('Crossbow') },
+    { id: 'mace', name: 'メイス', image: getItemImage('Mace') },
   ],
   offhand: [
-    { id: '', name: '-- なし --' },
-    { id: 'shield', name: '盾' },
-    { id: 'totem_of_undying', name: '不死のトーテム' },
-    { id: 'torch', name: '松明' },
-    { id: 'lantern', name: 'ランタン' },
-    { id: 'nautilus_shell', name: 'オウムガイの殻' },
+    { id: '', name: '-- なし --', image: null },
+    { id: 'shield', name: '盾', image: getItemImage('Shield') },
+    { id: 'totem_of_undying', name: '不死のトーテム', image: getItemImage('Totem_of_Undying') },
+    { id: 'torch', name: '松明', image: getItemImage('Torch') },
+    { id: 'lantern', name: 'ランタン', image: getItemImage('Lantern') },
+    { id: 'nautilus_shell', name: 'オウムガイの殻', image: getItemImage('Nautilus_Shell') },
   ],
 };
 
@@ -139,14 +211,14 @@ const ENCHANT_CATEGORIES = {
 
 // 属性一覧
 const ATTRIBUTES = [
-  { id: 'max_health', name: '最大体力', icon: '❤️', default: 20, min: 1, max: 1024, step: 1 },
-  { id: 'attack_damage', name: '攻撃力', icon: '⚔️', default: 3, min: 0, max: 2048, step: 0.5 },
-  { id: 'movement_speed', name: '移動速度', icon: '💨', default: 0.23, min: 0, max: 1, step: 0.01 },
-  { id: 'knockback_resistance', name: 'ノックバック耐性', icon: '🦶', default: 0, min: 0, max: 1, step: 0.1 },
-  { id: 'armor', name: '防御力', icon: '🛡️', default: 0, min: 0, max: 30, step: 1 },
-  { id: 'armor_toughness', name: '防具強度', icon: '💎', default: 0, min: 0, max: 20, step: 1 },
-  { id: 'follow_range', name: '追跡範囲', icon: '👁️', default: 35, min: 0, max: 2048, step: 1 },
-  { id: 'spawn_reinforcements', name: '増援召喚率', icon: '🧟‍♂️', default: 0, min: 0, max: 1, step: 0.1 },
+  { id: 'max_health', name: '最大体力', image: getItemImage('Heart'), default: 20, min: 1, max: 1024, step: 1 },
+  { id: 'attack_damage', name: '攻撃力', image: getItemImage('Iron_Sword'), default: 3, min: 0, max: 2048, step: 0.5 },
+  { id: 'movement_speed', name: '移動速度', image: getItemImage('Sugar'), default: 0.23, min: 0, max: 1, step: 0.01 },
+  { id: 'knockback_resistance', name: 'ノックバック耐性', image: getItemImage('Anvil'), default: 0, min: 0, max: 1, step: 0.1 },
+  { id: 'armor', name: '防御力', image: getItemImage('Iron_Chestplate'), default: 0, min: 0, max: 30, step: 1 },
+  { id: 'armor_toughness', name: '防具強度', image: getItemImage('Diamond_Chestplate'), default: 0, min: 0, max: 20, step: 1 },
+  { id: 'follow_range', name: '追跡範囲', image: getItemImage('Ender_Eye'), default: 35, min: 0, max: 2048, step: 1 },
+  { id: 'spawn_reinforcements', name: '増援召喚率', image: getEntityImage('Zombie'), default: 0, min: 0, max: 1, step: 0.1 },
 ];
 
 // プリセット
@@ -384,7 +456,7 @@ export function render(manifest) {
           <div class="zombie-type-selector" id="zombie-type-selector">
             ${ZOMBIE_TYPES.map(z => `
               <button type="button" class="zombie-type-btn ${z.id === 'zombie' ? 'active' : ''}" data-type="${z.id}">
-                <span class="type-icon">${z.icon}</span>
+                <img src="${z.image}" alt="${z.name}" class="type-icon mc-wiki-image" width="32" height="32">
                 <span class="type-name">${z.name}</span>
               </button>
             `).join('')}
@@ -404,17 +476,21 @@ export function render(manifest) {
             ${EQUIPMENT_SLOTS.map(slot => `
               <div class="equipment-slot" data-slot="${slot.id}">
                 <div class="slot-header">
-                  <span class="slot-icon">${slot.icon}</span>
+                  <img src="${slot.image}" alt="${slot.name}" class="slot-icon mc-wiki-image" width="24" height="24">
                   <span class="slot-name">${slot.name}</span>
                 </div>
-                <select class="equipment-select mc-select" data-slot="${slot.id}">
-                  ${EQUIPMENT_ITEMS[slot.id].map(item => `
-                    <option value="${item.id}">${item.name}</option>
-                  `).join('')}
-                </select>
+                <div class="equipment-select-wrapper">
+                  <img src="" alt="" class="selected-item-image mc-wiki-image" data-slot="${slot.id}" width="24" height="24" style="display: none;">
+                  <select class="equipment-select mc-select" data-slot="${slot.id}">
+                    ${EQUIPMENT_ITEMS[slot.id].map(item => `
+                      <option value="${item.id}" data-image="${item.image || ''}">${item.name}</option>
+                    `).join('')}
+                  </select>
+                </div>
                 <div class="slot-actions">
                   <button type="button" class="enchant-btn" data-slot="${slot.id}" title="エンチャント設定">
-                    ✨ <span class="enchant-count" data-slot="${slot.id}">0</span>
+                    <img src="${getItemImage('Enchanted_Book')}" alt="Enchant" class="mc-wiki-image" width="16" height="16">
+                    <span class="enchant-count" data-slot="${slot.id}">0</span>
                   </button>
                   <div class="drop-chance-wrapper">
                     <label>Drop:</label>
@@ -435,7 +511,7 @@ export function render(manifest) {
           <div class="attributes-section" id="attributes-section" style="display: none;">
             ${ATTRIBUTES.map(attr => `
               <div class="attribute-row">
-                <span class="attr-icon">${attr.icon}</span>
+                <img src="${attr.image}" alt="${attr.name}" class="attr-icon mc-wiki-image" width="20" height="20">
                 <span class="attr-name">${attr.name}</span>
                 <input type="number" class="attr-value mc-input" data-attr="${attr.id}"
                        value="${attr.default}" min="${attr.min}" max="${attr.max}" step="${attr.step}">
@@ -572,6 +648,7 @@ export function init(container) {
   delegate(container, 'change', '.equipment-select', (e, target) => {
     const slot = target.dataset.slot;
     state.equipment[slot].item = target.value;
+    updateEquipmentImage(slot, target.value, container);
     updateCommand();
   });
 
@@ -643,6 +720,22 @@ export function init(container) {
 
   // 初期コマンド生成
   updateCommand();
+}
+
+/**
+ * 装備選択時に画像を更新
+ */
+function updateEquipmentImage(slot, itemId, container) {
+  const imageEl = $(`.selected-item-image[data-slot="${slot}"]`, container);
+  if (!imageEl) return;
+
+  const imageUrl = getItemImageById(itemId);
+  if (imageUrl) {
+    imageEl.src = imageUrl;
+    imageEl.style.display = 'block';
+  } else {
+    imageEl.style.display = 'none';
+  }
 }
 
 /**
@@ -783,9 +876,13 @@ function syncUIFromState(container) {
   // 装備
   EQUIPMENT_SLOTS.forEach(slot => {
     const select = $(`.equipment-select[data-slot="${slot.id}"]`, container);
+    const itemId = state.equipment[slot.id]?.item || '';
     if (select) {
-      select.value = state.equipment[slot.id]?.item || '';
+      select.value = itemId;
     }
+
+    // 装備画像を更新
+    updateEquipmentImage(slot.id, itemId, container);
 
     const dropInput = $(`.drop-chance[data-slot="${slot.id}"]`, container);
     if (dropInput) {
@@ -1001,6 +1098,14 @@ function buildAttributesNBT(attributes) {
 // スタイル追加
 const style = document.createElement('style');
 style.textContent = `
+  /* Minecraft Wiki画像共通スタイル */
+  .mc-wiki-image {
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+    object-fit: contain;
+  }
+
   .summon-zombie-tool .version-badge {
     background: var(--mc-color-grass-main);
     color: white;
@@ -1066,11 +1171,29 @@ style.textContent = `
   }
 
   .zombie-type-btn .type-icon {
-    font-size: 1.5rem;
+    width: 32px;
+    height: 32px;
   }
 
   .zombie-type-btn .type-name {
     font-size: 0.75rem;
+  }
+
+  /* 装備選択ラッパー */
+  .equipment-select-wrapper {
+    display: flex;
+    align-items: center;
+    gap: var(--mc-space-xs);
+    margin-bottom: var(--mc-space-xs);
+  }
+
+  .equipment-select-wrapper .selected-item-image {
+    flex-shrink: 0;
+  }
+
+  .equipment-select-wrapper .equipment-select {
+    flex: 1;
+    margin-bottom: 0;
   }
 
   /* 装備設定 */
@@ -1096,10 +1219,11 @@ style.textContent = `
   }
 
   .slot-header .slot-icon {
-    font-size: 1.1rem;
+    width: 24px;
+    height: 24px;
   }
 
-  .equipment-select {
+  .equipment-slot > .equipment-select {
     width: 100%;
     margin-bottom: var(--mc-space-xs);
   }
@@ -1121,6 +1245,10 @@ style.textContent = `
     display: flex;
     align-items: center;
     gap: 4px;
+  }
+
+  .enchant-btn .mc-wiki-image {
+    filter: drop-shadow(0 0 1px rgba(255,255,255,0.5));
   }
 
   .enchant-btn:hover {
@@ -1160,8 +1288,9 @@ style.textContent = `
   }
 
   .attribute-row .attr-icon {
-    width: 24px;
-    text-align: center;
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
   }
 
   .attribute-row .attr-name {
