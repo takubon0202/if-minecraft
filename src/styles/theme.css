@@ -27,18 +27,18 @@
   --mc-color-diamond: #4decf2;
   --mc-color-obsidian: #14121d;
 
-  /* --- Semantic: Light Mode (Minecraft Wiki風 - 明るい背景) --- */
-  --mc-bg-body: #f8f9fa;
-  --mc-bg-surface: #ffffff;
-  --mc-bg-panel: #f5f5f5;
+  /* --- Semantic: Dark Mode (Deepslate Theme - デフォルト) --- */
+  --mc-bg-body: #1a1a1a;
+  --mc-bg-surface: #242424;
+  --mc-bg-panel: #2a2a2a;
 
-  --mc-text-primary: #202122;
-  --mc-text-secondary: #404040;
-  --mc-text-muted: #606060;
+  --mc-text-primary: #e0e0e0;
+  --mc-text-secondary: #c0c0c0;
+  --mc-text-muted: #a0a0a0;
 
-  --mc-border-light: #ffffff;
-  --mc-border-dark: #c8ccd1;
-  --mc-border-darker: #a2a9b1;
+  --mc-border-light: #4a4a4a;
+  --mc-border-dark: #3a3a3a;
+  --mc-border-darker: #2a2a2a;
 
   /* --- Spacing System (8px Grid) --- */
   --mc-grid: 8px;
@@ -82,111 +82,12 @@
   --mc-font-mono: 'Consolas', 'Monaco', 'Courier New', monospace;
 }
 
-/* --- Dark Mode (Deepslate Theme - 改善版) --- */
-/* Auto dark mode based on system preference */
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --mc-bg-body: #1a1a1a;
-    --mc-bg-surface: #242424;
-    --mc-bg-panel: #2a2a2a;
-
-    --mc-text-primary: #e0e0e0;
-    --mc-text-secondary: #c0c0c0;
-    --mc-text-muted: #a0a0a0;
-
-    --mc-border-light: #4a4a4a;
-    --mc-border-dark: #3a3a3a;
-    --mc-border-darker: #2a2a2a;
-  }
-}
-
-/* Manual dark mode override */
-:root[data-theme="dark"] {
-  --mc-bg-body: #1a1a1a;
-  --mc-bg-surface: #242424;
-  --mc-bg-panel: #2a2a2a;
-
-  --mc-text-primary: #e0e0e0;
-  --mc-text-secondary: #c0c0c0;
-  --mc-text-muted: #a0a0a0;
-
-  --mc-border-light: #4a4a4a;
-  --mc-border-dark: #3a3a3a;
-  --mc-border-darker: #2a2a2a;
-}
-
-/* --- Theme Toggle Button --- */
+/* --- Header Controls --- */
 .header-controls {
   display: flex;
   align-items: center;
   gap: var(--mc-space-md);
   flex-wrap: wrap;
-}
-
-.theme-toggle-btn {
-  width: 36px;
-  height: 36px;
-  background-color: var(--mc-bg-surface);
-  border: 2px solid var(--mc-border-dark);
-  border-radius: var(--mc-radius-md);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-  position: relative;
-  overflow: hidden;
-}
-
-.theme-toggle-btn:hover {
-  background-color: var(--mc-color-grass-light);
-  border-color: var(--mc-color-grass-main);
-}
-
-.theme-icon-light,
-.theme-icon-dark {
-  position: absolute;
-  font-size: 1.25rem;
-  transition: all 0.3s ease;
-}
-
-/* Light mode: show sun, hide moon */
-:root:not([data-theme="dark"]) .theme-icon-light,
-:root[data-theme="light"] .theme-icon-light {
-  opacity: 1;
-  transform: rotate(0deg);
-}
-
-:root:not([data-theme="dark"]) .theme-icon-dark,
-:root[data-theme="light"] .theme-icon-dark {
-  opacity: 0;
-  transform: rotate(-90deg) scale(0);
-}
-
-/* Dark mode: show moon, hide sun */
-:root[data-theme="dark"] .theme-icon-light {
-  opacity: 0;
-  transform: rotate(90deg) scale(0);
-}
-
-:root[data-theme="dark"] .theme-icon-dark {
-  opacity: 1;
-  transform: rotate(0deg);
-}
-
-/* Handle system dark mode when no manual theme set */
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme]) .theme-icon-light,
-  :root:not([data-theme="light"]) .theme-icon-light {
-    opacity: 0;
-    transform: rotate(90deg) scale(0);
-  }
-
-  :root:not([data-theme]) .theme-icon-dark,
-  :root:not([data-theme="light"]) .theme-icon-dark {
-    opacity: 1;
-    transform: rotate(0deg);
-  }
 }
 
 /* --- Global Resets & Base Styles --- */

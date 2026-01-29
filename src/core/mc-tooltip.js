@@ -111,20 +111,10 @@ export function initTooltip() {
       line-height: 1.4;
       white-space: normal;
 
-      /* Minecraft風背景 */
-      background: linear-gradient(180deg, #100010 0%, #1a0a1a 100%);
-      border: 3px solid;
-      border-image: linear-gradient(180deg, #5000aa 0%, #28007f 100%) 1;
-      box-shadow:
-        inset 0 0 0 1px rgba(80, 0, 170, 0.5),
-        0 0 20px rgba(80, 0, 170, 0.3),
-        4px 4px 0 rgba(0, 0, 0, 0.5);
-
-      padding: 8px 12px;
-      max-width: 280px;
-
-      /* Minecraft風テクスチャ */
+      /* Minecraft風背景（完全不透明） */
+      background-color: #100010;
       background-image:
+        linear-gradient(180deg, #100010 0%, #1a0a1a 100%),
         repeating-linear-gradient(
           0deg,
           transparent,
@@ -132,6 +122,15 @@ export function initTooltip() {
           rgba(255,255,255,0.02) 2px,
           rgba(255,255,255,0.02) 4px
         );
+      border: 3px solid #5000aa;
+      outline: 2px solid #28007f;
+      box-shadow:
+        inset 0 0 0 1px rgba(80, 0, 170, 0.5),
+        0 0 20px rgba(80, 0, 170, 0.3),
+        4px 4px 0 rgba(0, 0, 0, 0.8);
+
+      padding: 8px 12px;
+      max-width: 280px;
     }
 
     .mc-tooltip-header {

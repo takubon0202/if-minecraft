@@ -72,6 +72,21 @@
   font-size: 1.5rem;
 }
 
+.title-icons {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.if-logo {
+  image-rendering: auto;
+  border-radius: 2px;
+}
+
+.mc-pickaxe-icon {
+  image-rendering: pixelated;
+}
+
 .version-selector {
   display: flex;
   align-items: center;

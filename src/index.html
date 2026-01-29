@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Minecraft Java Edition コマンド生成ツール - give, summon, エンチャント, ポーション等のコマンドを簡単に生成">
-  <title>MC Tool Hub - Minecraft コマンド生成ツール</title>
+  <title>if Tool Hub - Minecraft コマンド生成ツール</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="stylesheet" href="./styles/theme.css">
   <link rel="stylesheet" href="./styles/app.css">
@@ -23,8 +23,11 @@
     <nav id="left-nav" class="left-nav">
       <div class="nav-header">
         <h1 class="site-title">
-          <span class="title-icon">⛏</span>
-          MC Tool Hub
+          <span class="title-icons">
+            <img src="./images/if-logo.png" alt="if" class="if-logo" width="28" height="28">
+            <img src="https://minecraft.wiki/images/Invicon_Diamond_Pickaxe.png" alt="ダイヤモンドのツルハシ" class="mc-pickaxe-icon" width="24" height="24">
+          </span>
+          if Tool Hub
         </h1>
         <div class="header-controls">
           <div class="version-selector">
@@ -34,10 +37,6 @@
               <option value="latest">Latest</option>
             </select>
           </div>
-          <button id="theme-toggle" class="theme-toggle-btn" title="テーマ切り替え">
-            <span class="theme-icon-light">☀</span>
-            <span class="theme-icon-dark">☾</span>
-          </button>
         </div>
       </div>
 
@@ -120,7 +119,7 @@
                 <span class="label">カラーコード</span>
               </button>
               <button class="quick-tool-btn" data-tool="target-selector">
-                <span class="icon"><img src="https://minecraft.wiki/images/Invicon_Compass.png" alt="コンパス" width="32" height="32" class="mc-wiki-icon"></span>
+                <span class="icon"><img src="https://minecraft.wiki/images/Invicon_Compass.gif" alt="コンパス" width="32" height="32" class="mc-wiki-icon"></span>
                 <span class="label">ターゲットセレクター</span>
               </button>
               <button class="quick-tool-btn" data-tool="coordinate">
@@ -144,11 +143,11 @@
                 <span class="label">最強ゾンビ召喚</span>
               </button>
               <button class="quick-tool-btn" data-tool="enchant">
-                <span class="icon"><img src="https://minecraft.wiki/images/Invicon_Enchanted_Book.png" alt="エンチャントの本" width="32" height="32" class="mc-wiki-icon"></span>
+                <span class="icon"><img src="https://minecraft.wiki/images/Invicon_Enchanted_Book.gif" alt="エンチャントの本" width="32" height="32" class="mc-wiki-icon"></span>
                 <span class="label">エンチャント</span>
               </button>
               <button class="quick-tool-btn" data-tool="potion">
-                <span class="icon"><img src="https://minecraft.wiki/images/Invicon_Potion.png" alt="ポーション" width="32" height="32" class="mc-wiki-icon"></span>
+                <span class="icon"><img src="https://minecraft.wiki/images/Invicon_Potion.gif" alt="ポーション" width="32" height="32" class="mc-wiki-icon"></span>
                 <span class="label">ポーション</span>
               </button>
               <button class="quick-tool-btn" data-tool="smithing">
@@ -176,7 +175,7 @@
                 <span class="label">看板</span>
               </button>
               <button class="quick-tool-btn" data-tool="book">
-                <span class="icon"><img src="https://minecraft.wiki/images/Invicon_Written_Book.png" alt="記入済みの本" width="32" height="32" class="mc-wiki-icon"></span>
+                <span class="icon"><img src="https://minecraft.wiki/images/Invicon_Written_Book.gif" alt="記入済みの本" width="32" height="32" class="mc-wiki-icon"></span>
                 <span class="label">本</span>
               </button>
             </div>
@@ -244,7 +243,7 @@
 
   <!-- フッター -->
   <footer class="site-footer">
-    <p>MC Tool Hub - Not affiliated with Mojang Studios or Microsoft</p>
+    <p>if Tool Hub - Not affiliated with Mojang Studios or Microsoft</p>
     <p>Minecraft content and materials are trademarks of Mojang Studios.</p>
   </footer>
 
