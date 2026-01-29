@@ -9,13 +9,13 @@ import { getInviconUrl } from '../../core/wiki-images.js';
 
 // ブロックカテゴリ定義
 const CATEGORIES = [
-  { id: 'all', label: '全て', icon: '📦' },
-  { id: 'building', label: '建築', icon: '🏗️' },
-  { id: 'decoration', label: '装飾', icon: '🎨' },
-  { id: 'nature', label: '自然', icon: '🌿' },
-  { id: 'redstone', label: 'レッドストーン', icon: '🔴' },
-  { id: 'functional', label: '機能ブロック', icon: '⚙️' },
-  { id: 'other', label: 'その他', icon: '📋' },
+  { id: 'all', label: '全て', iconItem: 'chest' },
+  { id: 'building', label: '建築', iconItem: 'bricks' },
+  { id: 'decoration', label: '装飾', iconItem: 'lantern' },
+  { id: 'nature', label: '自然', iconItem: 'oak_leaves' },
+  { id: 'redstone', label: 'レッドストーン', iconItem: 'redstone' },
+  { id: 'functional', label: '機能ブロック', iconItem: 'crafting_table' },
+  { id: 'other', label: 'その他', iconItem: 'command_block' },
 ];
 
 // ブロックデータ（200種類以上）
@@ -512,7 +512,7 @@ export function render(manifest) {
           ${CATEGORIES.map(cat => `
             <button class="category-tab ${cat.id === currentCategory ? 'active' : ''}"
                     data-category="${cat.id}">
-              <span class="icon">${cat.icon}</span>
+              <img src="${getInviconUrl(cat.iconItem)}" class="category-icon mc-wiki-image" width="16" height="16" alt="">
               <span class="label">${cat.label}</span>
             </button>
           `).join('')}
@@ -723,6 +723,12 @@ style.textContent = `
     background-color: var(--mc-color-grass-main);
     color: white;
     font-weight: bold;
+  }
+
+  .category-icon {
+    width: 16px;
+    height: 16px;
+    image-rendering: pixelated;
   }
 
   .search-row {

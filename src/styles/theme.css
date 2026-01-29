@@ -27,18 +27,18 @@
   --mc-color-diamond: #4decf2;
   --mc-color-obsidian: #14121d;
 
-  /* --- Semantic: Light Mode (Default) --- */
-  --mc-bg-body: #d6d6d6;
-  --mc-bg-surface: #c6c6c6;
-  --mc-bg-panel: #e0e0e0;
+  /* --- Semantic: Light Mode (Minecraft Wiki風 - 明るい背景) --- */
+  --mc-bg-body: #f8f9fa;
+  --mc-bg-surface: #ffffff;
+  --mc-bg-panel: #f5f5f5;
 
-  --mc-text-primary: #1f1f1f;
+  --mc-text-primary: #202122;
   --mc-text-secondary: #404040;
   --mc-text-muted: #606060;
 
   --mc-border-light: #ffffff;
-  --mc-border-dark: #555555;
-  --mc-border-darker: #373737;
+  --mc-border-dark: #c8ccd1;
+  --mc-border-darker: #a2a9b1;
 
   /* --- Spacing System (8px Grid) --- */
   --mc-grid: 8px;
@@ -82,20 +82,20 @@
   --mc-font-mono: 'Consolas', 'Monaco', 'Courier New', monospace;
 }
 
-/* --- Dark Mode (Deepslate Theme) --- */
+/* --- Dark Mode (Deepslate Theme - 改善版) --- */
 @media (prefers-color-scheme: dark) {
   :root {
-    --mc-bg-body: #111111;
-    --mc-bg-surface: #2d2d2d;
-    --mc-bg-panel: #3a3a3a;
+    --mc-bg-body: #1a1a1a;
+    --mc-bg-surface: #242424;
+    --mc-bg-panel: #2a2a2a;
 
-    --mc-text-primary: #f0f0f0;
-    --mc-text-secondary: #d4d4d4;
-    --mc-text-muted: #b0b0b0;
+    --mc-text-primary: #e0e0e0;
+    --mc-text-secondary: #c0c0c0;
+    --mc-text-muted: #a0a0a0;
 
-    --mc-border-light: #5a5a5a;
-    --mc-border-dark: #1a1a1a;
-    --mc-border-darker: #000000;
+    --mc-border-light: #4a4a4a;
+    --mc-border-dark: #3a3a3a;
+    --mc-border-darker: #2a2a2a;
   }
 }
 

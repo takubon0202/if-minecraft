@@ -280,14 +280,14 @@ const ITEM_CATEGORIES = {
 
 // 属性
 const ATTRIBUTES = [
-  { id: 'generic.max_health', name: '最大体力', icon: '❤️', default: 20 },
-  { id: 'generic.movement_speed', name: '移動速度', icon: '💨', default: 0.1 },
-  { id: 'generic.attack_damage', name: '攻撃力', icon: '⚔️', default: 1 },
-  { id: 'generic.attack_speed', name: '攻撃速度', icon: '⚡', default: 4 },
-  { id: 'generic.armor', name: '防御力', icon: '🛡️', default: 0 },
-  { id: 'generic.armor_toughness', name: '防具強度', icon: '💎', default: 0 },
-  { id: 'generic.knockback_resistance', name: 'ノックバック耐性', icon: '🦶', default: 0 },
-  { id: 'generic.luck', name: '幸運', icon: '🍀', default: 0 },
+  { id: 'generic.max_health', name: '最大体力', iconItem: 'golden_apple', default: 20 },
+  { id: 'generic.movement_speed', name: '移動速度', iconItem: 'sugar', default: 0.1 },
+  { id: 'generic.attack_damage', name: '攻撃力', iconItem: 'netherite_sword', default: 1 },
+  { id: 'generic.attack_speed', name: '攻撃速度', iconItem: 'clock', default: 4 },
+  { id: 'generic.armor', name: '防御力', iconItem: 'shield', default: 0 },
+  { id: 'generic.armor_toughness', name: '防具強度', iconItem: 'diamond', default: 0 },
+  { id: 'generic.knockback_resistance', name: 'ノックバック耐性', iconItem: 'netherite_boots', default: 0 },
+  { id: 'generic.luck', name: '幸運', iconItem: 'rabbit_foot', default: 0 },
 ];
 
 // プリセット
@@ -408,14 +408,14 @@ export function render(manifest) {
         <!-- エンチャント検索 -->
         <div class="form-group">
           <label>エンチャントを追加</label>
-          <input type="text" id="enchant-search" class="mc-input" placeholder="🔍 エンチャント名で検索...">
+          <input type="text" id="enchant-search" class="mc-input" placeholder="エンチャント名で検索...">
         </div>
 
         <!-- エンチャントカテゴリ（アコーディオン） -->
         <div class="form-group">
           <div class="enchant-info-hint">
-            <span class="hint-icon">💡</span>
-            <span>通常の最大レベルはバニラの値です。コマンドでは最大255まで設定可能！</span>
+            <img src="${getInviconUrl('experience_bottle')}" class="hint-icon mc-wiki-image" width="16" height="16" alt="">
+            <span>通常の最大レベルはバニラの値です。コマンドでは最大255まで設定可能</span>
           </div>
           <div class="enchant-categories" id="enchant-categories">
             ${Object.entries(ENCHANT_CATEGORIES).map(([catId, cat]) => `
@@ -459,7 +459,7 @@ export function render(manifest) {
           <div class="attributes-section" id="attributes-section" style="display: none;">
             ${ATTRIBUTES.map(attr => `
               <div class="attribute-row">
-                <span class="attr-icon">${attr.icon}</span>
+                <img src="${getInviconUrl(attr.iconItem)}" class="attr-icon mc-wiki-image" width="16" height="16" alt="">
                 <span class="attr-name">${attr.name}</span>
                 <input type="checkbox" class="attr-check" data-attr="${attr.id}">
                 <input type="number" class="attr-value mc-input" data-attr="${attr.id}"
@@ -1207,8 +1207,9 @@ style.textContent = `
   }
 
   .attribute-row .attr-icon {
-    width: 24px;
-    text-align: center;
+    width: 16px;
+    height: 16px;
+    image-rendering: pixelated;
   }
 
   .attribute-row .attr-name {

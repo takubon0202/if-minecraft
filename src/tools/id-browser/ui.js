@@ -8,11 +8,11 @@ import { copyToClipboard, showCopyFeedback } from '../../core/clipboard.js';
 import { getInviconUrl } from '../../core/wiki-images.js';
 
 const CATEGORIES = [
-  { id: 'items', label: 'アイテム', icon: '🎁' },
-  { id: 'blocks', label: 'ブロック', icon: '🧱' },
-  { id: 'entities', label: 'エンティティ', icon: '👾' },
-  { id: 'effects', label: 'エフェクト', icon: '✨' },
-  { id: 'enchantments', label: 'エンチャント', icon: '📜' },
+  { id: 'items', label: 'アイテム', iconItem: 'chest' },
+  { id: 'blocks', label: 'ブロック', iconItem: 'grass_block' },
+  { id: 'entities', label: 'エンティティ', iconItem: 'zombie_head' },
+  { id: 'effects', label: 'エフェクト', iconItem: 'potion' },
+  { id: 'enchantments', label: 'エンチャント', iconItem: 'enchanted_book' },
 ];
 
 let currentCategory = 'items';
@@ -34,7 +34,7 @@ export function render(manifest) {
           ${CATEGORIES.map(cat => `
             <button class="category-tab ${cat.id === currentCategory ? 'active' : ''}"
                     data-category="${cat.id}">
-              <span class="icon">${cat.icon}</span>
+              <img src="${getInviconUrl(cat.iconItem)}" class="category-icon mc-wiki-image" width="16" height="16" alt="">
               <span class="label">${cat.label}</span>
             </button>
           `).join('')}
@@ -190,6 +190,12 @@ style.textContent = `
     background-color: var(--mc-color-grass-main);
     color: white;
     font-weight: bold;
+  }
+
+  .category-icon {
+    width: 16px;
+    height: 16px;
+    image-rendering: pixelated;
   }
 
   .search-box {

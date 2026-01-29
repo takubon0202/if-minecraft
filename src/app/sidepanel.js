@@ -95,7 +95,7 @@ async function handleCopy() {
 
   const success = await copyToClipboard(currentCommand);
   if (success) {
-    showCopyFeedback($('#copy-btn'), '📋 コピー');
+    showCopyFeedback($('#copy-btn'), 'コピー');
   }
 }
 
