@@ -89,11 +89,11 @@
     --mc-bg-surface: #2d2d2d;
     --mc-bg-panel: #3a3a3a;
 
-    --mc-text-primary: #eeeeee;
-    --mc-text-secondary: #cccccc;
-    --mc-text-muted: #999999;
+    --mc-text-primary: #f0f0f0;
+    --mc-text-secondary: #d4d4d4;
+    --mc-text-muted: #b0b0b0;
 
-    --mc-border-light: #4d4d4d;
+    --mc-border-light: #5a5a5a;
     --mc-border-dark: #1a1a1a;
     --mc-border-darker: #000000;
   }

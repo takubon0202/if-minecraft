@@ -1443,6 +1443,136 @@ style.textContent = `
       grid-template-columns: 1fr;
     }
   }
+
+  /* ダークモードでのコントラスト改善（紫/マゼンタテーマ） */
+  @media (prefers-color-scheme: dark) {
+    .enchant-tool .category-header {
+      background: #2a2535;
+      color: #f0f0f0;
+    }
+
+    .enchant-tool .category-header:hover {
+      background: rgba(170, 0, 255, 0.25);
+    }
+
+    .enchant-tool .enchant-item {
+      background: #2a2535;
+      border: 2px solid #444;
+    }
+
+    .enchant-tool .enchant-item:hover {
+      background: rgba(170, 0, 255, 0.2);
+      border-color: #aa00ff;
+    }
+
+    .enchant-tool .enchant-item .enchant-name {
+      color: #e8e8e8;
+    }
+
+    .enchant-tool .enchant-item .enchant-en {
+      color: #b0b0b0;
+    }
+
+    .enchant-tool .selected-enchants {
+      background: #1a1a1a;
+      border-color: #555;
+    }
+
+    .enchant-tool .selected-enchant {
+      background: #2a2535;
+      border-left-color: #aa00ff;
+    }
+
+    .enchant-tool .selected-enchant .enchant-label {
+      color: #e8e8e8;
+    }
+
+    .enchant-tool .selected-enchant .enchant-level {
+      background: #1a1a1a;
+      color: #e8e8e8;
+      border-color: #555;
+    }
+
+    .enchant-tool .selected-enchant .level-quick-btn {
+      background: #3a3a3a;
+      color: #e0e0e0;
+      border-color: #555;
+    }
+
+    .enchant-tool .selected-enchant .level-quick-btn:hover {
+      background: #aa00ff;
+      color: white;
+      border-color: #aa00ff;
+    }
+
+    .enchant-tool .attributes-section {
+      background: #1a1a1a;
+      border-color: #555;
+    }
+
+    .enchant-tool .attribute-row .attr-name {
+      color: #e0e0e0;
+    }
+
+    .enchant-tool .attribute-row .attr-value {
+      background: #2a2a2a;
+      color: #e8e8e8;
+      border-color: #555;
+    }
+
+    .enchant-tool .preset-btn {
+      background: #3a3a3a;
+      color: #e0e0e0;
+      border-color: #555;
+    }
+
+    .enchant-tool .preset-btn:hover {
+      background: #aa00ff;
+      color: white;
+      border-color: #aa00ff;
+    }
+
+    .enchant-tool .enchant-preview-section {
+      background: #2a2535;
+      border-color: #555;
+    }
+
+    .enchant-tool .enchant-preview-section h3 {
+      color: #b0b0b0;
+    }
+
+    .enchant-tool .preview-item {
+      background: #1a1a1a;
+      border-color: #555;
+    }
+
+    .enchant-tool .preview-item .item-name {
+      color: #ff55ff;
+    }
+
+    .enchant-tool .preview-item .item-id {
+      color: #b0b0b0;
+    }
+
+    .enchant-tool .preview-enchant {
+      color: #d0d0d0;
+    }
+
+    .enchant-tool .option-item {
+      color: #e0e0e0;
+    }
+
+    .enchant-tool .mc-input {
+      background: #2a2a2a;
+      color: #e8e8e8;
+      border-color: #555;
+    }
+
+    .enchant-tool .mc-input:focus {
+      border-color: #aa00ff;
+      box-shadow: 0 0 0 2px rgba(170, 0, 255, 0.3);
+    }
+  }
 `;
 document.head.appendChild(style);
 

@@ -10,6 +10,7 @@ import { initTabs } from './tabs.js';
 import { initNav } from './nav.js';
 import { initSidePanel } from './sidepanel.js';
 import { loadTool, getToolManifest } from './shell.js';
+import { initTooltip } from '../core/mc-tooltip.js';
 
 // ツールマニフェストをインポート
 // リファレンス
@@ -63,6 +64,7 @@ async function init() {
   initNav();
   initTabs();
   initSidePanel();
+  initTooltip(); // Minecraft風ツールチップ
 
   // ルーター設定
   setupRouter();

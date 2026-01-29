@@ -6,6 +6,20 @@
 const WIKI_BASE = 'https://minecraft.wiki/images';
 
 /**
+ * アイテムID → Wiki画像ファイル名（拡張子含む）のマッピング
+ * GIF形式やPNG形式で名前が異なる場合に使用
+ */
+const ITEM_FILE_MAP = {
+  // === コマンドブロック系（GIF形式 - アニメーション対応） ===
+  'command_block': 'Command_Block.gif',
+  'chain_command_block': 'Chain_Command_Block.gif',
+  'repeating_command_block': 'Repeating_Command_Block.gif',
+  // === 構造ブロック系 ===
+  'structure_block': 'Structure_Block.png',
+  'jigsaw': 'Jigsaw_Block.png',
+};
+
+/**
  * アイテムID → Wiki画像名のマッピング
  * Wiki上の名前がアイテムIDと異なる場合に使用
  */
@@ -274,7 +288,13 @@ function toPascalCase(itemId) {
 export function getInviconUrl(itemId) {
   if (!itemId) return `${WIKI_BASE}/Invicon_Barrier.png`;
 
-  // 特殊マッピングを確認
+  // GIF形式などファイル名が特殊な場合を確認
+  const fileMapping = ITEM_FILE_MAP[itemId];
+  if (fileMapping) {
+    return `${WIKI_BASE}/Invicon_${fileMapping}`;
+  }
+
+  // 名前マッピングを確認
   const mappedName = ITEM_NAME_MAP[itemId];
   if (mappedName) {
     return `${WIKI_BASE}/Invicon_${mappedName}.png`;
@@ -340,12 +360,56 @@ export function getEntityImageUrl(entityId) {
 }
 
 /**
+ * スポーンエッグが存在しないエンティティ
+ * これらのエンティティはアイテムのInviconを代わりに返す
+ */
+const NON_SPAWNABLE_ENTITIES = new Set([
+  // オブジェクト系エンティティ
+  'armor_stand',
+  'item_frame',
+  'glow_item_frame',
+  'painting',
+  'minecart',
+  'chest_minecart',
+  'hopper_minecart',
+  'tnt_minecart',
+  'furnace_minecart',
+  'command_block_minecart',
+  'boat',
+  'chest_boat',
+  'tnt',
+  'falling_block',
+  'experience_orb',
+  'lightning_bolt',
+  // プレイヤー
+  'player',
+  // 投射物
+  'arrow',
+  'spectral_arrow',
+  'trident',
+  'fireball',
+  'small_fireball',
+  'dragon_fireball',
+  'wither_skull',
+  'shulker_bullet',
+  'llama_spit',
+  'evoker_fangs',
+  'wind_charge',
+]);
+
+/**
  * スポーンエッグ画像URLを取得
+ * スポーンエッグが存在しないエンティティはアイテムInviconを返す
  * @param {string} entityId - エンティティID (例: zombie)
  * @returns {string} 画像URL
  */
 export function getSpawnEggUrl(entityId) {
   if (!entityId) return null;
+
+  // スポーンエッグが存在しないエンティティはInviconを返す
+  if (NON_SPAWNABLE_ENTITIES.has(entityId)) {
+    return getInviconUrl(entityId);
+  }
 
   const name = toPascalCase(entityId);
   return `${WIKI_BASE}/Invicon_${name}_Spawn_Egg.png`;

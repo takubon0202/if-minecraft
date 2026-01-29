@@ -969,6 +969,165 @@ style.textContent = `
     color: var(--mc-color-gold);
     font-size: 0.75rem;
   }
+
+  /* ダークモードでのコントラスト改善（オレンジ/銅テーマ） */
+  @media (prefers-color-scheme: dark) {
+    .smithing-panel .preset-btn {
+      background: #2a2520;
+      color: #e0e0e0;
+      border-color: #555;
+    }
+
+    .smithing-panel .preset-btn:hover {
+      background: rgba(184, 104, 77, 0.3);
+      border-color: #b4684d;
+    }
+
+    .smithing-panel .preset-name {
+      color: #e0e0e0;
+    }
+
+    .smithing-panel .section-label {
+      color: #b0b0b0;
+    }
+
+    .smithing-panel .armor-material-btn,
+    .smithing-panel .armor-type-btn {
+      background: #2a2520;
+      color: #e0e0e0;
+      border-color: #555;
+    }
+
+    .smithing-panel .armor-material-btn:hover,
+    .smithing-panel .armor-type-btn:hover {
+      background: rgba(184, 104, 77, 0.2);
+    }
+
+    .smithing-panel .armor-material-btn.active,
+    .smithing-panel .armor-type-btn.active {
+      background: #b4684d;
+      color: white;
+      border-color: #8b5040;
+    }
+
+    .smithing-panel .material-label,
+    .smithing-panel .armor-label {
+      color: inherit;
+    }
+
+    .smithing-panel .fullset-toggle {
+      background: #2a2520;
+      color: #e0e0e0;
+      border-color: #555;
+    }
+
+    .smithing-panel .pattern-grid {
+      background: #1a1a1a;
+      border-color: #555;
+    }
+
+    .smithing-panel .pattern-btn {
+      background: #2a2520;
+      color: #e0e0e0;
+      border-color: #555;
+    }
+
+    .smithing-panel .pattern-btn:hover {
+      background: rgba(184, 104, 77, 0.2);
+    }
+
+    .smithing-panel .pattern-btn.active {
+      background: #b4684d;
+      color: white;
+      border-color: #8b5040;
+    }
+
+    .smithing-panel .pattern-name {
+      color: inherit;
+    }
+
+    .smithing-panel .pattern-en {
+      color: #b0b0b0;
+    }
+
+    .smithing-panel .pattern-btn.active .pattern-en {
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    .smithing-panel .trim-material-btn {
+      background: #2a2520;
+      color: #e0e0e0;
+      border-color: #555;
+    }
+
+    .smithing-panel .trim-material-btn:hover {
+      background: rgba(184, 104, 77, 0.2);
+    }
+
+    .smithing-panel .trim-material-btn .material-name {
+      color: #b0b0b0;
+    }
+
+    .smithing-panel .trim-material-btn.active .material-name {
+      color: #e8e8e8;
+    }
+
+    .smithing-panel .smithing-preview-panel {
+      background: #2a2520;
+      border-color: #555;
+    }
+
+    .smithing-panel .armor-preview-container {
+      background: #1a1a1a;
+    }
+
+    .smithing-panel .preview-trim-info {
+      background: #2a2520;
+      border-color: #555;
+    }
+
+    .smithing-panel .trim-pattern-preview span,
+    .smithing-panel .trim-material-preview span {
+      color: #e0e0e0;
+    }
+
+    .smithing-panel .upgrade-label {
+      background: #2a2520;
+      border-color: #b4684d;
+      color: #ffaa44;
+    }
+
+    .smithing-panel .upgrade-arrow {
+      color: #b0b0b0;
+    }
+
+    .smithing-panel .preview-info {
+      border-top-color: #555;
+    }
+
+    .smithing-panel .info-label {
+      color: #b0b0b0;
+    }
+
+    .smithing-panel .info-value {
+      color: #e0e0e0;
+    }
+
+    .smithing-panel .no-results {
+      color: #b0b0b0;
+    }
+
+    .smithing-panel .mc-input {
+      background: #2a2a2a;
+      color: #e8e8e8;
+      border-color: #555;
+    }
+
+    .smithing-panel .mc-input:focus {
+      border-color: #b4684d;
+      box-shadow: 0 0 0 2px rgba(184, 104, 77, 0.3);
+    }
+  }
 `;
 document.head.appendChild(style);
 

@@ -1044,6 +1044,130 @@ style.textContent = `
       gap: var(--mc-space-xs);
     }
   }
+
+  /* ダークモードでのコントラスト改善（ピンク/赤紫テーマ） */
+  @media (prefers-color-scheme: dark) {
+    .potion-tool .type-tab {
+      background: #2a252a;
+      color: #e0e0e0;
+      border-color: #555;
+    }
+
+    .potion-tool .type-tab:hover {
+      background: rgba(205, 92, 171, 0.25);
+    }
+
+    .potion-tool .type-tab.active {
+      background: #cd5cab;
+      color: white;
+      border-color: #a04988;
+    }
+
+    .potion-tool .type-tab .tab-name {
+      color: inherit;
+    }
+
+    .potion-tool .effect-tab {
+      background: #2a252a;
+      color: #e0e0e0;
+      border-color: #555;
+    }
+
+    .potion-tool .effect-tab:hover {
+      background: rgba(205, 92, 171, 0.2);
+    }
+
+    .potion-tool .effect-tab.active {
+      background: #cd5cab;
+      color: white;
+    }
+
+    .potion-tool .effect-grid-container {
+      background: #1a1a1a;
+      border-color: #555;
+    }
+
+    .potion-tool .effect-item {
+      background: #2a252a;
+      color: #e0e0e0;
+    }
+
+    .potion-tool .effect-item:hover {
+      background: rgba(205, 92, 171, 0.2);
+    }
+
+    .potion-tool .effect-item .effect-name {
+      color: #e8e8e8;
+    }
+
+    .potion-tool .selected-effects {
+      background: #1a1a1a;
+      border-color: #555;
+    }
+
+    .potion-tool .selected-effect {
+      background: #2a252a;
+    }
+
+    .potion-tool .effect-header .effect-label {
+      color: #e8e8e8;
+    }
+
+    .potion-tool .control-group span {
+      color: #b0b0b0;
+    }
+
+    .potion-tool .control-group input[type="number"],
+    .potion-tool .control-group input[type="text"] {
+      background: #1a1a1a;
+      color: #e8e8e8;
+      border-color: #555;
+    }
+
+    .potion-tool .preset-btn {
+      background: #3a3a3a;
+      color: #e0e0e0;
+      border-color: #555;
+    }
+
+    .potion-tool .preset-btn:hover {
+      background: #cd5cab;
+      color: white;
+      border-color: #a04988;
+    }
+
+    .potion-tool .potion-preview-section {
+      background: #2a252a;
+      border-color: #555;
+    }
+
+    .potion-tool .potion-preview-section h3 {
+      color: #b0b0b0;
+    }
+
+    .potion-tool .preview-type {
+      color: #b0b0b0;
+    }
+
+    .potion-tool .preview-name {
+      color: #ff88cc;
+    }
+
+    .potion-tool .mc-input {
+      background: #2a2a2a;
+      color: #e8e8e8;
+      border-color: #555;
+    }
+
+    .potion-tool .mc-input:focus {
+      border-color: #cd5cab;
+      box-shadow: 0 0 0 2px rgba(205, 92, 171, 0.3);
+    }
+
+    .potion-tool label {
+      color: #d0d0d0;
+    }
+  }
 `;
 document.head.appendChild(style);
 
