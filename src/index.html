@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Minecraft Java Edition コマンド生成ツール - give, summon, エンチャント, ポーション等のコマンドを簡単に生成">
+  <title>MC Tool Hub - Minecraft コマンド生成ツール</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="stylesheet" href="./styles/theme.css">
+  <link rel="stylesheet" href="./styles/app.css">
+  <link rel="stylesheet" href="./styles/antigravity.css">
+</head>
+<body>
+  <noscript>
+    <div class="noscript-warning">
+      <h1>JavaScriptが無効です</h1>
+      <p>このサイトはJavaScriptを使用しています。ブラウザの設定でJavaScriptを有効にしてください。</p>
+    </div>
+  </noscript>
+
+  <div id="app" class="app-shell">
+    <!-- 左ナビゲーション -->
+    <nav id="left-nav" class="left-nav">
+      <div class="nav-header">
+        <h1 class="site-title">
+          <span class="title-icon">⛏</span>
+          MC Tool Hub
+        </h1>
+        <div class="version-selector">
+          <label for="mc-version">バージョン:</label>
+          <select id="mc-version">
+            <option value="1.21.11">1.21.11</option>
+            <option value="latest">Latest</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="nav-search">
+        <input type="search" id="tool-search" placeholder="ツールを検索..." autocomplete="off">
+      </div>
+
+      <div class="nav-categories">
+        <div class="category" data-category="generator">
+          <h3 class="category-title">コマンド生成</h3>
+          <ul class="tool-list">
+            <li><a href="#/tool/give" data-tool="give">/give - アイテム付与</a></li>
+            <li><a href="#/tool/summon" data-tool="summon">/summon - エンティティ召喚</a></li>
+            <li><a href="#/tool/enchant" data-tool="enchant">エンチャント</a></li>
+            <li><a href="#/tool/potion" data-tool="potion">ポーション</a></li>
+            <li><a href="#/tool/smithing" data-tool="smithing">鍛冶/トリム</a></li>
+          </ul>
+        </div>
+        <div class="category" data-category="text">
+          <h3 class="category-title">テキスト系</h3>
+          <ul class="tool-list">
+            <li><a href="#/tool/tellraw" data-tool="tellraw">/tellraw</a></li>
+            <li><a href="#/tool/title" data-tool="title">/title</a></li>
+            <li><a href="#/tool/json-text" data-tool="json-text">JSON Text</a></li>
+            <li><a href="#/tool/sign" data-tool="sign">看板</a></li>
+            <li><a href="#/tool/book" data-tool="book">本</a></li>
+          </ul>
+        </div>
+        <div class="category" data-category="reference">
+          <h3 class="category-title">リファレンス</h3>
+          <ul class="tool-list">
+            <li><a href="#/tool/id-browser" data-tool="id-browser">IDブラウザ</a></li>
+            <li><a href="#/tool/target-selector" data-tool="target-selector">ターゲットセレクター</a></li>
+            <li><a href="#/tool/color-codes" data-tool="color-codes">カラーコード</a></li>
+            <li><a href="#/tool/coordinate" data-tool="coordinate">座標計算</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="nav-footer">
+        <button id="antigravity-trigger" class="antigravity-btn" title="Antigravity Mode">
+          <span>🌀</span>
+        </button>
+      </div>
+    </nav>
+
+    <!-- メインエリア -->
+    <main id="main-area" class="main-area">
+      <!-- タブバー -->
+      <div id="tab-bar" class="tab-bar">
+        <div class="tabs-container" id="tabs-container">
+          <!-- タブはJSで動的生成 -->
+        </div>
+        <button class="tab-add-btn" id="tab-add-btn" title="新しいタブ">+</button>
+      </div>
+
+      <!-- ツールコンテンツ -->
+      <div id="tool-content" class="tool-content">
+        <div class="welcome-screen" id="welcome-screen">
+          <div class="welcome-hero">
+            <h2>Minecraft コマンド生成ツール</h2>
+            <p>Java Edition 1.21.11 対応</p>
+          </div>
+          <div class="quick-start">
+            <h3>クイックスタート</h3>
+            <div class="quick-tools">
+              <button class="quick-tool-btn" data-tool="give">
+                <span class="icon">🎁</span>
+                <span class="label">/give</span>
+              </button>
+              <button class="quick-tool-btn" data-tool="summon">
+                <span class="icon">👾</span>
+                <span class="label">/summon</span>
+              </button>
+              <button class="quick-tool-btn" data-tool="id-browser">
+                <span class="icon">📚</span>
+                <span class="label">IDブラウザ</span>
+              </button>
+              <button class="quick-tool-btn" data-tool="enchant">
+                <span class="icon">✨</span>
+                <span class="label">エンチャント</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- 右サイドパネル -->
+    <aside id="side-panel" class="side-panel">
+      <div class="panel-tabs">
+        <button class="panel-tab active" data-panel="output">出力</button>
+        <button class="panel-tab" data-panel="history">履歴</button>
+        <button class="panel-tab" data-panel="help">ヘルプ</button>
+      </div>
+
+      <div class="panel-content">
+        <!-- 出力パネル -->
+        <div class="panel-section active" id="panel-output">
+          <div class="output-area">
+            <pre id="command-output" class="command-output">ツールを選択してコマンドを生成してください</pre>
+          </div>
+          <div class="output-actions">
+            <button id="copy-btn" class="action-btn" disabled>
+              <span>📋</span> コピー
+            </button>
+            <button id="share-btn" class="action-btn" disabled>
+              <span>🔗</span> 共有
+            </button>
+            <button id="save-btn" class="action-btn" disabled>
+              <span>💾</span> 保存
+            </button>
+          </div>
+        </div>
+
+        <!-- 履歴パネル -->
+        <div class="panel-section" id="panel-history">
+          <div class="history-list" id="history-list">
+            <p class="empty-message">履歴はありません</p>
+          </div>
+          <button id="clear-history-btn" class="action-btn">履歴をクリア</button>
+        </div>
+
+        <!-- ヘルプパネル -->
+        <div class="panel-section" id="panel-help">
+          <div class="help-content">
+            <h4>使い方</h4>
+            <ol>
+              <li>左のメニューからツールを選択</li>
+              <li>フォームに必要な情報を入力</li>
+              <li>生成されたコマンドをコピー</li>
+              <li>Minecraftで実行！</li>
+            </ol>
+            <h4>ショートカット</h4>
+            <ul>
+              <li><kbd>Ctrl</kbd>+<kbd>C</kbd> - コマンドをコピー</li>
+              <li><kbd>Ctrl</kbd>+<kbd>S</kbd> - 履歴に保存</li>
+              <li><kbd>↑↑↓↓←→←→BA</kbd> - ???</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- フッター -->
+  <footer class="site-footer">
+    <p>MC Tool Hub - Not affiliated with Mojang Studios or Microsoft</p>
+    <p>Minecraft content and materials are trademarks of Mojang Studios.</p>
+  </footer>
+
+  <!-- Matter.js（Antigravity用） -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js" defer></script>
+
+  <!-- アプリケーション -->
+  <script type="module" src="./app/app.js"></script>
+</body>
+</html>

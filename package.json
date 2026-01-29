@@ -1,0 +1,27 @@
+{
+  "name": "mc-tool-hub",
+  "version": "1.0.0",
+  "description": "Minecraft コマンド生成ツール ポータルサイト",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "mc:data:update": "node scripts/update-mc-data.mjs",
+    "mc:data:validate": "node scripts/validate-mc-data.mjs"
+  },
+  "keywords": [
+    "minecraft",
+    "command",
+    "generator",
+    "tool"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "vite": "^5.0.0"
+  },
+  "dependencies": {
+    "jszip": "^3.10.1"
+  }
+}

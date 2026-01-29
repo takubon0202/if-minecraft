@@ -1,0 +1,291 @@
+/*
+ * Minecraft Command Tool - Theme Definition
+ * Based on Minecraft UI aesthetics (Stone, Dirt, Deepslate)
+ * 8px Grid System
+ * Design by Gemini 3 Pro
+ */
+
+:root {
+  /* --- Palette: Stone & Nature --- */
+  --mc-color-stone-100: #fcfcfc;
+  --mc-color-stone-200: #e0e0e0;
+  --mc-color-stone-300: #c6c6c6;
+  --mc-color-stone-400: #8b8b8b;
+  --mc-color-stone-500: #757575;
+  --mc-color-stone-600: #585858;
+  --mc-color-stone-700: #3b3b3b;
+  --mc-color-stone-800: #262626;
+  --mc-color-stone-900: #121212;
+
+  /* --- Palette: Functional Colors --- */
+  --mc-color-grass-main: #3a8128;
+  --mc-color-grass-light: #5cb746;
+  --mc-color-dirt-main: #866043;
+  --mc-color-dirt-dark: #5d3f2e;
+  --mc-color-redstone: #c80000;
+  --mc-color-gold: #f2c13d;
+  --mc-color-diamond: #4decf2;
+  --mc-color-obsidian: #14121d;
+
+  /* --- Semantic: Light Mode (Default) --- */
+  --mc-bg-body: #d6d6d6;
+  --mc-bg-surface: #c6c6c6;
+  --mc-bg-panel: #e0e0e0;
+
+  --mc-text-primary: #1f1f1f;
+  --mc-text-secondary: #404040;
+  --mc-text-muted: #606060;
+
+  --mc-border-light: #ffffff;
+  --mc-border-dark: #555555;
+  --mc-border-darker: #373737;
+
+  /* --- Spacing System (8px Grid) --- */
+  --mc-grid: 8px;
+  --mc-space-xs: 4px;
+  --mc-space-sm: 8px;
+  --mc-space-md: 16px;
+  --mc-space-lg: 24px;
+  --mc-space-xl: 32px;
+  --mc-space-xxl: 64px;
+
+  /* --- Borders & Radius --- */
+  --mc-radius-sm: 2px;
+  --mc-radius-md: 4px;
+  --mc-border-width: 2px;
+
+  /* --- UI Effects: Inventory Slot / Button Styles --- */
+  --mc-shadow-inset:
+    inset 2px 2px 0px var(--mc-border-darker),
+    inset -2px -2px 0px var(--mc-border-light);
+
+  --mc-shadow-outset:
+    inset -2px -2px 0px var(--mc-border-dark),
+    inset 2px 2px 0px var(--mc-border-light),
+    2px 2px 0px rgba(0,0,0,0.25);
+
+  --mc-shadow-floating:
+    0px 4px 0px var(--mc-border-darker),
+    0px 8px 12px rgba(0,0,0,0.3);
+
+  /* --- Background Texture (Procedural) --- */
+  --mc-texture-noise: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.08'/%3E%3C/svg%3E");
+
+  /* --- Animation: Physics & Playful --- */
+  --mc-anim-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  --mc-anim-ease-out-back: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  --mc-anim-gravity: 9.8ms;
+  --mc-anim-float-duration: 3s;
+
+  /* --- Fonts --- */
+  --mc-font-body: 'Segoe UI', system-ui, sans-serif;
+  --mc-font-mono: 'Consolas', 'Monaco', 'Courier New', monospace;
+}
+
+/* --- Dark Mode (Deepslate Theme) --- */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --mc-bg-body: #111111;
+    --mc-bg-surface: #2d2d2d;
+    --mc-bg-panel: #3a3a3a;
+
+    --mc-text-primary: #eeeeee;
+    --mc-text-secondary: #cccccc;
+    --mc-text-muted: #999999;
+
+    --mc-border-light: #4d4d4d;
+    --mc-border-dark: #1a1a1a;
+    --mc-border-darker: #000000;
+  }
+}
+
+/* --- Global Resets & Base Styles --- */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--mc-bg-body);
+  color: var(--mc-text-primary);
+  font-family: var(--mc-font-body);
+  background-image: var(--mc-texture-noise);
+  background-repeat: repeat;
+  margin: 0;
+  padding: 0;
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* --- Components --- */
+
+.mc-panel {
+  background-color: var(--mc-bg-surface);
+  border: var(--mc-border-width) solid var(--mc-border-dark);
+  box-shadow: 4px 4px 0px rgba(0,0,0,0.2);
+  padding: var(--mc-space-md);
+  margin-bottom: var(--mc-space-lg);
+  position: relative;
+}
+
+.mc-slot {
+  background-color: var(--mc-border-darker);
+  box-shadow: var(--mc-shadow-inset);
+  padding: var(--mc-space-xs);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+}
+
+.mc-btn {
+  font-family: var(--mc-font-body);
+  font-weight: bold;
+  font-size: 0.875rem;
+  color: var(--mc-text-primary);
+  background-color: var(--mc-bg-panel);
+  border: var(--mc-border-width) solid var(--mc-border-dark);
+  box-shadow: var(--mc-shadow-outset);
+  padding: var(--mc-space-sm) var(--mc-space-md);
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  text-shadow: 1px 1px 0px rgba(255,255,255,0.2);
+  transition: transform 0.1s, box-shadow 0.1s, filter 0.1s;
+}
+
+.mc-btn:hover {
+  filter: brightness(1.1);
+  transform: translateY(-2px);
+}
+
+.mc-btn:active {
+  box-shadow: var(--mc-shadow-inset);
+  transform: translateY(2px);
+  filter: brightness(0.9);
+}
+
+.mc-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.mc-btn-primary {
+  background-color: var(--mc-color-grass-main);
+  color: white;
+  text-shadow: 2px 2px 0px rgba(0,0,0,0.25);
+}
+
+.mc-btn-danger {
+  background-color: var(--mc-color-redstone);
+  color: white;
+}
+
+.mc-code {
+  font-family: var(--mc-font-mono);
+  background-color: var(--mc-color-obsidian);
+  color: var(--mc-color-stone-200);
+  padding: var(--mc-space-md);
+  border-radius: var(--mc-radius-sm);
+  border-left: 4px solid var(--mc-color-grass-main);
+  box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.mc-title {
+  font-size: 1.5rem;
+  font-weight: 900;
+  text-shadow: 2px 2px 0px var(--mc-border-darker);
+  margin-bottom: var(--mc-space-md);
+  color: var(--mc-text-primary);
+  letter-spacing: 1px;
+}
+
+/* --- Form Elements --- */
+
+.mc-input {
+  font-family: var(--mc-font-body);
+  font-size: 0.875rem;
+  background-color: var(--mc-bg-panel);
+  color: var(--mc-text-primary);
+  border: var(--mc-border-width) solid var(--mc-border-dark);
+  box-shadow: var(--mc-shadow-inset);
+  padding: var(--mc-space-sm) var(--mc-space-md);
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.mc-input:focus {
+  border-color: var(--mc-color-grass-main);
+}
+
+.mc-input::placeholder {
+  color: var(--mc-text-muted);
+}
+
+.mc-select {
+  font-family: var(--mc-font-body);
+  font-size: 0.875rem;
+  background-color: var(--mc-bg-panel);
+  color: var(--mc-text-primary);
+  border: var(--mc-border-width) solid var(--mc-border-dark);
+  padding: var(--mc-space-sm) var(--mc-space-md);
+  cursor: pointer;
+}
+
+/* --- Animation Classes --- */
+
+.mc-anim-float {
+  animation: mcFloat var(--mc-anim-float-duration) ease-in-out infinite;
+}
+
+@keyframes mcFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+.mc-anim-pop {
+  animation: mcPop 0.4s var(--mc-anim-bounce);
+}
+
+@keyframes mcPop {
+  0% { transform: scale(0.8); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.mc-anim-shake {
+  animation: mcShake 0.5s ease-in-out;
+}
+
+@keyframes mcShake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+/* --- Scrollbar --- */
+
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--mc-bg-surface);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--mc-border-dark);
+  border: 2px solid var(--mc-bg-surface);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--mc-color-stone-500);
+}
