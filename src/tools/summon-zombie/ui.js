@@ -6,6 +6,7 @@
 import { $, $$, debounce, delegate } from '../../core/dom.js';
 import { setOutput } from '../../app/sidepanel.js';
 import { getInviconUrl, getSpawnEggUrl } from '../../core/wiki-images.js';
+import { applyTooltip } from '../../core/mc-tooltip.js';
 
 // ゾンビタイプ
 const ZOMBIE_TYPES = [
@@ -18,12 +19,12 @@ const ZOMBIE_TYPES = [
 
 // 装備スロット
 const EQUIPMENT_SLOTS = [
-  { id: 'head', name: 'ヘルメット', image: getInviconUrl('iron_helmet'), slot: 'head' },
-  { id: 'chest', name: 'チェストプレート', image: getInviconUrl('iron_chestplate'), slot: 'chest' },
-  { id: 'legs', name: 'レギンス', image: getInviconUrl('iron_leggings'), slot: 'legs' },
-  { id: 'feet', name: 'ブーツ', image: getInviconUrl('iron_boots'), slot: 'feet' },
-  { id: 'mainhand', name: 'メイン手', image: getInviconUrl('iron_sword'), slot: 'mainhand' },
-  { id: 'offhand', name: 'オフハンド', image: getInviconUrl('shield'), slot: 'offhand' },
+  { id: 'head', name: 'ヘルメット', image: getInviconUrl('iron_helmet'), slot: 'head', itemId: 'iron_helmet' },
+  { id: 'chest', name: 'チェストプレート', image: getInviconUrl('iron_chestplate'), slot: 'chest', itemId: 'iron_chestplate' },
+  { id: 'legs', name: 'レギンス', image: getInviconUrl('iron_leggings'), slot: 'legs', itemId: 'iron_leggings' },
+  { id: 'feet', name: 'ブーツ', image: getInviconUrl('iron_boots'), slot: 'feet', itemId: 'iron_boots' },
+  { id: 'mainhand', name: 'メイン手', image: getInviconUrl('iron_sword'), slot: 'mainhand', itemId: 'iron_sword' },
+  { id: 'offhand', name: 'オフハンド', image: getInviconUrl('shield'), slot: 'offhand', itemId: 'shield' },
 ];
 
 // 装備アイテム一覧
@@ -405,7 +406,7 @@ export function render(manifest) {
             ${EQUIPMENT_SLOTS.map(slot => `
               <div class="equipment-slot" data-slot="${slot.id}">
                 <div class="slot-header">
-                  <img src="${slot.image}" alt="${slot.name}" class="slot-icon mc-wiki-image" width="24" height="24" onerror="this.style.opacity='0.3'">
+                  <img src="${slot.image}" alt="${slot.name}" class="slot-icon mc-wiki-image" width="24" height="24" data-mc-tooltip="${slot.itemId}" onerror="this.style.opacity='0.3'">
                   <span class="slot-name">${slot.name}</span>
                 </div>
                 <div class="equipment-select-wrapper">

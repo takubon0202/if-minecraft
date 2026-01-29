@@ -7,6 +7,7 @@
 import { $, $$, createElement, debounce, delegate } from '../../core/dom.js';
 import { setOutput } from '../../app/sidepanel.js';
 import { getInviconUrl, getSpawnEggUrl } from '../../core/wiki-images.js';
+import { applyTooltip, addItemData } from '../../core/mc-tooltip.js';
 
 // エンティティカテゴリ（カテゴリ別に整理）
 const ENTITY_CATEGORIES = {

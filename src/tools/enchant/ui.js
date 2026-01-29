@@ -7,6 +7,7 @@
 import { $, $$, debounce, delegate } from '../../core/dom.js';
 import { setOutput } from '../../app/sidepanel.js';
 import { getInviconUrl } from '../../core/wiki-images.js';
+import { applyTooltip } from '../../core/mc-tooltip.js';
 
 // 最大レベル定数
 const ABSOLUTE_MAX_LEVEL = 255;  // ゲーム内で設定可能な絶対最大値
@@ -420,7 +421,7 @@ export function render(manifest) {
             ${Object.entries(ENCHANT_CATEGORIES).map(([catId, cat]) => `
               <div class="enchant-category" data-category="${catId}">
                 <button type="button" class="category-header">
-                  <img class="cat-icon-img" src="${getInviconUrl(cat.iconItem)}" alt="${cat.name}" onerror="this.style.opacity='0.3'">
+                  <img class="cat-icon-img" src="${getInviconUrl(cat.iconItem)}" alt="${cat.name}" data-mc-tooltip="${cat.iconItem}" onerror="this.style.opacity='0.3'">
                   <span class="cat-name">${cat.name}</span>
                   <span class="cat-count">(${cat.enchants.length})</span>
                   <span class="cat-arrow">▶</span>
