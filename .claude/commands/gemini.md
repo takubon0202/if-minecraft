@@ -28,15 +28,6 @@ gemini -m gemini-3-pro "$ARGUMENTS"
 
 > **重要**: Gemini 3系のみ使用します。2.5系へのフォールバックは行いません。
 
-## 特殊機能: Antigravity Mode
-
-Google Antigravity（https://antigravity.google/）インスパイアの物理演出機能。
-ページ要素に重力を適用し、インタラクティブに操作可能にします。
-
-```bash
-/gemini --antigravity  # Antigravityモードを有効化
-```
-
 ## コマンド例
 
 ```bash
@@ -53,17 +44,24 @@ gemini --yolo "テストを実行"
 
 # 対話モード
 gemini
-
-# Antigravityモード（物理演出）
-gemini --antigravity "ページにAntigravity効果を追加"
 ```
 
 ## このプロジェクトでの主な用途
 
 - Minecraftコマンドの詳細解説
 - コマンド構文の検証・デバッグ
+- UI/UXデザインの提案
 - SEOコンテンツの生成・最適化
 - マルチモーダル処理（画像からコマンド抽出等）
+
+## Antigravity機能について
+
+Antigravity（物理演出）はWebアプリ内の機能として実装されています。
+**PCで別アプリとして起動するものではありません。**
+
+Webアプリ内での発動方法：
+- Konami Code（↑↑↓↓←→←→BA）を入力
+- または画面左下の隠しボタンをクリック
 
 ## Agent Skills
 
