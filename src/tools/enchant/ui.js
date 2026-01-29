@@ -7,92 +7,36 @@
 import { $, $$, debounce, delegate } from '../../core/dom.js';
 import { setOutput } from '../../app/sidepanel.js';
 
-// Minecraft Wiki画像URL生成関数
+// Minecraft Wiki Invicon画像URL生成関数
 const MC_WIKI_BASE = 'https://minecraft.wiki/images';
+
+// 特殊なアイテム名マッピング（Wiki上の名前がアイテムIDと異なる場合）
+const SPECIAL_ITEM_NAMES = {
+  'turtle_helmet': 'Turtle_Shell',
+};
+
+/**
+ * アイテムIDからMinecraft Wiki Invicon画像URLを生成
+ * @param {string} itemId - アイテムID (例: diamond_sword, netherite_pickaxe)
+ * @returns {string} Invicon画像URL
+ */
 const getItemImageUrl = (itemId) => {
-  // アイテムID→Wiki画像名変換
-  const imageMap = {
-    // 剣
-    'wooden_sword': 'Wooden_Sword_JE2_BE2.png',
-    'stone_sword': 'Stone_Sword_JE2_BE2.png',
-    'iron_sword': 'Iron_Sword_JE2_BE2.png',
-    'golden_sword': 'Golden_Sword_JE2_BE2.png',
-    'diamond_sword': 'Diamond_Sword_JE3_BE3.png',
-    'netherite_sword': 'Netherite_Sword_JE2_BE2.png',
-    // ツルハシ
-    'wooden_pickaxe': 'Wooden_Pickaxe_JE3_BE3.png',
-    'stone_pickaxe': 'Stone_Pickaxe_JE3_BE3.png',
-    'iron_pickaxe': 'Iron_Pickaxe_JE3_BE3.png',
-    'golden_pickaxe': 'Golden_Pickaxe_JE3_BE3.png',
-    'diamond_pickaxe': 'Diamond_Pickaxe_JE3_BE3.png',
-    'netherite_pickaxe': 'Netherite_Pickaxe_JE2_BE2.png',
-    // 斧
-    'wooden_axe': 'Wooden_Axe_JE3.png',
-    'stone_axe': 'Stone_Axe_JE2.png',
-    'iron_axe': 'Iron_Axe_JE2.png',
-    'golden_axe': 'Golden_Axe_JE3.png',
-    'diamond_axe': 'Diamond_Axe_JE2.png',
-    'netherite_axe': 'Netherite_Axe_JE1_BE1.png',
-    // シャベル
-    'wooden_shovel': 'Wooden_Shovel_JE2_BE2.png',
-    'stone_shovel': 'Stone_Shovel_JE2_BE2.png',
-    'iron_shovel': 'Iron_Shovel_JE2_BE2.png',
-    'golden_shovel': 'Golden_Shovel_JE2_BE2.png',
-    'diamond_shovel': 'Diamond_Shovel_JE2_BE2.png',
-    'netherite_shovel': 'Netherite_Shovel_JE1_BE1.png',
-    // クワ
-    'wooden_hoe': 'Wooden_Hoe_JE2_BE2.png',
-    'stone_hoe': 'Stone_Hoe_JE2_BE2.png',
-    'iron_hoe': 'Iron_Hoe_JE2_BE2.png',
-    'golden_hoe': 'Golden_Hoe_JE2_BE2.png',
-    'diamond_hoe': 'Diamond_Hoe_JE2_BE2.png',
-    'netherite_hoe': 'Netherite_Hoe_JE1_BE1.png',
-    // ヘルメット
-    'leather_helmet': 'Leather_Cap_JE4_BE2.png',
-    'chainmail_helmet': 'Chainmail_Helmet_JE2_BE2.png',
-    'iron_helmet': 'Iron_Helmet_JE2_BE2.png',
-    'golden_helmet': 'Golden_Helmet_JE2_BE2.png',
-    'diamond_helmet': 'Diamond_Helmet_JE2_BE2.png',
-    'netherite_helmet': 'Netherite_Helmet_JE1_BE1.png',
-    'turtle_helmet': 'Turtle_Shell_JE2_BE2.png',
-    // チェストプレート
-    'leather_chestplate': 'Leather_Tunic_JE4_BE2.png',
-    'chainmail_chestplate': 'Chainmail_Chestplate_JE2_BE2.png',
-    'iron_chestplate': 'Iron_Chestplate_JE2_BE2.png',
-    'golden_chestplate': 'Golden_Chestplate_JE2_BE2.png',
-    'diamond_chestplate': 'Diamond_Chestplate_JE2_BE2.png',
-    'netherite_chestplate': 'Netherite_Chestplate_JE1_BE1.png',
-    'elytra': 'Elytra_JE2_BE2.png',
-    // レギンス
-    'leather_leggings': 'Leather_Pants_JE4_BE2.png',
-    'chainmail_leggings': 'Chainmail_Leggings_JE2_BE2.png',
-    'iron_leggings': 'Iron_Leggings_JE2_BE2.png',
-    'golden_leggings': 'Golden_Leggings_JE2_BE2.png',
-    'diamond_leggings': 'Diamond_Leggings_JE2_BE2.png',
-    'netherite_leggings': 'Netherite_Leggings_JE1_BE1.png',
-    // ブーツ
-    'leather_boots': 'Leather_Boots_JE4_BE2.png',
-    'chainmail_boots': 'Chainmail_Boots_JE2_BE2.png',
-    'iron_boots': 'Iron_Boots_JE2_BE2.png',
-    'golden_boots': 'Golden_Boots_JE2_BE2.png',
-    'diamond_boots': 'Diamond_Boots_JE2_BE2.png',
-    'netherite_boots': 'Netherite_Boots_JE1_BE1.png',
-    // 遠距離武器
-    'bow': 'Bow_%28Pull_0%29_JE1_BE1.png',
-    'crossbow': 'Crossbow_JE1_BE1.png',
-    'trident': 'Trident_JE2_BE1.png',
-    'mace': 'Mace_JE1_BE1.png',
-    // その他
-    'fishing_rod': 'Fishing_Rod_JE2_BE2.png',
-    'shield': 'Shield_JE2_BE1.png',
-    'shears': 'Shears_JE2_BE2.png',
-    'flint_and_steel': 'Flint_and_Steel_JE4_BE2.png',
-    'carrot_on_a_stick': 'Carrot_on_a_Stick_JE1_BE1.png',
-    'warped_fungus_on_a_stick': 'Warped_Fungus_on_a_Stick_JE1_BE1.png',
-    'brush': 'Brush_JE1_BE1.png',
-  };
-  const imageName = imageMap[itemId];
-  return imageName ? `${MC_WIKI_BASE}/${imageName}` : null;
+  if (!itemId) return `${MC_WIKI_BASE}/Invicon_Air.png`;
+
+  // 特殊なアイテム名があればそれを使用
+  const specialName = SPECIAL_ITEM_NAMES[itemId];
+  if (specialName) {
+    return `${MC_WIKI_BASE}/Invicon_${specialName}.png`;
+  }
+
+  // アイテムIDをPascalCase（アンダースコア区切り）に変換
+  // 例: diamond_sword → Diamond_Sword
+  const pascalCaseName = itemId
+    .split('_')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join('_');
+
+  return `${MC_WIKI_BASE}/Invicon_${pascalCaseName}.png`;
 };
 
 // 最大レベル定数
@@ -586,8 +530,7 @@ export function render(manifest) {
         <div class="enchant-preview">
           <div class="preview-item" id="preview-item">
             <div class="item-icon-wrapper">
-              <img class="item-icon-img" id="item-icon-img" src="" alt="" style="display:none;">
-              <div class="item-icon-fallback" id="item-icon">⚔️</div>
+              <img class="item-icon-img" id="item-icon-img" src="" alt="">
             </div>
             <div class="item-name" id="item-name">ダイヤの剣</div>
             <div class="item-id" id="item-id">minecraft:diamond_sword</div>
@@ -831,7 +774,6 @@ function findEnchantInfo(id) {
 function updatePreview(container) {
   const itemNameEl = $('#item-name', container);
   const itemIdEl = $('#item-id', container);
-  const itemIconEl = $('#item-icon', container);
   const itemIconImg = $('#item-icon-img', container);
   const previewEnchantsEl = $('#preview-enchants', container);
 
@@ -842,37 +784,24 @@ function updatePreview(container) {
 
   // アイテム名とアイコン
   if (useCustom && customId) {
-    if (itemNameEl) itemNameEl.textContent = customId.split(':').pop() || customId;
+    const customItemId = customId.split(':').pop() || customId;
+    if (itemNameEl) itemNameEl.textContent = customItemId;
     if (itemIdEl) itemIdEl.textContent = customId.startsWith('minecraft:') ? customId : `minecraft:${customId}`;
-    if (itemIconEl) itemIconEl.style.display = 'block';
-    if (itemIconEl) itemIconEl.textContent = '📦';
-    if (itemIconImg) itemIconImg.style.display = 'none';
+    // カスタムアイテムもInvicon画像を試行
+    if (itemIconImg) {
+      itemIconImg.src = getItemImageUrl(customItemId);
+      itemIconImg.alt = customItemId;
+    }
   } else {
     const cat = ITEM_CATEGORIES[catId];
     const item = cat?.items.find(i => i.id === itemId);
     if (itemNameEl) itemNameEl.textContent = item?.name || 'アイテム';
     if (itemIdEl) itemIdEl.textContent = `minecraft:${itemId}`;
 
-    // Wiki画像を試行
-    const imageUrl = getItemImageUrl(itemId);
-    if (imageUrl && itemIconImg) {
-      itemIconImg.src = imageUrl;
+    // Wiki Invicon画像を設定
+    if (itemIconImg) {
+      itemIconImg.src = getItemImageUrl(itemId);
       itemIconImg.alt = item?.name || itemId;
-      itemIconImg.style.display = 'block';
-      itemIconImg.onerror = () => {
-        itemIconImg.style.display = 'none';
-        if (itemIconEl) {
-          itemIconEl.style.display = 'block';
-          itemIconEl.textContent = getItemIcon(itemId);
-        }
-      };
-      if (itemIconEl) itemIconEl.style.display = 'none';
-    } else {
-      if (itemIconImg) itemIconImg.style.display = 'none';
-      if (itemIconEl) {
-        itemIconEl.style.display = 'block';
-        itemIconEl.textContent = getItemIcon(itemId);
-      }
     }
   }
 
@@ -1006,26 +935,6 @@ function updateCommand(container) {
     customName,
     count
   });
-}
-
-function getItemIcon(itemId) {
-  if (itemId?.includes('sword')) return '⚔️';
-  if (itemId?.includes('pickaxe')) return '⛏️';
-  if (itemId?.includes('axe')) return '🪓';
-  if (itemId?.includes('shovel')) return '⏚';
-  if (itemId?.includes('hoe')) return '🌾';
-  if (itemId?.includes('helmet')) return '⛑️';
-  if (itemId?.includes('chestplate')) return '🦺';
-  if (itemId?.includes('leggings')) return '👖';
-  if (itemId?.includes('boots')) return '👟';
-  if (itemId?.includes('bow')) return '🏹';
-  if (itemId?.includes('crossbow')) return '🎯';
-  if (itemId?.includes('trident')) return '🔱';
-  if (itemId?.includes('fishing')) return '🎣';
-  if (itemId?.includes('shield')) return '🛡️';
-  if (itemId?.includes('elytra')) return '🪽';
-  if (itemId?.includes('mace')) return '🔨';
-  return '📦';
 }
 
 function toRoman(num) {
@@ -1386,8 +1295,8 @@ style.textContent = `
   }
 
   .preview-item .item-icon-wrapper {
-    width: 64px;
-    height: 64px;
+    width: 32px;
+    height: 32px;
     margin: 0 auto var(--mc-space-sm);
     display: flex;
     align-items: center;
@@ -1395,14 +1304,10 @@ style.textContent = `
   }
 
   .preview-item .item-icon-img {
-    max-width: 64px;
-    max-height: 64px;
+    width: 32px;
+    height: 32px;
     image-rendering: pixelated;
     filter: drop-shadow(2px 2px 2px rgba(0,0,0,0.3));
-  }
-
-  .preview-item .item-icon-fallback {
-    font-size: 2.5rem;
   }
 
   .preview-item .item-name {
