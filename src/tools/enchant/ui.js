@@ -1,55 +1,147 @@
 /**
  * Enchant Tool - UI (minecraft-blog.net参考)
  * 全42種エンチャント、属性追加、プレビュー機能
+ * 最大レベル255対応、Minecraft Wiki画像対応
  */
 
 import { $, $$, debounce, delegate } from '../../core/dom.js';
 import { setOutput } from '../../app/sidepanel.js';
 
-// 全42種エンチャント（カテゴリ別）
+// Minecraft Wiki画像URL生成関数
+const MC_WIKI_BASE = 'https://minecraft.wiki/images';
+const getItemImageUrl = (itemId) => {
+  // アイテムID→Wiki画像名変換
+  const imageMap = {
+    // 剣
+    'wooden_sword': 'Wooden_Sword_JE2_BE2.png',
+    'stone_sword': 'Stone_Sword_JE2_BE2.png',
+    'iron_sword': 'Iron_Sword_JE2_BE2.png',
+    'golden_sword': 'Golden_Sword_JE2_BE2.png',
+    'diamond_sword': 'Diamond_Sword_JE3_BE3.png',
+    'netherite_sword': 'Netherite_Sword_JE2_BE2.png',
+    // ツルハシ
+    'wooden_pickaxe': 'Wooden_Pickaxe_JE3_BE3.png',
+    'stone_pickaxe': 'Stone_Pickaxe_JE3_BE3.png',
+    'iron_pickaxe': 'Iron_Pickaxe_JE3_BE3.png',
+    'golden_pickaxe': 'Golden_Pickaxe_JE3_BE3.png',
+    'diamond_pickaxe': 'Diamond_Pickaxe_JE3_BE3.png',
+    'netherite_pickaxe': 'Netherite_Pickaxe_JE2_BE2.png',
+    // 斧
+    'wooden_axe': 'Wooden_Axe_JE3.png',
+    'stone_axe': 'Stone_Axe_JE2.png',
+    'iron_axe': 'Iron_Axe_JE2.png',
+    'golden_axe': 'Golden_Axe_JE3.png',
+    'diamond_axe': 'Diamond_Axe_JE2.png',
+    'netherite_axe': 'Netherite_Axe_JE1_BE1.png',
+    // シャベル
+    'wooden_shovel': 'Wooden_Shovel_JE2_BE2.png',
+    'stone_shovel': 'Stone_Shovel_JE2_BE2.png',
+    'iron_shovel': 'Iron_Shovel_JE2_BE2.png',
+    'golden_shovel': 'Golden_Shovel_JE2_BE2.png',
+    'diamond_shovel': 'Diamond_Shovel_JE2_BE2.png',
+    'netherite_shovel': 'Netherite_Shovel_JE1_BE1.png',
+    // クワ
+    'wooden_hoe': 'Wooden_Hoe_JE2_BE2.png',
+    'stone_hoe': 'Stone_Hoe_JE2_BE2.png',
+    'iron_hoe': 'Iron_Hoe_JE2_BE2.png',
+    'golden_hoe': 'Golden_Hoe_JE2_BE2.png',
+    'diamond_hoe': 'Diamond_Hoe_JE2_BE2.png',
+    'netherite_hoe': 'Netherite_Hoe_JE1_BE1.png',
+    // ヘルメット
+    'leather_helmet': 'Leather_Cap_JE4_BE2.png',
+    'chainmail_helmet': 'Chainmail_Helmet_JE2_BE2.png',
+    'iron_helmet': 'Iron_Helmet_JE2_BE2.png',
+    'golden_helmet': 'Golden_Helmet_JE2_BE2.png',
+    'diamond_helmet': 'Diamond_Helmet_JE2_BE2.png',
+    'netherite_helmet': 'Netherite_Helmet_JE1_BE1.png',
+    'turtle_helmet': 'Turtle_Shell_JE2_BE2.png',
+    // チェストプレート
+    'leather_chestplate': 'Leather_Tunic_JE4_BE2.png',
+    'chainmail_chestplate': 'Chainmail_Chestplate_JE2_BE2.png',
+    'iron_chestplate': 'Iron_Chestplate_JE2_BE2.png',
+    'golden_chestplate': 'Golden_Chestplate_JE2_BE2.png',
+    'diamond_chestplate': 'Diamond_Chestplate_JE2_BE2.png',
+    'netherite_chestplate': 'Netherite_Chestplate_JE1_BE1.png',
+    'elytra': 'Elytra_JE2_BE2.png',
+    // レギンス
+    'leather_leggings': 'Leather_Pants_JE4_BE2.png',
+    'chainmail_leggings': 'Chainmail_Leggings_JE2_BE2.png',
+    'iron_leggings': 'Iron_Leggings_JE2_BE2.png',
+    'golden_leggings': 'Golden_Leggings_JE2_BE2.png',
+    'diamond_leggings': 'Diamond_Leggings_JE2_BE2.png',
+    'netherite_leggings': 'Netherite_Leggings_JE1_BE1.png',
+    // ブーツ
+    'leather_boots': 'Leather_Boots_JE4_BE2.png',
+    'chainmail_boots': 'Chainmail_Boots_JE2_BE2.png',
+    'iron_boots': 'Iron_Boots_JE2_BE2.png',
+    'golden_boots': 'Golden_Boots_JE2_BE2.png',
+    'diamond_boots': 'Diamond_Boots_JE2_BE2.png',
+    'netherite_boots': 'Netherite_Boots_JE1_BE1.png',
+    // 遠距離武器
+    'bow': 'Bow_%28Pull_0%29_JE1_BE1.png',
+    'crossbow': 'Crossbow_JE1_BE1.png',
+    'trident': 'Trident_JE2_BE1.png',
+    'mace': 'Mace_JE1_BE1.png',
+    // その他
+    'fishing_rod': 'Fishing_Rod_JE2_BE2.png',
+    'shield': 'Shield_JE2_BE1.png',
+    'shears': 'Shears_JE2_BE2.png',
+    'flint_and_steel': 'Flint_and_Steel_JE4_BE2.png',
+    'carrot_on_a_stick': 'Carrot_on_a_Stick_JE1_BE1.png',
+    'warped_fungus_on_a_stick': 'Warped_Fungus_on_a_Stick_JE1_BE1.png',
+    'brush': 'Brush_JE1_BE1.png',
+  };
+  const imageName = imageMap[itemId];
+  return imageName ? `${MC_WIKI_BASE}/${imageName}` : null;
+};
+
+// 最大レベル定数
+const ABSOLUTE_MAX_LEVEL = 255;  // ゲーム内で設定可能な絶対最大値
+
+// 全42種エンチャント（カテゴリ別）- defaultMaxはMinecraftのデフォルト最大レベル
 const ENCHANT_CATEGORIES = {
   weapon: {
     name: '⚔️ 武器（剣）',
     icon: '⚔️',
     enchants: [
-      { id: 'sharpness', name: 'ダメージ増加', en: 'Sharpness', maxLevel: 5, desc: '近接攻撃ダメージ増加' },
-      { id: 'smite', name: 'アンデッド特効', en: 'Smite', maxLevel: 5, desc: 'アンデッド系に追加ダメージ' },
-      { id: 'bane_of_arthropods', name: '虫特効', en: 'Bane of Arthropods', maxLevel: 5, desc: '虫系に追加ダメージ' },
-      { id: 'knockback', name: 'ノックバック', en: 'Knockback', maxLevel: 2, desc: '攻撃時のノックバック増加' },
-      { id: 'fire_aspect', name: '火属性', en: 'Fire Aspect', maxLevel: 2, desc: '攻撃対象に発火' },
-      { id: 'looting', name: 'ドロップ増加', en: 'Looting', maxLevel: 3, desc: 'Mobのドロップ増加' },
-      { id: 'sweeping_edge', name: '範囲ダメージ増加', en: 'Sweeping Edge', maxLevel: 3, desc: '範囲攻撃ダメージ増加' },
-      { id: 'density', name: '密度', en: 'Density', maxLevel: 5, desc: 'メイス専用、落下ダメージ増加' },
-      { id: 'breach', name: '貫通', en: 'Breach', maxLevel: 4, desc: 'メイス専用、防具無視ダメージ' },
-      { id: 'wind_burst', name: '風爆発', en: 'Wind Burst', maxLevel: 3, desc: 'メイス専用、着地時に風爆発' },
+      { id: 'sharpness', name: 'ダメージ増加', en: 'Sharpness', defaultMax: 5, desc: '近接攻撃ダメージ増加' },
+      { id: 'smite', name: 'アンデッド特効', en: 'Smite', defaultMax: 5, desc: 'アンデッド系に追加ダメージ' },
+      { id: 'bane_of_arthropods', name: '虫特効', en: 'Bane of Arthropods', defaultMax: 5, desc: '虫系に追加ダメージ' },
+      { id: 'knockback', name: 'ノックバック', en: 'Knockback', defaultMax: 2, desc: '攻撃時のノックバック増加' },
+      { id: 'fire_aspect', name: '火属性', en: 'Fire Aspect', defaultMax: 2, desc: '攻撃対象に発火' },
+      { id: 'looting', name: 'ドロップ増加', en: 'Looting', defaultMax: 3, desc: 'Mobのドロップ増加' },
+      { id: 'sweeping_edge', name: '範囲ダメージ増加', en: 'Sweeping Edge', defaultMax: 3, desc: '範囲攻撃ダメージ増加' },
+      { id: 'density', name: '密度', en: 'Density', defaultMax: 5, desc: 'メイス専用、落下ダメージ増加' },
+      { id: 'breach', name: '貫通', en: 'Breach', defaultMax: 4, desc: 'メイス専用、防具無視ダメージ' },
+      { id: 'wind_burst', name: '風爆発', en: 'Wind Burst', defaultMax: 3, desc: 'メイス専用、着地時に風爆発' },
     ]
   },
   tool: {
     name: '⛏️ ツール',
     icon: '⛏️',
     enchants: [
-      { id: 'efficiency', name: '効率強化', en: 'Efficiency', maxLevel: 5, desc: '採掘速度増加' },
-      { id: 'silk_touch', name: 'シルクタッチ', en: 'Silk Touch', maxLevel: 1, desc: 'ブロックをそのまま回収' },
-      { id: 'fortune', name: '幸運', en: 'Fortune', maxLevel: 3, desc: 'ドロップ数増加' },
+      { id: 'efficiency', name: '効率強化', en: 'Efficiency', defaultMax: 5, desc: '採掘速度増加' },
+      { id: 'silk_touch', name: 'シルクタッチ', en: 'Silk Touch', defaultMax: 1, desc: 'ブロックをそのまま回収' },
+      { id: 'fortune', name: '幸運', en: 'Fortune', defaultMax: 3, desc: 'ドロップ数増加' },
     ]
   },
   armor: {
     name: '🛡️ 防具（共通）',
     icon: '🛡️',
     enchants: [
-      { id: 'protection', name: 'ダメージ軽減', en: 'Protection', maxLevel: 4, desc: '全ダメージ軽減' },
-      { id: 'fire_protection', name: '火炎耐性', en: 'Fire Protection', maxLevel: 4, desc: '火炎ダメージ軽減' },
-      { id: 'blast_protection', name: '爆発耐性', en: 'Blast Protection', maxLevel: 4, desc: '爆発ダメージ軽減' },
-      { id: 'projectile_protection', name: '飛び道具耐性', en: 'Projectile Protection', maxLevel: 4, desc: '飛び道具ダメージ軽減' },
-      { id: 'thorns', name: 'トゲ', en: 'Thorns', maxLevel: 3, desc: '反射ダメージ' },
+      { id: 'protection', name: 'ダメージ軽減', en: 'Protection', defaultMax: 4, desc: '全ダメージ軽減' },
+      { id: 'fire_protection', name: '火炎耐性', en: 'Fire Protection', defaultMax: 4, desc: '火炎ダメージ軽減' },
+      { id: 'blast_protection', name: '爆発耐性', en: 'Blast Protection', defaultMax: 4, desc: '爆発ダメージ軽減' },
+      { id: 'projectile_protection', name: '飛び道具耐性', en: 'Projectile Protection', defaultMax: 4, desc: '飛び道具ダメージ軽減' },
+      { id: 'thorns', name: 'トゲ', en: 'Thorns', defaultMax: 3, desc: '反射ダメージ' },
     ]
   },
   helmet: {
     name: '⛑️ ヘルメット',
     icon: '⛑️',
     enchants: [
-      { id: 'respiration', name: '水中呼吸', en: 'Respiration', maxLevel: 3, desc: '水中での呼吸時間延長' },
-      { id: 'aqua_affinity', name: '水中採掘', en: 'Aqua Affinity', maxLevel: 1, desc: '水中採掘速度アップ' },
+      { id: 'respiration', name: '水中呼吸', en: 'Respiration', defaultMax: 3, desc: '水中での呼吸時間延長' },
+      { id: 'aqua_affinity', name: '水中採掘', en: 'Aqua Affinity', defaultMax: 1, desc: '水中採掘速度アップ' },
     ]
   },
   chestplate: {
@@ -61,70 +153,70 @@ const ENCHANT_CATEGORIES = {
     name: '👖 レギンス',
     icon: '👖',
     enchants: [
-      { id: 'swift_sneak', name: 'スニーク速度上昇', en: 'Swift Sneak', maxLevel: 3, desc: 'スニーク時の移動速度アップ' },
+      { id: 'swift_sneak', name: 'スニーク速度上昇', en: 'Swift Sneak', defaultMax: 3, desc: 'スニーク時の移動速度アップ' },
     ]
   },
   boots: {
     name: '👟 ブーツ',
     icon: '👟',
     enchants: [
-      { id: 'feather_falling', name: '落下耐性', en: 'Feather Falling', maxLevel: 4, desc: '落下ダメージ軽減' },
-      { id: 'depth_strider', name: '水中歩行', en: 'Depth Strider', maxLevel: 3, desc: '水中移動速度アップ' },
-      { id: 'frost_walker', name: '氷渡り', en: 'Frost Walker', maxLevel: 2, desc: '水上を凍らせて歩く' },
-      { id: 'soul_speed', name: 'ソウルスピード', en: 'Soul Speed', maxLevel: 3, desc: 'ソウルサンド上の速度アップ' },
+      { id: 'feather_falling', name: '落下耐性', en: 'Feather Falling', defaultMax: 4, desc: '落下ダメージ軽減' },
+      { id: 'depth_strider', name: '水中歩行', en: 'Depth Strider', defaultMax: 3, desc: '水中移動速度アップ' },
+      { id: 'frost_walker', name: '氷渡り', en: 'Frost Walker', defaultMax: 2, desc: '水上を凍らせて歩く' },
+      { id: 'soul_speed', name: 'ソウルスピード', en: 'Soul Speed', defaultMax: 3, desc: 'ソウルサンド上の速度アップ' },
     ]
   },
   bow: {
     name: '🏹 弓',
     icon: '🏹',
     enchants: [
-      { id: 'power', name: '射撃ダメージ増加', en: 'Power', maxLevel: 5, desc: '矢のダメージ増加' },
-      { id: 'punch', name: 'パンチ', en: 'Punch', maxLevel: 2, desc: '矢のノックバック増加' },
-      { id: 'flame', name: 'フレイム', en: 'Flame', maxLevel: 1, desc: '矢に火属性付与' },
-      { id: 'infinity', name: '無限', en: 'Infinity', maxLevel: 1, desc: '矢を消費しない' },
+      { id: 'power', name: '射撃ダメージ増加', en: 'Power', defaultMax: 5, desc: '矢のダメージ増加' },
+      { id: 'punch', name: 'パンチ', en: 'Punch', defaultMax: 2, desc: '矢のノックバック増加' },
+      { id: 'flame', name: 'フレイム', en: 'Flame', defaultMax: 1, desc: '矢に火属性付与' },
+      { id: 'infinity', name: '無限', en: 'Infinity', defaultMax: 1, desc: '矢を消費しない' },
     ]
   },
   crossbow: {
     name: '🎯 クロスボウ',
     icon: '🎯',
     enchants: [
-      { id: 'multishot', name: '拡散', en: 'Multishot', maxLevel: 1, desc: '3本同時発射' },
-      { id: 'piercing', name: '貫通', en: 'Piercing', maxLevel: 4, desc: '敵を貫通' },
-      { id: 'quick_charge', name: '高速装填', en: 'Quick Charge', maxLevel: 3, desc: 'リロード速度アップ' },
+      { id: 'multishot', name: '拡散', en: 'Multishot', defaultMax: 1, desc: '3本同時発射' },
+      { id: 'piercing', name: '貫通', en: 'Piercing', defaultMax: 4, desc: '敵を貫通' },
+      { id: 'quick_charge', name: '高速装填', en: 'Quick Charge', defaultMax: 3, desc: 'リロード速度アップ' },
     ]
   },
   trident: {
     name: '🔱 トライデント',
     icon: '🔱',
     enchants: [
-      { id: 'loyalty', name: '忠誠', en: 'Loyalty', maxLevel: 3, desc: '投げると戻ってくる' },
-      { id: 'impaling', name: '水生特効', en: 'Impaling', maxLevel: 5, desc: '水中Mobに追加ダメージ' },
-      { id: 'riptide', name: '激流', en: 'Riptide', maxLevel: 3, desc: '雨/水中で突進' },
-      { id: 'channeling', name: '召雷', en: 'Channeling', maxLevel: 1, desc: '雷雨時に雷を落とす' },
+      { id: 'loyalty', name: '忠誠', en: 'Loyalty', defaultMax: 3, desc: '投げると戻ってくる' },
+      { id: 'impaling', name: '水生特効', en: 'Impaling', defaultMax: 5, desc: '水中Mobに追加ダメージ' },
+      { id: 'riptide', name: '激流', en: 'Riptide', defaultMax: 3, desc: '雨/水中で突進' },
+      { id: 'channeling', name: '召雷', en: 'Channeling', defaultMax: 1, desc: '雷雨時に雷を落とす' },
     ]
   },
   fishing: {
     name: '🎣 釣り竿',
     icon: '🎣',
     enchants: [
-      { id: 'luck_of_the_sea', name: '宝釣り', en: 'Luck of the Sea', maxLevel: 3, desc: 'レアアイテム確率アップ' },
-      { id: 'lure', name: '入れ食い', en: 'Lure', maxLevel: 3, desc: '釣れるまでの時間短縮' },
+      { id: 'luck_of_the_sea', name: '宝釣り', en: 'Luck of the Sea', defaultMax: 3, desc: 'レアアイテム確率アップ' },
+      { id: 'lure', name: '入れ食い', en: 'Lure', defaultMax: 3, desc: '釣れるまでの時間短縮' },
     ]
   },
   universal: {
     name: '🔧 汎用',
     icon: '🔧',
     enchants: [
-      { id: 'unbreaking', name: '耐久力', en: 'Unbreaking', maxLevel: 3, desc: '耐久値消費軽減' },
-      { id: 'mending', name: '修繕', en: 'Mending', maxLevel: 1, desc: '経験値で耐久回復' },
+      { id: 'unbreaking', name: '耐久力', en: 'Unbreaking', defaultMax: 3, desc: '耐久値消費軽減' },
+      { id: 'mending', name: '修繕', en: 'Mending', defaultMax: 1, desc: '経験値で耐久回復' },
     ]
   },
   curse: {
     name: '💀 呪い',
     icon: '💀',
     enchants: [
-      { id: 'vanishing_curse', name: '消滅の呪い', en: 'Curse of Vanishing', maxLevel: 1, desc: '死亡時に消滅' },
-      { id: 'binding_curse', name: '束縛の呪い', en: 'Curse of Binding', maxLevel: 1, desc: '外せなくなる' },
+      { id: 'vanishing_curse', name: '消滅の呪い', en: 'Curse of Vanishing', defaultMax: 1, desc: '死亡時に消滅' },
+      { id: 'binding_curse', name: '束縛の呪い', en: 'Curse of Binding', defaultMax: 1, desc: '外せなくなる' },
     ]
   },
 };
@@ -355,7 +447,7 @@ export function render(manifest) {
       <div class="tool-header">
         <span class="tool-icon">${manifest.icon}</span>
         <h2>${manifest.title}</h2>
-        <span class="version-badge">1.21.5+</span>
+        <span class="version-badge">1.21.11</span>
       </div>
 
       <form class="tool-form" id="enchant-form">
@@ -390,6 +482,10 @@ export function render(manifest) {
 
         <!-- エンチャントカテゴリ（アコーディオン） -->
         <div class="form-group">
+          <div class="enchant-info-hint">
+            <span class="hint-icon">💡</span>
+            <span>通常の最大レベルはバニラの値です。コマンドでは最大255まで設定可能！</span>
+          </div>
           <div class="enchant-categories" id="enchant-categories">
             ${Object.entries(ENCHANT_CATEGORIES).map(([catId, cat]) => `
               <div class="enchant-category" data-category="${catId}">
@@ -401,10 +497,13 @@ export function render(manifest) {
                 </button>
                 <div class="category-enchants" style="display: none;">
                   ${cat.enchants.map(e => `
-                    <div class="enchant-item" data-enchant="${e.id}" data-max="${e.maxLevel}" title="${e.desc}">
+                    <div class="enchant-item" data-enchant="${e.id}" data-default-max="${e.defaultMax}" title="${e.desc}">
                       <span class="enchant-name">${e.name}</span>
                       <span class="enchant-en">${e.en}</span>
-                      <span class="enchant-max">Max: ${e.maxLevel}</span>
+                      <div class="enchant-level-info">
+                        <span class="enchant-default-max">通常Max: ${e.defaultMax}</span>
+                        <span class="enchant-cmd-max">コマンド: 255</span>
+                      </div>
                     </div>
                   `).join('')}
                 </div>
@@ -486,8 +585,12 @@ export function render(manifest) {
         <h3>プレビュー</h3>
         <div class="enchant-preview">
           <div class="preview-item" id="preview-item">
-            <div class="item-icon" id="item-icon">⚔️</div>
+            <div class="item-icon-wrapper">
+              <img class="item-icon-img" id="item-icon-img" src="" alt="" style="display:none;">
+              <div class="item-icon-fallback" id="item-icon">⚔️</div>
+            </div>
             <div class="item-name" id="item-name">ダイヤの剣</div>
+            <div class="item-id" id="item-id">minecraft:diamond_sword</div>
           </div>
           <div class="preview-enchants" id="preview-enchants">
             <p class="text-muted">エンチャントなし</p>
@@ -563,10 +666,11 @@ export function init(container) {
   // エンチャント追加
   delegate(container, 'click', '.enchant-item', (e, target) => {
     const enchantId = target.dataset.enchant;
-    const maxLevel = parseInt(target.dataset.max) || 5;
+    const defaultMax = parseInt(target.dataset.defaultMax) || 5;
 
     if (!selectedEnchants.find(e => e.id === enchantId)) {
-      selectedEnchants.push({ id: enchantId, level: maxLevel });
+      // デフォルトの最大レベルで追加（ユーザーは後で255まで上げられる）
+      selectedEnchants.push({ id: enchantId, level: defaultMax, defaultMax });
       target.classList.add('selected');
       renderSelectedEnchants(container);
       updateCommand(container);
@@ -580,6 +684,18 @@ export function init(container) {
     $(`.enchant-item[data-enchant="${enchantId}"]`, container)?.classList.remove('selected');
     renderSelectedEnchants(container);
     updateCommand(container);
+  });
+
+  // レベルクイックボタン
+  delegate(container, 'click', '.level-quick-btn', (e, target) => {
+    const enchantId = target.dataset.enchant;
+    const level = parseInt(target.dataset.level);
+    const enchant = selectedEnchants.find(e => e.id === enchantId);
+    if (enchant) {
+      enchant.level = level;
+      renderSelectedEnchants(container);
+      updateCommand(container);
+    }
   });
 
   // レベル変更
@@ -675,11 +791,20 @@ function renderSelectedEnchants(container) {
   list.innerHTML = selectedEnchants.map(e => {
     const info = findEnchantInfo(e.id);
     const isCurse = e.id.includes('curse');
+    const defaultMax = info?.defaultMax || e.defaultMax || 5;
+    const isOverDefault = e.level > defaultMax;
     return `
-      <div class="selected-enchant ${isCurse ? 'curse' : ''}">
+      <div class="selected-enchant ${isCurse ? 'curse' : ''} ${isOverDefault ? 'over-default' : ''}">
         <span class="enchant-label">${info?.name || e.id}</span>
-        <input type="number" class="enchant-level mc-input" data-enchant="${e.id}"
-               value="${e.level}" min="1" max="32767">
+        <div class="enchant-level-wrapper">
+          <input type="number" class="enchant-level mc-input" data-enchant="${e.id}"
+                 value="${e.level}" min="1" max="${ABSOLUTE_MAX_LEVEL}">
+          <span class="default-max-hint" title="通常の最大レベル">(通常:${defaultMax})</span>
+        </div>
+        <div class="level-quick-btns">
+          <button type="button" class="level-quick-btn" data-enchant="${e.id}" data-level="${defaultMax}">Max</button>
+          <button type="button" class="level-quick-btn extreme" data-enchant="${e.id}" data-level="255">255</button>
+        </div>
         <button type="button" class="enchant-remove" data-enchant="${e.id}">×</button>
       </div>
     `;
@@ -704,7 +829,9 @@ function findEnchantInfo(id) {
  */
 function updatePreview(container) {
   const itemNameEl = $('#item-name', container);
+  const itemIdEl = $('#item-id', container);
   const itemIconEl = $('#item-icon', container);
+  const itemIconImg = $('#item-icon-img', container);
   const previewEnchantsEl = $('#preview-enchants', container);
 
   const useCustom = $('#use-custom-item', container)?.checked;
@@ -712,15 +839,40 @@ function updatePreview(container) {
   const catId = $('#item-category', container)?.value;
   const itemId = $('#item-select', container)?.value;
 
-  // アイテム名
+  // アイテム名とアイコン
   if (useCustom && customId) {
-    if (itemNameEl) itemNameEl.textContent = customId;
+    if (itemNameEl) itemNameEl.textContent = customId.split(':').pop() || customId;
+    if (itemIdEl) itemIdEl.textContent = customId.startsWith('minecraft:') ? customId : `minecraft:${customId}`;
+    if (itemIconEl) itemIconEl.style.display = 'block';
     if (itemIconEl) itemIconEl.textContent = '📦';
+    if (itemIconImg) itemIconImg.style.display = 'none';
   } else {
     const cat = ITEM_CATEGORIES[catId];
     const item = cat?.items.find(i => i.id === itemId);
     if (itemNameEl) itemNameEl.textContent = item?.name || 'アイテム';
-    if (itemIconEl) itemIconEl.textContent = getItemIcon(itemId);
+    if (itemIdEl) itemIdEl.textContent = `minecraft:${itemId}`;
+
+    // Wiki画像を試行
+    const imageUrl = getItemImageUrl(itemId);
+    if (imageUrl && itemIconImg) {
+      itemIconImg.src = imageUrl;
+      itemIconImg.alt = item?.name || itemId;
+      itemIconImg.style.display = 'block';
+      itemIconImg.onerror = () => {
+        itemIconImg.style.display = 'none';
+        if (itemIconEl) {
+          itemIconEl.style.display = 'block';
+          itemIconEl.textContent = getItemIcon(itemId);
+        }
+      };
+      if (itemIconEl) itemIconEl.style.display = 'none';
+    } else {
+      if (itemIconImg) itemIconImg.style.display = 'none';
+      if (itemIconEl) {
+        itemIconEl.style.display = 'block';
+        itemIconEl.textContent = getItemIcon(itemId);
+      }
+    }
   }
 
   // エンチャント一覧
@@ -731,9 +883,11 @@ function updatePreview(container) {
       previewEnchantsEl.innerHTML = selectedEnchants.map(e => {
         const info = findEnchantInfo(e.id);
         const isCurse = e.id.includes('curse');
+        const isOverDefault = e.level > (info?.defaultMax || 5);
         return `
-          <div class="preview-enchant ${isCurse ? 'curse' : ''}">
+          <div class="preview-enchant ${isCurse ? 'curse' : ''} ${isOverDefault ? 'over-default' : ''}">
             ${info?.name || e.id} ${toRoman(e.level)}
+            ${isOverDefault ? '<span class="over-badge">+</span>' : ''}
           </div>
         `;
       }).join('');
@@ -1003,9 +1157,40 @@ style.textContent = `
     color: var(--mc-text-muted);
   }
 
-  .enchant-item .enchant-max {
+  .enchant-item .enchant-level-info {
+    display: flex;
+    gap: 8px;
+    margin-top: 2px;
+  }
+
+  .enchant-item .enchant-default-max {
     font-size: 0.65rem;
     color: var(--mc-color-diamond);
+    background: rgba(85, 255, 255, 0.1);
+    padding: 1px 4px;
+    border-radius: 2px;
+  }
+
+  .enchant-item .enchant-cmd-max {
+    font-size: 0.6rem;
+    color: var(--mc-color-gold);
+    opacity: 0.7;
+  }
+
+  .enchant-info-hint {
+    display: flex;
+    align-items: center;
+    gap: var(--mc-space-sm);
+    padding: var(--mc-space-sm) var(--mc-space-md);
+    background: linear-gradient(135deg, rgba(85, 255, 255, 0.1) 0%, rgba(255, 170, 0, 0.1) 100%);
+    border: 1px solid rgba(85, 255, 255, 0.3);
+    border-radius: 4px;
+    margin-bottom: var(--mc-space-sm);
+    font-size: 0.8rem;
+  }
+
+  .enchant-info-hint .hint-icon {
+    font-size: 1.1rem;
   }
 
   /* 選択されたエンチャント */
@@ -1051,6 +1236,53 @@ style.textContent = `
     color: var(--mc-color-redstone);
     cursor: pointer;
     font-size: 1.2rem;
+  }
+
+  .selected-enchant .enchant-level-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .selected-enchant .default-max-hint {
+    font-size: 0.65rem;
+    color: var(--mc-text-muted);
+    white-space: nowrap;
+  }
+
+  .selected-enchant .level-quick-btns {
+    display: flex;
+    gap: 2px;
+  }
+
+  .selected-enchant .level-quick-btn {
+    padding: 2px 6px;
+    background: var(--mc-bg-panel);
+    border: 1px solid var(--mc-border-dark);
+    cursor: pointer;
+    font-size: 0.65rem;
+    border-radius: 2px;
+    transition: all 0.15s;
+  }
+
+  .selected-enchant .level-quick-btn:hover {
+    background: var(--mc-color-grass-light);
+    border-color: var(--mc-color-grass-main);
+  }
+
+  .selected-enchant .level-quick-btn.extreme {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ffa500 100%);
+    color: white;
+    border-color: #ff6b6b;
+  }
+
+  .selected-enchant .level-quick-btn.extreme:hover {
+    background: linear-gradient(135deg, #ff4444 0%, #ff8800 100%);
+  }
+
+  .selected-enchant.over-default {
+    border-left-color: var(--mc-color-gold);
+    background: rgba(255, 170, 0, 0.1);
   }
 
   /* 属性 */
@@ -1150,15 +1382,37 @@ style.textContent = `
     min-width: 100px;
   }
 
-  .preview-item .item-icon {
+  .preview-item .item-icon-wrapper {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto var(--mc-space-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .preview-item .item-icon-img {
+    max-width: 64px;
+    max-height: 64px;
+    image-rendering: pixelated;
+    filter: drop-shadow(2px 2px 2px rgba(0,0,0,0.3));
+  }
+
+  .preview-item .item-icon-fallback {
     font-size: 2.5rem;
-    margin-bottom: var(--mc-space-xs);
   }
 
   .preview-item .item-name {
-    font-size: 0.8rem;
+    font-size: 0.9rem;
     color: var(--mc-color-diamond);
     font-weight: bold;
+    margin-bottom: 2px;
+  }
+
+  .preview-item .item-id {
+    font-size: 0.65rem;
+    color: var(--mc-text-muted);
+    font-family: monospace;
   }
 
   .preview-enchants {
@@ -1173,6 +1427,73 @@ style.textContent = `
 
   .preview-enchant.curse {
     color: var(--mc-color-redstone);
+  }
+
+  .preview-enchant.over-default {
+    color: var(--mc-color-gold);
+    font-weight: bold;
+  }
+
+  .preview-enchant .over-badge {
+    font-size: 0.65rem;
+    color: var(--mc-color-gold);
+    vertical-align: super;
+  }
+
+  /* Minecraft風アニメーション */
+  @keyframes enchant-glow {
+    0%, 100% {
+      box-shadow: 0 0 5px rgba(170, 0, 255, 0.3), 0 0 10px rgba(170, 0, 255, 0.2);
+    }
+    50% {
+      box-shadow: 0 0 15px rgba(170, 0, 255, 0.5), 0 0 25px rgba(170, 0, 255, 0.3);
+    }
+  }
+
+  @keyframes gold-pulse {
+    0%, 100% {
+      box-shadow: 0 0 5px rgba(255, 170, 0, 0.5), 0 0 10px rgba(255, 215, 0, 0.3);
+      background: linear-gradient(135deg, rgba(255, 170, 0, 0.15) 0%, rgba(255, 215, 0, 0.1) 100%);
+    }
+    50% {
+      box-shadow: 0 0 20px rgba(255, 170, 0, 0.7), 0 0 35px rgba(255, 215, 0, 0.4);
+      background: linear-gradient(135deg, rgba(255, 170, 0, 0.25) 0%, rgba(255, 215, 0, 0.2) 100%);
+    }
+  }
+
+  @keyframes item-float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-3px); }
+  }
+
+  /* エンチャント選択時のエフェクト */
+  .enchant-item.selected {
+    animation: enchant-glow 2s ease-in-out infinite;
+  }
+
+  /* アイテム画像のホバーエフェクト */
+  .preview-item .item-icon-img {
+    transition: transform 0.3s ease, filter 0.3s ease;
+  }
+
+  .preview-item:hover .item-icon-img {
+    transform: scale(1.1);
+    filter: drop-shadow(0 0 8px rgba(85, 255, 255, 0.5));
+    animation: item-float 1.5s ease-in-out infinite;
+  }
+
+  /* レベル255選択時の特別エフェクト */
+  .selected-enchant.over-default {
+    animation: gold-pulse 2s ease-in-out infinite;
+  }
+
+  .selected-enchant .level-quick-btn.extreme:hover {
+    animation: gold-pulse 0.5s ease-in-out;
+  }
+
+  /* プレビューの超過レベル表示 */
+  .preview-enchant.over-default {
+    text-shadow: 0 0 10px rgba(255, 170, 0, 0.7);
   }
 
   .text-muted {

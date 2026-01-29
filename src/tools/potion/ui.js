@@ -95,7 +95,7 @@ export function render(manifest) {
       <div class="tool-header">
         <span class="tool-icon">${manifest.icon}</span>
         <h2>${manifest.title}</h2>
-        <span class="version-badge">1.21.5+</span>
+        <span class="version-badge">1.21.11</span>
       </div>
 
       <form class="tool-form" id="potion-form">
