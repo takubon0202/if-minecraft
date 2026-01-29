@@ -14,12 +14,14 @@ import { loadTool, getToolManifest } from './shell.js';
 // ツールマニフェストをインポート
 // リファレンス
 import * as idBrowser from '../tools/id-browser/manifest.js';
+import * as blockIds from '../tools/block-ids/manifest.js';
 import * as colorCodes from '../tools/color-codes/manifest.js';
 import * as targetSelector from '../tools/target-selector/manifest.js';
 import * as coordinate from '../tools/coordinate/manifest.js';
 // コマンド生成
 import * as give from '../tools/give/manifest.js';
 import * as summon from '../tools/summon/manifest.js';
+import * as summonZombie from '../tools/summon-zombie/manifest.js';
 import * as enchant from '../tools/enchant/manifest.js';
 import * as potion from '../tools/potion/manifest.js';
 import * as smithing from '../tools/smithing/manifest.js';
@@ -40,12 +42,14 @@ async function init() {
 
   // ツール登録 - リファレンス
   registerTool(idBrowser);
+  registerTool(blockIds);
   registerTool(colorCodes);
   registerTool(targetSelector);
   registerTool(coordinate);
   // コマンド生成
   registerTool(give);
   registerTool(summon);
+  registerTool(summonZombie);
   registerTool(enchant);
   registerTool(potion);
   registerTool(smithing);
