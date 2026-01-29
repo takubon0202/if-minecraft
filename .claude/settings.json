@@ -53,11 +53,11 @@
     "skills": {
       "evaluate": {
         "criteria": ["SEO", "事業内容の明確さ", "分かりやすさ", "サービス申込意欲"],
-        "passingScore": 70
+        "passingScore": 90
       },
       "persona": {
         "criteria": ["共感", "通いたい度", "サービス利用意欲"],
-        "passingScore": 70
+        "passingScore": 90
       }
     }
   },
