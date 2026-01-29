@@ -1043,85 +1043,170 @@ style.textContent = `
     margin-left: auto;
   }
 
+  /* フォームラベル */
+  .summon-zombie-tool .form-group > label {
+    display: block;
+    color: #ffffff;
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin-bottom: var(--mc-space-sm);
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+  }
+
+  /* 汎用入力フィールド */
+  .summon-zombie-tool .mc-input {
+    background: #2a2a2a;
+    color: #ffffff;
+    border: 2px solid #444444;
+    border-radius: 4px;
+    padding: 10px 14px;
+    font-size: 0.95rem;
+    width: 100%;
+  }
+
+  .summon-zombie-tool .mc-input:focus {
+    border-color: var(--mc-color-grass-main);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(92, 183, 70, 0.3);
+  }
+
+  .summon-zombie-tool .mc-input::placeholder {
+    color: #888888;
+  }
+
   /* プリセット */
   .preset-grid {
     display: flex;
     flex-wrap: wrap;
-    gap: var(--mc-space-xs);
+    gap: var(--mc-space-sm);
   }
 
   .preset-btn {
-    padding: var(--mc-space-xs) var(--mc-space-sm);
-    background: var(--mc-bg-surface);
-    border: 1px solid var(--mc-border-dark);
+    padding: 8px 16px;
+    background: linear-gradient(180deg, #4a4a4a 0%, #3a3a3a 100%);
+    border: 2px solid #555555;
+    border-radius: 4px;
+    color: #ffffff;
     cursor: pointer;
-    font-size: 0.75rem;
+    font-size: 0.85rem;
+    font-weight: 500;
     transition: all 0.15s;
+    text-shadow: 1px 1px 1px rgba(0,0,0,0.3);
   }
 
   .preset-btn:hover {
-    background: var(--mc-color-grass-light);
+    background: linear-gradient(180deg, #5cb746 0%, #3a8128 100%);
     border-color: var(--mc-color-grass-main);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
   }
 
   .preset-btn.preset-clear {
-    background: var(--mc-color-redstone);
+    background: linear-gradient(180deg, #e04040 0%, #c80000 100%);
+    border-color: #a00000;
     color: white;
+  }
+
+  .preset-btn.preset-clear:hover {
+    background: linear-gradient(180deg, #ff5050 0%, #e00000 100%);
+    border-color: #c80000;
   }
 
   /* ゾンビタイプ選択 */
   .zombie-type-selector {
     display: flex;
     flex-wrap: wrap;
-    gap: var(--mc-space-sm);
+    gap: var(--mc-space-md);
   }
 
   .zombie-type-btn {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
-    padding: var(--mc-space-sm) var(--mc-space-md);
-    background: var(--mc-bg-surface);
-    border: 2px solid var(--mc-border-dark);
+    gap: 8px;
+    padding: var(--mc-space-md);
+    background: linear-gradient(180deg, #4a4a4a 0%, #3a3a3a 100%);
+    border: 2px solid #555555;
+    border-radius: 8px;
     cursor: pointer;
     transition: all 0.15s;
-    min-width: 80px;
+    min-width: 90px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
   }
 
   .zombie-type-btn:hover {
-    background: var(--mc-color-stone-300);
+    background: linear-gradient(180deg, #5a5a5a 0%, #4a4a4a 100%);
+    border-color: #666666;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
   }
 
   .zombie-type-btn.active {
-    background: rgba(92, 183, 70, 0.2);
+    background: linear-gradient(180deg, rgba(92, 183, 70, 0.4) 0%, rgba(58, 129, 40, 0.4) 100%);
     border-color: var(--mc-color-grass-main);
+    box-shadow: 0 0 12px rgba(92, 183, 70, 0.4);
   }
 
   .zombie-type-btn .type-icon {
-    width: 32px;
-    height: 32px;
+    width: 40px;
+    height: 40px;
+    filter: drop-shadow(2px 2px 2px rgba(0,0,0,0.3));
   }
 
   .zombie-type-btn .type-name {
-    font-size: 0.75rem;
+    font-size: 0.8rem;
+    color: #ffffff;
+    font-weight: 500;
+    text-shadow: 1px 1px 1px rgba(0,0,0,0.3);
   }
 
   /* 装備選択ラッパー */
   .equipment-select-wrapper {
     display: flex;
     align-items: center;
-    gap: var(--mc-space-xs);
-    margin-bottom: var(--mc-space-xs);
+    gap: var(--mc-space-sm);
+    margin-bottom: var(--mc-space-sm);
   }
 
   .equipment-select-wrapper .selected-item-image {
     flex-shrink: 0;
+    border-radius: 4px;
+    background: #222222;
+    padding: 2px;
   }
 
   .equipment-select-wrapper .equipment-select {
     flex: 1;
     margin-bottom: 0;
+    background: #2a2a2a;
+    color: #ffffff;
+    border: 2px solid #444444;
+    border-radius: 4px;
+    padding: 8px 12px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23ffffff' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    padding-right: 32px;
+  }
+
+  .equipment-select-wrapper .equipment-select:hover {
+    border-color: #666666;
+    background-color: #333333;
+  }
+
+  .equipment-select-wrapper .equipment-select:focus {
+    border-color: var(--mc-color-grass-main);
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(92, 183, 70, 0.3);
+  }
+
+  .equipment-select-wrapper .equipment-select option {
+    background: #2a2a2a;
+    color: #ffffff;
+    padding: 8px;
   }
 
   /* 装備設定 */
@@ -1132,9 +1217,11 @@ style.textContent = `
   }
 
   .equipment-slot {
-    padding: var(--mc-space-sm);
-    background: var(--mc-bg-surface);
-    border: 1px solid var(--mc-border-dark);
+    padding: var(--mc-space-md);
+    background: linear-gradient(180deg, #4a4a4a 0%, #3a3a3a 100%);
+    border: 2px solid #555555;
+    border-radius: 6px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.1), 0 2px 4px rgba(0,0,0,0.2);
   }
 
   .slot-header {
@@ -1144,6 +1231,12 @@ style.textContent = `
     margin-bottom: var(--mc-space-xs);
     font-weight: bold;
     font-size: 0.85rem;
+    color: var(--mc-text-primary);
+  }
+
+  .slot-name {
+    color: #ffffff;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
   }
 
   .slot-header .slot-icon {
@@ -1164,84 +1257,158 @@ style.textContent = `
   }
 
   .enchant-btn {
-    padding: 4px 8px;
-    background: var(--mc-color-diamond);
-    color: white;
-    border: none;
+    padding: 6px 10px;
+    background: linear-gradient(180deg, #6b4ce8 0%, #4a32b3 100%);
+    color: #ffffff;
+    border: 2px solid #3d2694;
+    border-radius: 4px;
     cursor: pointer;
     font-size: 0.75rem;
+    font-weight: bold;
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 6px;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    transition: all 0.15s ease;
   }
 
   .enchant-btn .mc-wiki-image {
-    filter: drop-shadow(0 0 1px rgba(255,255,255,0.5));
+    filter: drop-shadow(0 0 2px rgba(255,255,255,0.7));
   }
 
   .enchant-btn:hover {
-    background: var(--mc-color-diamond-dark, #1a8aa3);
+    background: linear-gradient(180deg, #7d5ef5 0%, #5a42c3 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(107, 76, 232, 0.4);
+  }
+
+  .enchant-btn:active {
+    transform: translateY(1px);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.3);
   }
 
   .enchant-count {
-    background: rgba(255,255,255,0.3);
-    padding: 0 4px;
-    border-radius: 2px;
+    background: rgba(255,255,255,0.25);
+    color: #ffffff;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-weight: bold;
+    min-width: 20px;
+    text-align: center;
   }
 
   .drop-chance-wrapper {
     display: flex;
     align-items: center;
-    gap: 4px;
-    font-size: 0.75rem;
+    gap: 6px;
+    font-size: 0.8rem;
+    color: #ffffff;
+    font-weight: 500;
+  }
+
+  .drop-chance-wrapper label {
+    color: #cccccc;
   }
 
   .drop-chance {
-    width: 60px;
+    width: 70px;
+    background: #2a2a2a;
+    color: #ffffff;
+    border: 2px solid #444444;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 0.85rem;
+    text-align: center;
+  }
+
+  .drop-chance:focus {
+    border-color: var(--mc-color-grass-main);
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(92, 183, 70, 0.3);
   }
 
   /* 属性設定 */
   .attributes-section {
-    margin-top: var(--mc-space-sm);
-    padding: var(--mc-space-sm);
-    background: var(--mc-bg-panel);
-    border: 1px solid var(--mc-border-dark);
+    margin-top: var(--mc-space-md);
+    padding: var(--mc-space-md);
+    background: linear-gradient(180deg, #3d3d3d 0%, #2d2d2d 100%);
+    border: 2px solid #4a4a4a;
+    border-radius: 6px;
   }
 
   .attribute-row {
     display: flex;
     align-items: center;
-    gap: var(--mc-space-sm);
-    padding: 4px 0;
+    gap: var(--mc-space-md);
+    padding: 8px 4px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .attribute-row:last-child {
+    border-bottom: none;
   }
 
   .attribute-row .attr-icon {
-    width: 20px;
-    height: 20px;
+    width: 24px;
+    height: 24px;
     flex-shrink: 0;
   }
 
   .attribute-row .attr-name {
     flex: 1;
-    font-size: 0.8rem;
+    font-size: 0.9rem;
+    color: #ffffff;
+    font-weight: 500;
   }
 
   .attribute-row .attr-value {
     width: 100px;
+    background: #2a2a2a;
+    color: #ffffff;
+    border: 2px solid #444444;
+    border-radius: 4px;
+    padding: 6px 10px;
+    font-size: 0.9rem;
+    text-align: center;
+  }
+
+  .attribute-row .attr-value:focus {
+    border-color: var(--mc-color-grass-main);
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(92, 183, 70, 0.3);
   }
 
   /* オプション */
   .options-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-    gap: var(--mc-space-sm);
+    gap: var(--mc-space-md);
+    padding: var(--mc-space-sm);
+    background: rgba(0,0,0,0.2);
+    border-radius: 6px;
   }
 
   .option-label {
     display: flex;
     align-items: center;
-    gap: var(--mc-space-xs);
-    font-size: 0.85rem;
+    gap: var(--mc-space-sm);
+    font-size: 0.9rem;
+    cursor: pointer;
+    color: #ffffff;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: background 0.15s;
+  }
+
+  .option-label:hover {
+    background: rgba(255,255,255,0.1);
+  }
+
+  .option-label input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--mc-color-grass-main);
     cursor: pointer;
   }
 
