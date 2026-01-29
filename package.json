@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:simple": "cd src && python -m http.server 8080",
     "build": "vite build",
     "preview": "vite preview",
     "mc:data:update": "node scripts/update-mc-data.mjs",
