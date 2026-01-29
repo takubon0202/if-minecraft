@@ -6,57 +6,7 @@
 
 import { $, $$, debounce, delegate } from '../../core/dom.js';
 import { setOutput } from '../../app/sidepanel.js';
-
-// Minecraft Wiki画像ベースURL
-const WIKI_IMG_BASE = 'https://minecraft.wiki/images/';
-
-// エフェクトアイコンURL生成（ステータスエフェクト）
-function getEffectIconUrl(effectId) {
-  // エフェクトIDからWiki画像名へのマッピング
-  const effectIconMap = {
-    'speed': 'Effect_Speed',
-    'haste': 'Effect_Haste',
-    'strength': 'Effect_Strength',
-    'instant_health': 'Effect_Instant_Health',
-    'jump_boost': 'Effect_Jump_Boost',
-    'regeneration': 'Effect_Regeneration',
-    'resistance': 'Effect_Resistance',
-    'fire_resistance': 'Effect_Fire_Resistance',
-    'water_breathing': 'Effect_Water_Breathing',
-    'invisibility': 'Effect_Invisibility',
-    'night_vision': 'Effect_Night_Vision',
-    'health_boost': 'Effect_Health_Boost',
-    'absorption': 'Effect_Absorption',
-    'saturation': 'Effect_Saturation',
-    'luck': 'Effect_Luck',
-    'slow_falling': 'Effect_Slow_Falling',
-    'conduit_power': 'Effect_Conduit_Power',
-    'dolphins_grace': 'Effect_Dolphin%27s_Grace',
-    'hero_of_the_village': 'Effect_Hero_of_the_Village',
-    'slowness': 'Effect_Slowness',
-    'mining_fatigue': 'Effect_Mining_Fatigue',
-    'instant_damage': 'Effect_Instant_Damage',
-    'nausea': 'Effect_Nausea',
-    'blindness': 'Effect_Blindness',
-    'hunger': 'Effect_Hunger',
-    'weakness': 'Effect_Weakness',
-    'poison': 'Effect_Poison',
-    'wither': 'Effect_Wither',
-    'levitation': 'Effect_Levitation',
-    'unluck': 'Effect_Bad_Luck',
-    'bad_omen': 'Effect_Bad_Omen',
-    'darkness': 'Effect_Darkness',
-    'infested': 'Effect_Infested',
-    'oozing': 'Effect_Oozing',
-    'weaving': 'Effect_Weaving',
-    'wind_charged': 'Effect_Wind_Charged',
-    'glowing': 'Effect_Glowing',
-    'trial_omen': 'Effect_Trial_Omen',
-    'raid_omen': 'Effect_Raid_Omen',
-  };
-  const iconName = effectIconMap[effectId];
-  return iconName ? `${WIKI_IMG_BASE}${iconName}.png` : null;
-}
+import { getInviconUrl, getEffectIconUrl } from '../../core/wiki-images.js';
 
 // 全エフェクト一覧（33種類+）- colorは色付き円のフォールバック用
 const EFFECTS = [
@@ -104,21 +54,18 @@ const EFFECTS = [
   { id: 'raid_omen', name: '襲撃の前兆', en: 'Raid Omen', type: 'neutral', color: '#8B0000' },
 ];
 
-// ポーションタイプ - Minecraft Wiki画像URL使用
+// ポーションタイプ
 const POTION_TYPES = [
-  { id: 'potion', name: '通常のポーション', icon: `${WIKI_IMG_BASE}Invicon_Potion.png` },
-  { id: 'splash_potion', name: 'スプラッシュポーション', icon: `${WIKI_IMG_BASE}Invicon_Splash_Potion.png` },
-  { id: 'lingering_potion', name: '残留ポーション', icon: `${WIKI_IMG_BASE}Invicon_Lingering_Potion.png` },
-  { id: 'tipped_arrow', name: '効果付きの矢', icon: `${WIKI_IMG_BASE}Invicon_Tipped_Arrow.png` },
+  { id: 'potion', name: '通常のポーション' },
+  { id: 'splash_potion', name: 'スプラッシュポーション' },
+  { id: 'lingering_potion', name: '残留ポーション' },
+  { id: 'tipped_arrow', name: '効果付きの矢' },
 ];
 
-// エフェクトアイコンのHTML生成（画像またはカラー円）
+// エフェクトアイコンのHTML生成（画像またはカラー円フォールバック）
 function renderEffectIcon(effectId, color, size = 18) {
   const iconUrl = getEffectIconUrl(effectId);
-  if (iconUrl) {
-    return `<img src="${iconUrl}" alt="" class="effect-icon-img" width="${size}" height="${size}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='inline-block'"><span class="effect-icon-fallback" style="display:none;background-color:${color}"></span>`;
-  }
-  return `<span class="effect-icon-circle" style="background-color:${color}"></span>`;
+  return `<img src="${iconUrl}" alt="" class="effect-icon-img" width="${size}" height="${size}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='inline-block'"><span class="effect-icon-fallback" style="display:none;background-color:${color}"></span>`;
 }
 
 // プリセット
@@ -166,7 +113,7 @@ export function render(manifest) {
           <div class="potion-type-tabs" id="potion-type-tabs">
             ${POTION_TYPES.map((t, i) => `
               <button type="button" class="type-tab ${i === 0 ? 'active' : ''}" data-type="${t.id}">
-                <img src="${t.icon}" alt="${t.name}" class="tab-icon-img" width="32" height="32" loading="lazy">
+                <img src="${getInviconUrl(t.id)}" alt="${t.name}" class="tab-icon-img" width="32" height="32" loading="lazy" onerror="this.style.opacity='0.3'">
                 <span class="tab-name">${t.name}</span>
               </button>
             `).join('')}

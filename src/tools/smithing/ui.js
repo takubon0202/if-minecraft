@@ -7,22 +7,11 @@
 
 import { $, $$, debounce, delegate } from '../../core/dom.js';
 import { setOutput } from '../../app/sidepanel.js';
+import { getInviconUrl, wikiImg } from '../../core/wiki-images.js';
 
 // ======================================
-// Minecraft Wiki画像ヘルパー
+// 画像URLヘルパー（共通モジュール使用）
 // ======================================
-
-const WIKI_IMAGE_BASE = 'https://minecraft.wiki/images/';
-
-/**
- * Wiki画像URLを生成
- * @param {string} itemName - アイテム名（スペース区切り、例: "Netherite Helmet"）
- * @returns {string} 画像URL
- */
-function getWikiImageUrl(itemName) {
-  const formatted = itemName.replace(/ /g, '_');
-  return `${WIKI_IMAGE_BASE}Invicon_${formatted}.png`;
-}
 
 /**
  * 防具のWiki画像URLを取得
@@ -31,22 +20,8 @@ function getWikiImageUrl(itemName) {
  * @returns {string} 画像URL
  */
 function getArmorImageUrl(material, type) {
-  const materialNames = {
-    leather: 'Leather',
-    chainmail: 'Chainmail',
-    iron: 'Iron',
-    copper: 'Copper',
-    golden: 'Golden',
-    diamond: 'Diamond',
-    netherite: 'Netherite',
-  };
-  const typeNames = {
-    helmet: 'Helmet',
-    chestplate: 'Chestplate',
-    leggings: 'Leggings',
-    boots: 'Boots',
-  };
-  return getWikiImageUrl(`${materialNames[material] || 'Diamond'}_${typeNames[type] || 'Helmet'}`);
+  // 防具アイテムID: material_type (例: diamond_chestplate)
+  return getInviconUrl(`${material}_${type}`);
 }
 
 /**
@@ -56,29 +31,10 @@ function getArmorImageUrl(material, type) {
  */
 function getTrimTemplateImageUrl(patternId) {
   if (patternId === 'netherite_upgrade') {
-    return getWikiImageUrl('Netherite_Upgrade_Smithing_Template');
+    return getInviconUrl('netherite_upgrade_smithing_template');
   }
-  const patternNames = {
-    bolt: 'Bolt',
-    coast: 'Coast',
-    dune: 'Dune',
-    eye: 'Eye',
-    flow: 'Flow',
-    host: 'Host',
-    raiser: 'Raiser',
-    rib: 'Rib',
-    sentry: 'Sentry',
-    shaper: 'Shaper',
-    silence: 'Silence',
-    snout: 'Snout',
-    spire: 'Spire',
-    tide: 'Tide',
-    vex: 'Vex',
-    ward: 'Ward',
-    wayfinder: 'Wayfinder',
-    wild: 'Wild',
-  };
-  return getWikiImageUrl(`${patternNames[patternId] || patternId}_Armor_Trim_Smithing_Template`);
+  // トリムテンプレートID: {pattern}_armor_trim_smithing_template
+  return getInviconUrl(`${patternId}_armor_trim_smithing_template`);
 }
 
 /**
@@ -87,31 +43,7 @@ function getTrimTemplateImageUrl(patternId) {
  * @returns {string} 画像URL
  */
 function getMaterialImageUrl(itemId) {
-  const itemNames = {
-    amethyst_shard: 'Amethyst_Shard',
-    copper_ingot: 'Copper_Ingot',
-    diamond: 'Diamond',
-    emerald: 'Emerald',
-    gold_ingot: 'Gold_Ingot',
-    iron_ingot: 'Iron_Ingot',
-    lapis_lazuli: 'Lapis_Lazuli',
-    netherite_ingot: 'Netherite_Ingot',
-    quartz: 'Nether_Quartz',
-    redstone: 'Redstone_Dust',
-    resin_brick: 'Resin_Brick',
-  };
-  return getWikiImageUrl(itemNames[itemId] || itemId);
-}
-
-/**
- * Wiki画像要素を生成
- * @param {string} url - 画像URL
- * @param {string} alt - 代替テキスト
- * @param {number} size - サイズ（デフォルト32px）
- * @returns {string} img HTML
- */
-function wikiImg(url, alt, size = 32) {
-  return `<img src="${url}" alt="${alt}" class="mc-wiki-icon" width="${size}" height="${size}" loading="lazy">`;
+  return getInviconUrl(itemId);
 }
 
 // ======================================
@@ -605,7 +537,7 @@ function updateCommand() {
 const style = document.createElement('style');
 style.textContent = `
   /* Wiki画像アイコン */
-  .mc-wiki-icon {
+  .mc-wiki-img {
     image-rendering: pixelated;
     image-rendering: -moz-crisp-edges;
     image-rendering: crisp-edges;
@@ -939,7 +871,7 @@ style.textContent = `
     filter: none;
   }
 
-  .armor-piece .mc-wiki-icon {
+  .armor-piece .mc-wiki-img {
     display: block;
   }
 

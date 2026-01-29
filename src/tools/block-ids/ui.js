@@ -5,22 +5,7 @@
 
 import { $, $$, debounce, delegate } from '../../core/dom.js';
 import { copyToClipboard } from '../../core/clipboard.js';
-
-/**
- * ブロックIDからMinecraft Wiki画像URLを生成
- * @param {string} blockId - ブロックID (例: 'stone', 'oak_planks')
- * @returns {string} 画像URL
- */
-function getBlockImageUrl(blockId) {
-  // ブロックIDをWiki形式の名前に変換
-  // 例: 'oak_planks' -> 'Oak_Planks'
-  const wikiName = blockId
-    .split('_')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join('_');
-
-  return `https://minecraft.wiki/images/Invicon_${wikiName}.png`;
-}
+import { getInviconUrl } from '../../core/wiki-images.js';
 
 // ブロックカテゴリ定義
 const CATEGORIES = [
@@ -646,7 +631,7 @@ function renderResults(container) {
       <div class="block-grid">
         ${displayBlocks.map(block => `
           <div class="block-item" data-id="${block.id}" title="${block.desc}">
-            <img class="block-icon" src="${getBlockImageUrl(block.id)}" alt="${block.name}" loading="lazy">
+            <img class="block-icon" src="${getInviconUrl(block.id)}" alt="${block.name}" loading="lazy" onerror="this.style.opacity='0.3'">
             <span class="block-name">${block.name}</span>
             <span class="block-id">${block.id}</span>
           </div>
@@ -659,7 +644,7 @@ function renderResults(container) {
       <div class="block-list">
         ${displayBlocks.map(block => `
           <div class="block-item list-item" data-id="${block.id}">
-            <img class="block-icon" src="${getBlockImageUrl(block.id)}" alt="${block.name}" loading="lazy">
+            <img class="block-icon" src="${getInviconUrl(block.id)}" alt="${block.name}" loading="lazy" onerror="this.style.opacity='0.3'">
             <div class="block-info">
               <span class="block-name">${block.name}</span>
               <span class="block-id">minecraft:${block.id}</span>

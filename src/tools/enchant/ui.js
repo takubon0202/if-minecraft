@@ -6,38 +6,7 @@
 
 import { $, $$, debounce, delegate } from '../../core/dom.js';
 import { setOutput } from '../../app/sidepanel.js';
-
-// Minecraft Wiki Invicon画像URL生成関数
-const MC_WIKI_BASE = 'https://minecraft.wiki/images';
-
-// 特殊なアイテム名マッピング（Wiki上の名前がアイテムIDと異なる場合）
-const SPECIAL_ITEM_NAMES = {
-  'turtle_helmet': 'Turtle_Shell',
-};
-
-/**
- * アイテムIDからMinecraft Wiki Invicon画像URLを生成
- * @param {string} itemId - アイテムID (例: diamond_sword, netherite_pickaxe)
- * @returns {string} Invicon画像URL
- */
-const getItemImageUrl = (itemId) => {
-  if (!itemId) return `${MC_WIKI_BASE}/Invicon_Air.png`;
-
-  // 特殊なアイテム名があればそれを使用
-  const specialName = SPECIAL_ITEM_NAMES[itemId];
-  if (specialName) {
-    return `${MC_WIKI_BASE}/Invicon_${specialName}.png`;
-  }
-
-  // アイテムIDをPascalCase（アンダースコア区切り）に変換
-  // 例: diamond_sword → Diamond_Sword
-  const pascalCaseName = itemId
-    .split('_')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join('_');
-
-  return `${MC_WIKI_BASE}/Invicon_${pascalCaseName}.png`;
-};
+import { getInviconUrl } from '../../core/wiki-images.js';
 
 // 最大レベル定数
 const ABSOLUTE_MAX_LEVEL = 255;  // ゲーム内で設定可能な絶対最大値
@@ -789,8 +758,10 @@ function updatePreview(container) {
     if (itemIdEl) itemIdEl.textContent = customId.startsWith('minecraft:') ? customId : `minecraft:${customId}`;
     // カスタムアイテムもInvicon画像を試行
     if (itemIconImg) {
-      itemIconImg.src = getItemImageUrl(customItemId);
+      itemIconImg.src = getInviconUrl(customItemId);
       itemIconImg.alt = customItemId;
+      itemIconImg.style.opacity = '1';
+      itemIconImg.onerror = () => { itemIconImg.style.opacity = '0.3'; };
     }
   } else {
     const cat = ITEM_CATEGORIES[catId];
@@ -800,8 +771,10 @@ function updatePreview(container) {
 
     // Wiki Invicon画像を設定
     if (itemIconImg) {
-      itemIconImg.src = getItemImageUrl(itemId);
+      itemIconImg.src = getInviconUrl(itemId);
       itemIconImg.alt = item?.name || itemId;
+      itemIconImg.style.opacity = '1';
+      itemIconImg.onerror = () => { itemIconImg.style.opacity = '0.3'; };
     }
   }
 
