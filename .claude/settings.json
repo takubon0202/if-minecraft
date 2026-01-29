@@ -1,0 +1,73 @@
+{
+  "claude": {
+    "plan": "Max",
+    "price": "$200/月",
+    "model": "claude-opus-4-5"
+  },
+  "codex": {
+    "enabled": true,
+    "method": "codex-cli",
+    "command": "codex",
+    "model": "gpt-5.2-codex",
+    "subscription": "ChatGPT Plus ($20/月)",
+    "approvalPolicy": "never",
+    "autoInvoke": {
+      "onRepeatedError": 3,
+      "keywords": ["Codexで", "GPTで", "OpenAIで"]
+    }
+  },
+  "gemini": {
+    "enabled": true,
+    "method": "gemini-cli",
+    "command": "gemini",
+    "model": "gemini-3-pro-preview",
+    "subscription": "Gemini AI Pro ($19.99/月)",
+    "yolo": true,
+    "autoInvoke": {
+      "keywords": ["Geminiで", "Googleで"]
+    },
+    "skills": {
+      "enabled": true,
+      "directory": ".gemini/skills"
+    },
+    "models": {
+      "primary": {
+        "pro": "gemini-3-pro-preview",
+        "flash": "gemini-3-flash-preview"
+      },
+      "fallback": {
+        "pro": "gemini-2.5-pro",
+        "flash": "gemini-2.5-flash"
+      }
+    }
+  },
+  "projectContext": {
+    "type": "web-site",
+    "description": "Minecraftコマンド解説・ジェネレーターサイト",
+    "language": "JavaScript/TypeScript",
+    "framework": "未定（React/Next.js/Astro等）",
+    "contextFiles": ["CODEX.md", "GEMINI.md"]
+  },
+  "evaluation": {
+    "enabled": true,
+    "skills": {
+      "evaluate": {
+        "criteria": ["SEO", "事業内容の明確さ", "分かりやすさ", "サービス申込意欲"],
+        "passingScore": 70
+      },
+      "persona": {
+        "criteria": ["共感", "通いたい度", "サービス利用意欲"],
+        "passingScore": 70
+      }
+    }
+  },
+  "autoSwitch": {
+    "onError": "suggest-alternatives",
+    "alternatives": ["claude", "codex", "gemini"]
+  },
+  "usageLimits": {
+    "warnOnRateLimit": true,
+    "stopOnRateLimit": true,
+    "preventExtraCharges": true
+  }
+}
