@@ -44,14 +44,19 @@ const ITEM_NAME_MAP = {
   'filled_map': 'Map',
 
   // === 弓・クロスボウ ===
-  'bow': 'Bow_%28Pull_0%29',
-  'crossbow': 'Crossbow_%28Loading_0%29',
+  'bow': 'Bow',
+  'crossbow': 'Crossbow',
 
-  // === ポーション ===
-  'potion': 'Potion',
-  'splash_potion': 'Splash_Potion',
-  'lingering_potion': 'Lingering_Potion',
-  'tipped_arrow': 'Arrow_of_Poison',
+  // === ポーション（効果なし/汎用） ===
+  'potion': 'Water_Bottle',
+  'splash_potion': 'Splash_Water_Bottle',
+  'lingering_potion': 'Lingering_Water_Bottle',
+  'tipped_arrow': 'Tipped_Arrow',
+
+  // === 効果付きポーション（代表例） ===
+  'potion_healing': 'Potion_of_Healing',
+  'splash_potion_healing': 'Splash_Potion_of_Healing',
+  'lingering_potion_healing': 'Lingering_Potion_of_Healing',
 
   // === 食料 ===
   'cooked_beef': 'Steak',
@@ -268,20 +273,45 @@ export function getInviconUrl(itemId) {
   return `${WIKI_BASE}/Invicon_${toPascalCase(itemId)}.png`;
 }
 
+// エフェクトIDの特殊マッピング（Wiki上の名前が異なる場合）
+const EFFECT_SPECIAL_MAP = {
+  'poison': 'fatal-poison',
+  'instant_damage': 'instant-damage',
+  'instant_health': 'instant-health',
+  'jump_boost': 'jump-boost',
+  'mining_fatigue': 'mining-fatigue',
+  'health_boost': 'health-boost',
+  'water_breathing': 'water-breathing',
+  'fire_resistance': 'fire-resistance',
+  'night_vision': 'night-vision',
+  'slow_falling': 'slow-falling',
+  'conduit_power': 'conduit-power',
+  'dolphins_grace': 'dolphins-grace',
+  'bad_omen': 'bad-omen',
+  'hero_of_the_village': 'hero-of-the-village',
+  'trial_omen': 'trial-omen',
+  'raid_omen': 'raid-omen',
+  'wind_charged': 'wind-charged',
+};
+
 /**
  * エフェクトアイコン画像URLを取得
- * @param {string} effectId - エフェクトID (例: speed)
+ * Minecraft WikiはEffectSprite_形式（ハイフン区切り、小文字）を使用
+ * @param {string} effectId - エフェクトID (例: speed, fire_resistance)
  * @returns {string} 画像URL
  */
 export function getEffectIconUrl(effectId) {
   if (!effectId) return null;
 
-  const mappedName = EFFECT_NAME_MAP[effectId];
-  if (mappedName) {
-    return `${WIKI_BASE}/Effect_${mappedName}.png`;
+  // 特殊マッピングを確認
+  const specialName = EFFECT_SPECIAL_MAP[effectId];
+  if (specialName) {
+    return `${WIKI_BASE}/EffectSprite_${specialName}.png`;
   }
 
-  return `${WIKI_BASE}/Effect_${toPascalCase(effectId)}.png`;
+  // アンダースコアをハイフンに変換（Wiki形式）
+  const wikiName = effectId.replace(/_/g, '-');
+  return `${WIKI_BASE}/EffectSprite_${wikiName}.png`;
 }
 
 /**
