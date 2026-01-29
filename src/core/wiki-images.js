@@ -3,7 +3,7 @@
  * 全ツールで統一された画像URLを生成
  */
 
-const WIKI_BASE = 'https://ja.minecraft.wiki/images';
+const WIKI_BASE = 'https://minecraft.wiki/images';
 
 /**
  * アイテムID → Wiki画像ファイル名（拡張子含む）のマッピング
