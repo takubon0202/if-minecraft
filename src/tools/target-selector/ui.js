@@ -242,7 +242,7 @@ const style = document.createElement('style');
 style.textContent = `
   .selector-desc {
     font-size: 0.75rem;
-    color: var(--mc-text-muted);
+    color: var(--mc-text-secondary);
     margin-top: var(--mc-space-xs);
   }
 
@@ -251,27 +251,33 @@ style.textContent = `
     flex-wrap: wrap;
     gap: var(--mc-space-xs);
     padding: var(--mc-space-sm);
-    background-color: var(--mc-bg-panel);
-    border: 1px solid var(--mc-border-dark);
+    background-color: var(--mc-bg-surface);
+    border: 2px solid var(--mc-border-dark);
+    border-radius: var(--mc-radius-md);
   }
 
   .arg-btn {
     padding: var(--mc-space-xs) var(--mc-space-sm);
     font-size: 0.7rem;
     font-family: var(--mc-font-mono);
-    background-color: var(--mc-bg-surface);
+    background-color: var(--mc-bg-panel);
+    color: var(--mc-text-primary);
     border: 1px solid var(--mc-border-dark);
     cursor: pointer;
     transition: all 0.15s;
+    border-radius: var(--mc-radius-sm);
   }
 
   .arg-btn:hover {
-    background-color: var(--mc-color-stone-300);
+    background-color: var(--mc-color-grass-light);
+    color: #fff;
+    border-color: var(--mc-color-grass-main);
   }
 
   .arg-btn.active {
     background-color: var(--mc-color-grass-main);
-    color: white;
+    color: #fff;
+    border-color: var(--mc-color-grass-main);
   }
 
   .active-args {
@@ -279,8 +285,9 @@ style.textContent = `
     flex-direction: column;
     gap: var(--mc-space-xs);
     padding: var(--mc-space-sm);
-    background-color: var(--mc-bg-panel);
-    border: 1px solid var(--mc-border-dark);
+    background-color: var(--mc-bg-surface);
+    border: 2px solid var(--mc-border-dark);
+    border-radius: var(--mc-radius-md);
     min-height: 60px;
   }
 
@@ -288,19 +295,22 @@ style.textContent = `
     display: flex;
     align-items: center;
     gap: var(--mc-space-sm);
-    padding: var(--mc-space-xs);
-    background-color: var(--mc-bg-surface);
+    padding: var(--mc-space-sm);
+    background-color: var(--mc-bg-panel);
     border: 1px solid var(--mc-border-dark);
+    border-radius: var(--mc-radius-sm);
   }
 
   .active-arg .arg-name {
     font-family: var(--mc-font-mono);
     font-weight: bold;
     min-width: 80px;
+    color: var(--mc-color-grass-main);
   }
 
   .active-arg .arg-value {
     flex: 1;
+    color: var(--mc-text-primary);
   }
 
   .active-arg .remove-arg {
@@ -313,16 +323,22 @@ style.textContent = `
     font-size: 1.25rem;
   }
 
+  .active-arg .remove-arg:hover {
+    transform: scale(1.2);
+  }
+
   .reference-section, .examples-section {
     margin-top: var(--mc-space-lg);
     padding: var(--mc-space-md);
     background-color: var(--mc-bg-surface);
-    border: 1px solid var(--mc-border-dark);
+    border: 2px solid var(--mc-border-dark);
+    border-radius: var(--mc-radius-md);
   }
 
   .reference-section h3, .examples-section h3 {
     margin: 0 0 var(--mc-space-md) 0;
     font-size: 1rem;
+    color: var(--mc-text-primary);
   }
 
   .reference-grid {
@@ -337,6 +353,8 @@ style.textContent = `
     gap: var(--mc-space-sm);
     padding: var(--mc-space-sm);
     background-color: var(--mc-bg-panel);
+    border: 1px solid var(--mc-border-dark);
+    border-radius: var(--mc-radius-sm);
   }
 
   .ref-code {
@@ -347,7 +365,7 @@ style.textContent = `
 
   .ref-desc {
     font-size: 0.75rem;
-    color: var(--mc-text-secondary);
+    color: var(--mc-text-primary);
   }
 
   .examples-list {
@@ -362,16 +380,29 @@ style.textContent = `
     gap: var(--mc-space-md);
     padding: var(--mc-space-sm);
     background-color: var(--mc-bg-panel);
+    border: 1px solid var(--mc-border-dark);
+    border-radius: var(--mc-radius-sm);
     cursor: pointer;
-    transition: background-color 0.15s;
+    transition: all 0.15s;
   }
 
   .example-item:hover {
-    background-color: var(--mc-color-stone-300);
+    background-color: var(--mc-color-grass-light);
+    border-color: var(--mc-color-grass-main);
+  }
+
+  .example-item:hover code,
+  .example-item:hover span {
+    color: #fff;
   }
 
   .example-item.copied {
-    background-color: var(--mc-color-grass-light);
+    background-color: var(--mc-color-grass-main);
+  }
+
+  .example-item.copied code,
+  .example-item.copied span {
+    color: #fff;
   }
 
   .example-item code {
@@ -382,7 +413,7 @@ style.textContent = `
 
   .example-item span {
     font-size: 0.75rem;
-    color: var(--mc-text-muted);
+    color: var(--mc-text-secondary);
   }
 `;
 document.head.appendChild(style);

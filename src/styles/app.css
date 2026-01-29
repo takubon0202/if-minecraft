@@ -79,12 +79,25 @@
   font-size: 0.75rem;
 }
 
+.version-selector label {
+  color: rgba(255, 255, 255, 0.8);
+}
+
 .version-selector select {
   background-color: var(--mc-bg-panel);
+  color: var(--mc-text-primary);
   border: 1px solid var(--mc-border-dark);
   padding: 4px 8px;
   font-size: 0.75rem;
   cursor: pointer;
+}
+
+.header-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--mc-space-sm);
+  margin-top: var(--mc-space-xs);
 }
 
 .nav-search {

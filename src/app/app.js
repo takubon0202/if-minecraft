@@ -67,6 +67,7 @@ async function init() {
   initTabs();
   initSidePanel();
   initTooltip(); // Minecraft風ツールチップ
+  initThemeToggle(); // テーマ切り替え
 
   // ルーター設定
   setupRouter();
@@ -294,6 +295,38 @@ function setupAntigravity() {
       }
       konamiBuffer = [];
     }
+  });
+}
+
+/**
+ * テーマ切り替え初期化
+ */
+function initThemeToggle() {
+  const btn = $('#theme-toggle');
+  if (!btn) return;
+
+  // 保存されたテーマを復元
+  const savedTheme = storage.load('theme', null);
+  if (savedTheme) {
+    document.documentElement.setAttribute('data-theme', savedTheme);
+  }
+
+  btn.addEventListener('click', () => {
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    let newTheme;
+
+    if (currentTheme === 'dark') {
+      newTheme = 'light';
+    } else if (currentTheme === 'light') {
+      newTheme = 'dark';
+    } else {
+      // 自動（システム設定）の場合、現在の表示を切り替え
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      newTheme = prefersDark ? 'light' : 'dark';
+    }
+
+    document.documentElement.setAttribute('data-theme', newTheme);
+    storage.save('theme', newTheme);
   });
 }
 

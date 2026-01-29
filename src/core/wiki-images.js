@@ -17,6 +17,15 @@ const ITEM_FILE_MAP = {
   // === 構造ブロック系 ===
   'structure_block': 'Structure_Block.png',
   'jigsaw': 'Jigsaw_Block.png',
+  // === 本・エンチャント系（GIF形式） ===
+  'enchanted_book': 'Enchanted_Book.gif',
+  'written_book': 'Written_Book.gif',
+  'compass': 'Compass.gif',
+  'clock': 'Clock.gif',
+  // === ポーション系（GIF形式） ===
+  'potion': 'Potion.gif',
+  'splash_potion': 'Splash_Potion.gif',
+  'lingering_potion': 'Lingering_Potion.gif',
 };
 
 /**
