@@ -12,9 +12,22 @@ import { initSidePanel } from './sidepanel.js';
 import { loadTool, getToolManifest } from './shell.js';
 
 // ツールマニフェストをインポート
+// リファレンス
 import * as idBrowser from '../tools/id-browser/manifest.js';
+import * as colorCodes from '../tools/color-codes/manifest.js';
+import * as targetSelector from '../tools/target-selector/manifest.js';
+import * as coordinate from '../tools/coordinate/manifest.js';
+// コマンド生成
 import * as give from '../tools/give/manifest.js';
 import * as summon from '../tools/summon/manifest.js';
+import * as enchant from '../tools/enchant/manifest.js';
+import * as potion from '../tools/potion/manifest.js';
+import * as smithing from '../tools/smithing/manifest.js';
+// テキスト系
+import * as tellraw from '../tools/tellraw/manifest.js';
+import * as title from '../tools/title/manifest.js';
+import * as sign from '../tools/sign/manifest.js';
+import * as book from '../tools/book/manifest.js';
 
 // 登録済みツール
 const tools = new Map();
@@ -25,10 +38,22 @@ const tools = new Map();
 async function init() {
   console.log('MC Tool Hub initializing...');
 
-  // ツール登録
+  // ツール登録 - リファレンス
   registerTool(idBrowser);
+  registerTool(colorCodes);
+  registerTool(targetSelector);
+  registerTool(coordinate);
+  // コマンド生成
   registerTool(give);
   registerTool(summon);
+  registerTool(enchant);
+  registerTool(potion);
+  registerTool(smithing);
+  // テキスト系
+  registerTool(tellraw);
+  registerTool(title);
+  registerTool(sign);
+  registerTool(book);
 
   // コンポーネント初期化
   initNav();
