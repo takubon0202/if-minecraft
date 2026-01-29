@@ -1,313 +1,1375 @@
 /**
  * Summon Generator - UI
+ * エンティティ召喚コマンド生成ツール
+ * Minecraft公式サイト風デザイン
  */
 
-import { $, $$, createElement, debounce } from '../../core/dom.js';
-import { dataStore } from '../../core/store.js';
+import { $, $$, createElement, debounce, delegate } from '../../core/dom.js';
 import { setOutput } from '../../app/sidepanel.js';
-import { generateSummonCommand } from './engine.js';
+import { getInviconUrl, getSpawnEggUrl } from '../../core/wiki-images.js';
+
+// エンティティカテゴリ（カテゴリ別に整理）
+const ENTITY_CATEGORIES = {
+  hostile: {
+    name: '敵対的Mob',
+    icon: 'zombie',
+    color: '#c80000',
+    entities: [
+      { id: 'zombie', name: 'ゾンビ', desc: '基本的な敵Mob' },
+      { id: 'skeleton', name: 'スケルトン', desc: '弓を撃つ' },
+      { id: 'creeper', name: 'クリーパー', desc: '爆発する' },
+      { id: 'spider', name: 'クモ', desc: '壁を登れる' },
+      { id: 'enderman', name: 'エンダーマン', desc: 'テレポートする' },
+      { id: 'witch', name: 'ウィッチ', desc: 'ポーションを投げる' },
+      { id: 'slime', name: 'スライム', desc: '分裂する' },
+      { id: 'phantom', name: 'ファントム', desc: '空を飛ぶ' },
+      { id: 'drowned', name: 'ドラウンド', desc: '水中ゾンビ' },
+      { id: 'husk', name: 'ハスク', desc: '砂漠ゾンビ' },
+      { id: 'stray', name: 'ストレイ', desc: '氷スケルトン' },
+      { id: 'blaze', name: 'ブレイズ', desc: '火の玉を撃つ' },
+      { id: 'ghast', name: 'ガスト', desc: '巨大な火の玉' },
+      { id: 'magma_cube', name: 'マグマキューブ', desc: 'ネザーのスライム' },
+      { id: 'wither_skeleton', name: 'ウィザースケルトン', desc: '衰弱効果' },
+      { id: 'piglin_brute', name: 'ピグリンブルート', desc: '常に敵対的' },
+      { id: 'hoglin', name: 'ホグリン', desc: 'ネザーの獣' },
+      { id: 'zoglin', name: 'ゾグリン', desc: 'ゾンビ化ホグリン' },
+      { id: 'ravager', name: 'ラヴェジャー', desc: '襲撃の獣' },
+      { id: 'vex', name: 'ヴェックス', desc: '壁をすり抜ける' },
+      { id: 'evoker', name: 'エヴォーカー', desc: '魔法を使う' },
+      { id: 'vindicator', name: 'ヴィンディケーター', desc: '斧を持つ' },
+      { id: 'pillager', name: 'ピリジャー', desc: 'クロスボウを持つ' },
+      { id: 'warden', name: 'ウォーデン', desc: '最強の敵Mob' },
+      { id: 'breeze', name: 'ブリーズ', desc: '風の攻撃' },
+    ]
+  },
+  passive: {
+    name: '友好的Mob',
+    icon: 'pig',
+    color: '#5cb746',
+    entities: [
+      { id: 'pig', name: 'ブタ', desc: '豚肉をドロップ' },
+      { id: 'cow', name: 'ウシ', desc: '牛肉と革' },
+      { id: 'sheep', name: 'ヒツジ', desc: '羊毛を刈れる' },
+      { id: 'chicken', name: 'ニワトリ', desc: '卵を産む' },
+      { id: 'rabbit', name: 'ウサギ', desc: '小さくて速い' },
+      { id: 'horse', name: 'ウマ', desc: '乗れる' },
+      { id: 'donkey', name: 'ロバ', desc: 'チェスト付き' },
+      { id: 'mule', name: 'ラバ', desc: 'ウマとロバの子' },
+      { id: 'llama', name: 'ラマ', desc: 'カーペット装備可' },
+      { id: 'cat', name: 'ネコ', desc: 'クリーパー除け' },
+      { id: 'wolf', name: 'オオカミ', desc: '飼いならせる' },
+      { id: 'ocelot', name: 'ヤマネコ', desc: 'ジャングルに生息' },
+      { id: 'parrot', name: 'オウム', desc: '音を真似る' },
+      { id: 'fox', name: 'キツネ', desc: 'アイテムを拾う' },
+      { id: 'bee', name: 'ミツバチ', desc: '蜂蜜を作る' },
+      { id: 'turtle', name: 'カメ', desc: '卵を産む' },
+      { id: 'axolotl', name: 'ウーパールーパー', desc: '水中で再生' },
+      { id: 'frog', name: 'カエル', desc: 'マグマキューブを食べる' },
+      { id: 'allay', name: 'アレイ', desc: 'アイテムを集める' },
+      { id: 'sniffer', name: 'スニッファー', desc: '種を掘る' },
+      { id: 'camel', name: 'ラクダ', desc: '2人乗り' },
+      { id: 'armadillo', name: 'アルマジロ', desc: '鱗をドロップ' },
+    ]
+  },
+  neutral: {
+    name: '中立Mob',
+    icon: 'iron_golem',
+    color: '#f2c13d',
+    entities: [
+      { id: 'iron_golem', name: 'アイアンゴーレム', desc: '村を守る' },
+      { id: 'snow_golem', name: 'スノウゴーレム', desc: '雪玉を投げる' },
+      { id: 'piglin', name: 'ピグリン', desc: '金で取引' },
+      { id: 'zombified_piglin', name: 'ゾンビピグリン', desc: '攻撃すると群れで襲う' },
+      { id: 'endermite', name: 'エンダーマイト', desc: 'エンダーマンの敵' },
+      { id: 'polar_bear', name: 'シロクマ', desc: '子供がいると攻撃的' },
+      { id: 'panda', name: 'パンダ', desc: '竹を食べる' },
+      { id: 'dolphin', name: 'イルカ', desc: '泳ぎを速くする' },
+      { id: 'trader_llama', name: '行商人のラマ', desc: '行商人と一緒' },
+      { id: 'goat', name: 'ヤギ', desc: '突進攻撃' },
+    ]
+  },
+  npc: {
+    name: 'NPC',
+    icon: 'villager',
+    color: '#8b6914',
+    entities: [
+      { id: 'villager', name: '村人', desc: '取引できる' },
+      { id: 'wandering_trader', name: '行商人', desc: 'レアアイテム取引' },
+      { id: 'zombie_villager', name: '村人ゾンビ', desc: '治療可能' },
+    ]
+  },
+  boss: {
+    name: 'ボス',
+    icon: 'wither_skeleton_skull',
+    color: '#7b3f9e',
+    entities: [
+      { id: 'ender_dragon', name: 'エンダードラゴン', desc: 'エンドのボス' },
+      { id: 'wither', name: 'ウィザー', desc: '召喚して戦う' },
+      { id: 'elder_guardian', name: 'エルダーガーディアン', desc: '海底神殿のボス' },
+    ]
+  },
+  aquatic: {
+    name: '水生Mob',
+    icon: 'tropical_fish',
+    color: '#4decf2',
+    entities: [
+      { id: 'squid', name: 'イカ', desc: '墨を吐く' },
+      { id: 'glow_squid', name: '発光イカ', desc: '光る墨' },
+      { id: 'cod', name: 'タラ', desc: '魚' },
+      { id: 'salmon', name: 'サケ', desc: '魚' },
+      { id: 'tropical_fish', name: '熱帯魚', desc: 'カラフル' },
+      { id: 'pufferfish', name: 'フグ', desc: '毒' },
+      { id: 'guardian', name: 'ガーディアン', desc: 'ビームを撃つ' },
+    ]
+  },
+  other: {
+    name: 'その他',
+    icon: 'armor_stand',
+    color: '#888888',
+    entities: [
+      { id: 'armor_stand', name: '防具立て', desc: '装飾用' },
+      { id: 'item_frame', name: '額縁', desc: 'アイテムを飾る' },
+      { id: 'glow_item_frame', name: '発光額縁', desc: '光る額縁' },
+      { id: 'painting', name: '絵画', desc: '壁に飾る' },
+      { id: 'minecart', name: 'トロッコ', desc: 'レール上を移動' },
+      { id: 'boat', name: 'ボート', desc: '水上移動' },
+      { id: 'tnt', name: 'TNT', desc: '爆発物' },
+      { id: 'falling_block', name: '落下ブロック', desc: '落下する' },
+      { id: 'experience_orb', name: '経験値オーブ', desc: '経験値を得る' },
+      { id: 'lightning_bolt', name: '雷', desc: '落雷' },
+    ]
+  },
+};
+
+// JSONテキストの色
+const TEXT_COLORS = [
+  { id: 'black', name: '黒', hex: '#000000' },
+  { id: 'dark_blue', name: '紺', hex: '#0000AA' },
+  { id: 'dark_green', name: '緑', hex: '#00AA00' },
+  { id: 'dark_aqua', name: '青緑', hex: '#00AAAA' },
+  { id: 'dark_red', name: '暗赤', hex: '#AA0000' },
+  { id: 'dark_purple', name: '紫', hex: '#AA00AA' },
+  { id: 'gold', name: '金', hex: '#FFAA00' },
+  { id: 'gray', name: '灰', hex: '#AAAAAA' },
+  { id: 'dark_gray', name: '暗灰', hex: '#555555' },
+  { id: 'blue', name: '青', hex: '#5555FF' },
+  { id: 'green', name: '黄緑', hex: '#55FF55' },
+  { id: 'aqua', name: '水色', hex: '#55FFFF' },
+  { id: 'red', name: '赤', hex: '#FF5555' },
+  { id: 'light_purple', name: 'ピンク', hex: '#FF55FF' },
+  { id: 'yellow', name: '黄', hex: '#FFFF55' },
+  { id: 'white', name: '白', hex: '#FFFFFF' },
+];
+
+// エフェクト一覧
+const EFFECTS = [
+  { id: 'speed', name: '移動速度上昇', icon: 'speed' },
+  { id: 'slowness', name: '移動速度低下', icon: 'slowness' },
+  { id: 'haste', name: '採掘速度上昇', icon: 'haste' },
+  { id: 'mining_fatigue', name: '採掘速度低下', icon: 'mining-fatigue' },
+  { id: 'strength', name: '攻撃力上昇', icon: 'strength' },
+  { id: 'instant_health', name: '即時回復', icon: 'instant-health' },
+  { id: 'instant_damage', name: '即時ダメージ', icon: 'instant-damage' },
+  { id: 'jump_boost', name: '跳躍力上昇', icon: 'jump-boost' },
+  { id: 'nausea', name: '吐き気', icon: 'nausea' },
+  { id: 'regeneration', name: '再生', icon: 'regeneration' },
+  { id: 'resistance', name: '耐性', icon: 'resistance' },
+  { id: 'fire_resistance', name: '火炎耐性', icon: 'fire-resistance' },
+  { id: 'water_breathing', name: '水中呼吸', icon: 'water-breathing' },
+  { id: 'invisibility', name: '透明化', icon: 'invisibility' },
+  { id: 'blindness', name: '盲目', icon: 'blindness' },
+  { id: 'night_vision', name: '暗視', icon: 'night-vision' },
+  { id: 'hunger', name: '空腹', icon: 'hunger' },
+  { id: 'weakness', name: '弱体化', icon: 'weakness' },
+  { id: 'poison', name: '毒', icon: 'poison' },
+  { id: 'wither', name: 'ウィザー', icon: 'wither' },
+  { id: 'health_boost', name: '体力増強', icon: 'health-boost' },
+  { id: 'absorption', name: '衝撃吸収', icon: 'absorption' },
+  { id: 'saturation', name: '満腹度回復', icon: 'saturation' },
+  { id: 'glowing', name: '発光', icon: 'glowing' },
+  { id: 'levitation', name: '浮遊', icon: 'levitation' },
+  { id: 'luck', name: '幸運', icon: 'luck' },
+  { id: 'unluck', name: '不運', icon: 'unluck' },
+  { id: 'slow_falling', name: '低速落下', icon: 'slow-falling' },
+  { id: 'conduit_power', name: 'コンジットパワー', icon: 'conduit-power' },
+  { id: 'dolphins_grace', name: 'イルカの恩恵', icon: 'dolphins-grace' },
+  { id: 'bad_omen', name: '凶兆', icon: 'bad-omen' },
+  { id: 'hero_of_the_village', name: '村の英雄', icon: 'hero-of-the-village' },
+  { id: 'darkness', name: '暗闇', icon: 'darkness' },
+];
 
 // フォーム状態
 let formState = {
-  entity: 'minecraft:zombie',
+  entity: 'zombie',
   pos: '~ ~ ~',
   customName: '',
+  nameColor: 'white',
+  nameBold: false,
+  nameItalic: false,
   noAI: false,
   silent: false,
   invulnerable: false,
   persistenceRequired: false,
+  glowing: false,
   effects: [],
   rawNBT: '',
 };
+
+let selectedCategory = 'hostile';
 
 /**
  * UIをレンダリング
  */
 export function render(manifest) {
   return `
-    <div class="tool-panel" id="summon-panel">
-      <div class="tool-header">
-        <span class="tool-icon">${manifest.icon}</span>
-        <h2>${manifest.title}</h2>
+    <div class="tool-panel summon-tool mc-themed" id="summon-panel">
+      <!-- ヘッダー -->
+      <div class="tool-header mc-header-banner">
+        <div class="header-content">
+          <img src="${getInviconUrl('command_block')}" alt="" class="header-icon mc-pixelated">
+          <div class="header-text">
+            <h2>/summon コマンド</h2>
+            <p class="header-subtitle">エンティティを召喚するコマンドを生成</p>
+          </div>
+        </div>
+        <span class="version-badge">1.21.5+</span>
       </div>
 
-      <form class="tool-form" id="summon-form">
-        <!-- エンティティ -->
-        <div class="form-group">
-          <label for="summon-entity">エンティティID</label>
-          <div class="autocomplete-wrapper">
-            <input type="text" id="summon-entity" class="mc-input"
-                   value="minecraft:zombie"
-                   placeholder="minecraft:zombie"
-                   autocomplete="off">
-            <div class="autocomplete-list" id="entity-suggestions"></div>
+      <form class="tool-form mc-form" id="summon-form">
+
+        <!-- ステップ1: エンティティ選択 -->
+        <section class="form-section mc-section">
+          <div class="section-header">
+            <span class="step-number">1</span>
+            <h3>エンティティを選択</h3>
           </div>
-        </div>
 
-        <!-- 座標 -->
-        <div class="form-group">
-          <label for="summon-pos">座標</label>
-          <input type="text" id="summon-pos" class="mc-input"
-                 value="~ ~ ~"
-                 placeholder="~ ~ ~ または 100 64 200">
-        </div>
-
-        <!-- カスタム名 -->
-        <div class="form-group">
-          <label for="summon-name">カスタム名（任意）</label>
-          <input type="text" id="summon-name" class="mc-input"
-                 placeholder="ボスゾンビ">
-        </div>
-
-        <!-- オプション -->
-        <div class="form-group options-group">
-          <label>オプション</label>
-          <div class="options-grid">
-            <label class="option-label">
-              <input type="checkbox" id="summon-noai">
-              NoAI（動かない）
-            </label>
-            <label class="option-label">
-              <input type="checkbox" id="summon-silent">
-              Silent（音を出さない）
-            </label>
-            <label class="option-label">
-              <input type="checkbox" id="summon-invulnerable">
-              無敵
-            </label>
-            <label class="option-label">
-              <input type="checkbox" id="summon-persistence">
-              デスポーンしない
-            </label>
+          <!-- カテゴリタブ -->
+          <div class="category-tabs" id="category-tabs">
+            ${Object.entries(ENTITY_CATEGORIES).map(([catId, cat]) => `
+              <button type="button" class="category-tab ${catId === selectedCategory ? 'active' : ''}"
+                      data-category="${catId}" style="--cat-color: ${cat.color}">
+                <img src="${getSpawnEggUrl(cat.icon)}" alt="" class="tab-icon mc-pixelated"
+                     onerror="this.src='${getInviconUrl(cat.icon)}'">
+                <span>${cat.name}</span>
+              </button>
+            `).join('')}
           </div>
-        </div>
 
-        <!-- エフェクト -->
-        <div class="form-group">
-          <label>エフェクト（任意）</label>
-          <div class="effect-list" id="effect-list">
-            <div class="effect-item">
-              <select class="effect-select mc-select">
-                <option value="">-- 選択 --</option>
-                <option value="speed">移動速度上昇</option>
-                <option value="strength">攻撃力上昇</option>
-                <option value="regeneration">再生</option>
-                <option value="resistance">耐性</option>
-                <option value="fire_resistance">火炎耐性</option>
-                <option value="invisibility">透明化</option>
-                <option value="glowing">発光</option>
-                <option value="slowness">移動速度低下</option>
-              </select>
-              <input type="number" class="effect-amplifier mc-input" value="0" min="0" max="255" placeholder="Lv">
-              <input type="number" class="effect-duration mc-input" value="600" min="1" placeholder="秒×20">
+          <!-- エンティティグリッド -->
+          <div class="entity-grid-container">
+            <div class="entity-grid" id="entity-grid">
+              ${renderEntityGrid('hostile')}
             </div>
           </div>
-          <button type="button" class="mc-btn" id="add-effect">+ エフェクト追加</button>
-        </div>
 
-        <!-- Raw NBT -->
-        <div class="form-group">
-          <label for="summon-raw">
-            Raw NBT/SNBT（上級者向け）
-            <span class="hint">手動でNBTを追加</span>
-          </label>
-          <textarea id="summon-raw" class="mc-input mc-code" rows="3"
-                    placeholder='例: Health:100f,Fire:200'></textarea>
-        </div>
+          <!-- 選択中のエンティティ表示 -->
+          <div class="selected-entity-display" id="selected-display">
+            <img src="${getSpawnEggUrl('zombie')}" alt="" class="selected-entity-icon mc-pixelated" id="selected-icon">
+            <div class="selected-entity-info">
+              <span class="selected-entity-name" id="selected-name">ゾンビ</span>
+              <code class="selected-entity-id" id="selected-id">minecraft:zombie</code>
+            </div>
+          </div>
+        </section>
+
+        <!-- ステップ2: 座標設定 -->
+        <section class="form-section mc-section">
+          <div class="section-header">
+            <span class="step-number">2</span>
+            <h3>召喚位置</h3>
+          </div>
+
+          <div class="coordinate-input">
+            <div class="coord-preset-btns">
+              <button type="button" class="coord-preset active" data-pos="~ ~ ~">
+                現在地 <code>~ ~ ~</code>
+              </button>
+              <button type="button" class="coord-preset" data-pos="~ ~1 ~">
+                1ブロック上 <code>~ ~1 ~</code>
+              </button>
+              <button type="button" class="coord-preset" data-pos="~ ~ ~5">
+                前方5m <code>~ ~ ~5</code>
+              </button>
+            </div>
+            <div class="coord-custom">
+              <label>カスタム座標:</label>
+              <input type="text" id="summon-pos" class="mc-input coord-input"
+                     value="~ ~ ~" placeholder="X Y Z">
+            </div>
+          </div>
+        </section>
+
+        <!-- ステップ3: カスタム名（JSONテキスト対応） -->
+        <section class="form-section mc-section">
+          <div class="section-header">
+            <span class="step-number">3</span>
+            <h3>名前設定 <span class="optional-badge">任意</span></h3>
+          </div>
+
+          <div class="name-editor">
+            <input type="text" id="summon-name" class="mc-input name-input"
+                   placeholder="カスタム名を入力...">
+
+            <div class="name-style-options">
+              <div class="color-selector">
+                <label>文字色:</label>
+                <div class="color-grid" id="color-grid">
+                  ${TEXT_COLORS.map(c => `
+                    <button type="button" class="color-btn ${c.id === 'white' ? 'active' : ''}"
+                            data-color="${c.id}" style="background: ${c.hex}"
+                            title="${c.name}"></button>
+                  `).join('')}
+                </div>
+              </div>
+
+              <div class="text-style-btns">
+                <button type="button" class="style-btn" data-style="bold" title="太字">
+                  <strong>B</strong>
+                </button>
+                <button type="button" class="style-btn" data-style="italic" title="斜体">
+                  <em>I</em>
+                </button>
+                <button type="button" class="style-btn" data-style="underlined" title="下線">
+                  <u>U</u>
+                </button>
+                <button type="button" class="style-btn" data-style="obfuscated" title="難読化">
+                  §k
+                </button>
+              </div>
+            </div>
+
+            <!-- プレビュー -->
+            <div class="name-preview" id="name-preview">
+              <span class="preview-label">プレビュー:</span>
+              <span class="preview-text" id="preview-text">名前を入力...</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- ステップ4: 動作設定 -->
+        <section class="form-section mc-section">
+          <div class="section-header">
+            <span class="step-number">4</span>
+            <h3>動作設定</h3>
+          </div>
+
+          <div class="behavior-grid">
+            <label class="behavior-option">
+              <input type="checkbox" id="summon-noai">
+              <div class="option-content">
+                <img src="${getInviconUrl('barrier')}" alt="" class="option-icon mc-pixelated">
+                <div class="option-text">
+                  <span class="option-name">NoAI</span>
+                  <span class="option-desc">動かない・攻撃しない</span>
+                </div>
+              </div>
+            </label>
+
+            <label class="behavior-option">
+              <input type="checkbox" id="summon-silent">
+              <div class="option-content">
+                <img src="${getInviconUrl('note_block')}" alt="" class="option-icon mc-pixelated">
+                <div class="option-text">
+                  <span class="option-name">Silent</span>
+                  <span class="option-desc">音を出さない</span>
+                </div>
+              </div>
+            </label>
+
+            <label class="behavior-option">
+              <input type="checkbox" id="summon-invulnerable">
+              <div class="option-content">
+                <img src="${getInviconUrl('totem_of_undying')}" alt="" class="option-icon mc-pixelated">
+                <div class="option-text">
+                  <span class="option-name">無敵</span>
+                  <span class="option-desc">ダメージを受けない</span>
+                </div>
+              </div>
+            </label>
+
+            <label class="behavior-option">
+              <input type="checkbox" id="summon-persistence" checked>
+              <div class="option-content">
+                <img src="${getInviconUrl('name_tag')}" alt="" class="option-icon mc-pixelated">
+                <div class="option-text">
+                  <span class="option-name">デスポーンしない</span>
+                  <span class="option-desc">永続的に存在</span>
+                </div>
+              </div>
+            </label>
+
+            <label class="behavior-option">
+              <input type="checkbox" id="summon-glowing">
+              <div class="option-content">
+                <img src="${getInviconUrl('glowstone_dust')}" alt="" class="option-icon mc-pixelated">
+                <div class="option-text">
+                  <span class="option-name">発光</span>
+                  <span class="option-desc">輪郭が光る</span>
+                </div>
+              </div>
+            </label>
+          </div>
+        </section>
+
+        <!-- ステップ5: エフェクト -->
+        <section class="form-section mc-section collapsible" data-collapsed="true">
+          <div class="section-header clickable" data-toggle="effects-content">
+            <span class="step-number">5</span>
+            <h3>エフェクト <span class="optional-badge">任意</span></h3>
+            <span class="collapse-icon">▶</span>
+          </div>
+
+          <div class="section-content" id="effects-content" style="display: none;">
+            <div class="effect-list" id="effect-list"></div>
+
+            <div class="add-effect-row">
+              <select class="mc-select effect-add-select" id="effect-add-select">
+                <option value="">エフェクトを選択...</option>
+                ${EFFECTS.map(e => `<option value="${e.id}">${e.name}</option>`).join('')}
+              </select>
+              <button type="button" class="mc-btn mc-btn-secondary" id="add-effect">
+                + 追加
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ステップ6: 上級者向け -->
+        <section class="form-section mc-section collapsible" data-collapsed="true">
+          <div class="section-header clickable" data-toggle="advanced-content">
+            <span class="step-number">6</span>
+            <h3>Raw NBT <span class="advanced-badge">上級者向け</span></h3>
+            <span class="collapse-icon">▶</span>
+          </div>
+
+          <div class="section-content" id="advanced-content" style="display: none;">
+            <p class="help-text">手動でNBTタグを追加します。カンマ区切りで複数指定可能。</p>
+            <textarea id="summon-raw" class="mc-input mc-code" rows="3"
+                      placeholder='例: Health:100f,Fire:200,CustomNameVisible:1b'></textarea>
+          </div>
+        </section>
       </form>
     </div>
   `;
 }
 
 /**
+ * エンティティグリッドをレンダリング
+ */
+function renderEntityGrid(categoryId) {
+  const cat = ENTITY_CATEGORIES[categoryId];
+  if (!cat) return '';
+
+  return cat.entities.map(entity => `
+    <button type="button" class="entity-card ${entity.id === formState.entity ? 'selected' : ''}"
+            data-entity="${entity.id}" data-name="${entity.name}">
+      <img src="${getSpawnEggUrl(entity.id)}" alt="${entity.name}"
+           class="entity-icon mc-pixelated"
+           onerror="this.src='${getInviconUrl(entity.id + '_spawn_egg')}'">
+      <span class="entity-name">${entity.name}</span>
+      <span class="entity-desc">${entity.desc}</span>
+    </button>
+  `).join('');
+}
+
+/**
  * 初期化
  */
 export function init(container) {
-  const form = $('#summon-form', container);
+  // カテゴリタブ切り替え
+  delegate(container, 'click', '.category-tab', (e, target) => {
+    const catId = target.dataset.category;
+    selectedCategory = catId;
 
-  // フォーム変更時にコマンド更新
-  form.addEventListener('input', debounce(() => updateCommand(container), 150));
-  form.addEventListener('change', () => updateCommand(container));
+    $$('.category-tab', container).forEach(t => t.classList.remove('active'));
+    target.classList.add('active');
 
-  // エンティティオートコンプリート
-  setupAutocomplete(container);
-
-  // エフェクト追加ボタン
-  $('#add-effect', container)?.addEventListener('click', () => {
-    addEffectRow(container);
+    $('#entity-grid', container).innerHTML = renderEntityGrid(catId);
   });
 
-  // 初期コマンド生成
+  // エンティティ選択
+  delegate(container, 'click', '.entity-card', (e, target) => {
+    const entityId = target.dataset.entity;
+    const entityName = target.dataset.name;
+
+    formState.entity = entityId;
+
+    $$('.entity-card', container).forEach(c => c.classList.remove('selected'));
+    target.classList.add('selected');
+
+    // 選択表示を更新
+    $('#selected-icon', container).src = getSpawnEggUrl(entityId);
+    $('#selected-name', container).textContent = entityName;
+    $('#selected-id', container).textContent = `minecraft:${entityId}`;
+
+    updateCommand(container);
+  });
+
+  // 座標プリセット
+  delegate(container, 'click', '.coord-preset', (e, target) => {
+    const pos = target.dataset.pos;
+    $('#summon-pos', container).value = pos;
+    formState.pos = pos;
+
+    $$('.coord-preset', container).forEach(b => b.classList.remove('active'));
+    target.classList.add('active');
+
+    updateCommand(container);
+  });
+
+  // 座標入力
+  $('#summon-pos', container)?.addEventListener('input', debounce((e) => {
+    formState.pos = e.target.value || '~ ~ ~';
+    updateCommand(container);
+  }, 150));
+
+  // 名前入力
+  $('#summon-name', container)?.addEventListener('input', debounce((e) => {
+    formState.customName = e.target.value;
+    updateNamePreview(container);
+    updateCommand(container);
+  }, 150));
+
+  // 色選択
+  delegate(container, 'click', '.color-btn', (e, target) => {
+    const color = target.dataset.color;
+    formState.nameColor = color;
+
+    $$('.color-btn', container).forEach(b => b.classList.remove('active'));
+    target.classList.add('active');
+
+    updateNamePreview(container);
+    updateCommand(container);
+  });
+
+  // スタイルボタン
+  delegate(container, 'click', '.style-btn', (e, target) => {
+    const style = target.dataset.style;
+    target.classList.toggle('active');
+
+    if (style === 'bold') formState.nameBold = target.classList.contains('active');
+    if (style === 'italic') formState.nameItalic = target.classList.contains('active');
+
+    updateNamePreview(container);
+    updateCommand(container);
+  });
+
+  // オプションチェックボックス
+  ['noai', 'silent', 'invulnerable', 'persistence', 'glowing'].forEach(opt => {
+    $(`#summon-${opt}`, container)?.addEventListener('change', (e) => {
+      const key = opt === 'persistence' ? 'persistenceRequired' : opt;
+      formState[key] = e.target.checked;
+      updateCommand(container);
+    });
+  });
+
+  // 折りたたみセクション
+  delegate(container, 'click', '.section-header.clickable', (e, target) => {
+    const contentId = target.dataset.toggle;
+    const content = $(`#${contentId}`, container);
+    const section = target.closest('.collapsible');
+    const icon = target.querySelector('.collapse-icon');
+
+    if (content) {
+      const isCollapsed = section.dataset.collapsed === 'true';
+      section.dataset.collapsed = isCollapsed ? 'false' : 'true';
+      content.style.display = isCollapsed ? 'block' : 'none';
+      if (icon) icon.textContent = isCollapsed ? '▼' : '▶';
+    }
+  });
+
+  // エフェクト追加
+  $('#add-effect', container)?.addEventListener('click', () => {
+    const select = $('#effect-add-select', container);
+    const effectId = select.value;
+    if (!effectId) return;
+
+    // 重複チェック
+    if (formState.effects.find(e => e.id === effectId)) {
+      select.value = '';
+      return;
+    }
+
+    formState.effects.push({
+      id: effectId,
+      amplifier: 0,
+      duration: 600,
+    });
+
+    select.value = '';
+    renderEffectList(container);
+    updateCommand(container);
+  });
+
+  // Raw NBT
+  $('#summon-raw', container)?.addEventListener('input', debounce((e) => {
+    formState.rawNBT = e.target.value;
+    updateCommand(container);
+  }, 200));
+
+  // 初期状態
+  $('#summon-persistence', container).checked = true;
   updateCommand(container);
 }
 
 /**
- * オートコンプリートをセットアップ
+ * エフェクトリストをレンダリング
  */
-function setupAutocomplete(container) {
-  const input = $('#summon-entity', container);
-  const suggestions = $('#entity-suggestions', container);
-
-  input.addEventListener('input', debounce(() => {
-    const query = input.value.toLowerCase().replace('minecraft:', '');
-    const entities = dataStore.get('entities') || [];
-
-    if (query.length < 2) {
-      suggestions.innerHTML = '';
-      suggestions.style.display = 'none';
-      return;
-    }
-
-    const matches = entities
-      .filter(id => id.includes(query))
-      .slice(0, 10);
-
-    if (matches.length === 0) {
-      suggestions.style.display = 'none';
-      return;
-    }
-
-    suggestions.innerHTML = matches.map(id => `
-      <div class="suggestion-item" data-id="${id}">
-        ${id.replace('minecraft:', '')}
-      </div>
-    `).join('');
-    suggestions.style.display = 'block';
-  }, 200));
-
-  suggestions.addEventListener('click', (e) => {
-    const item = e.target.closest('.suggestion-item');
-    if (item) {
-      input.value = item.dataset.id;
-      suggestions.style.display = 'none';
-      updateCommand(container);
-    }
-  });
-
-  document.addEventListener('click', (e) => {
-    if (!e.target.closest('.autocomplete-wrapper')) {
-      suggestions.style.display = 'none';
-    }
-  });
-}
-
-/**
- * エフェクト行を追加
- */
-function addEffectRow(container) {
+function renderEffectList(container) {
   const list = $('#effect-list', container);
-  const row = createElement('div', { className: 'effect-item' });
-  row.innerHTML = `
-    <select class="effect-select mc-select">
-      <option value="">-- 選択 --</option>
-      <option value="speed">移動速度上昇</option>
-      <option value="strength">攻撃力上昇</option>
-      <option value="regeneration">再生</option>
-      <option value="resistance">耐性</option>
-      <option value="fire_resistance">火炎耐性</option>
-      <option value="invisibility">透明化</option>
-      <option value="glowing">発光</option>
-      <option value="slowness">移動速度低下</option>
-    </select>
-    <input type="number" class="effect-amplifier mc-input" value="0" min="0" max="255" placeholder="Lv">
-    <input type="number" class="effect-duration mc-input" value="600" min="1" placeholder="秒×20">
-    <button type="button" class="remove-effect">×</button>
-  `;
+  if (!list) return;
 
-  row.querySelector('.remove-effect').addEventListener('click', () => {
-    row.remove();
-    updateCommand(container);
+  if (formState.effects.length === 0) {
+    list.innerHTML = '<p class="empty-text">エフェクトなし</p>';
+    return;
+  }
+
+  list.innerHTML = formState.effects.map((effect, index) => {
+    const info = EFFECTS.find(e => e.id === effect.id);
+    return `
+      <div class="effect-row" data-index="${index}">
+        <span class="effect-name">${info?.name || effect.id}</span>
+        <div class="effect-controls">
+          <label>
+            Lv:
+            <input type="number" class="mc-input effect-level" value="${effect.amplifier}"
+                   min="0" max="255" data-index="${index}">
+          </label>
+          <label>
+            時間:
+            <input type="number" class="mc-input effect-duration" value="${effect.duration}"
+                   min="1" data-index="${index}">
+            <span class="unit">tick</span>
+          </label>
+          <button type="button" class="remove-effect-btn" data-index="${index}">×</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // イベント設定
+  $$('.effect-level', list).forEach(input => {
+    input.addEventListener('input', (e) => {
+      const idx = parseInt(e.target.dataset.index);
+      formState.effects[idx].amplifier = parseInt(e.target.value) || 0;
+      updateCommand(container);
+    });
   });
 
-  list.appendChild(row);
+  $$('.effect-duration', list).forEach(input => {
+    input.addEventListener('input', (e) => {
+      const idx = parseInt(e.target.dataset.index);
+      formState.effects[idx].duration = parseInt(e.target.value) || 600;
+      updateCommand(container);
+    });
+  });
+
+  $$('.remove-effect-btn', list).forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const idx = parseInt(e.target.dataset.index);
+      formState.effects.splice(idx, 1);
+      renderEffectList(container);
+      updateCommand(container);
+    });
+  });
 }
 
 /**
- * コマンドを更新
+ * 名前プレビューを更新
+ */
+function updateNamePreview(container) {
+  const preview = $('#preview-text', container);
+  if (!preview) return;
+
+  const name = formState.customName || '名前を入力...';
+  const color = TEXT_COLORS.find(c => c.id === formState.nameColor);
+
+  let style = `color: ${color?.hex || '#FFFFFF'};`;
+  if (formState.nameBold) style += ' font-weight: bold;';
+  if (formState.nameItalic) style += ' font-style: italic;';
+
+  preview.style.cssText = style;
+  preview.textContent = name;
+}
+
+/**
+ * コマンドを生成・更新
  */
 function updateCommand(container) {
-  formState = {
-    entity: $('#summon-entity', container).value || 'minecraft:zombie',
-    pos: $('#summon-pos', container).value || '~ ~ ~',
-    customName: $('#summon-name', container).value,
-    noAI: $('#summon-noai', container).checked,
-    silent: $('#summon-silent', container).checked,
-    invulnerable: $('#summon-invulnerable', container).checked,
-    persistenceRequired: $('#summon-persistence', container).checked,
-    effects: getEffects(container),
-    rawNBT: $('#summon-raw', container).value,
-  };
+  const nbtParts = [];
 
-  const command = generateSummonCommand(formState);
+  // カスタム名（JSONテキスト形式）
+  if (formState.customName) {
+    const jsonText = {
+      text: formState.customName,
+    };
+    if (formState.nameColor !== 'white') jsonText.color = formState.nameColor;
+    if (formState.nameBold) jsonText.bold = true;
+    if (formState.nameItalic) jsonText.italic = true;
+
+    const jsonStr = JSON.stringify(jsonText).replace(/"/g, '\\"');
+    nbtParts.push(`CustomName:"${jsonStr}"`);
+    nbtParts.push('CustomNameVisible:1b');
+  }
+
+  // オプション
+  if (formState.noAI) nbtParts.push('NoAI:1b');
+  if (formState.silent) nbtParts.push('Silent:1b');
+  if (formState.invulnerable) nbtParts.push('Invulnerable:1b');
+  if (formState.persistenceRequired) nbtParts.push('PersistenceRequired:1b');
+  if (formState.glowing) nbtParts.push('Glowing:1b');
+
+  // エフェクト
+  if (formState.effects.length > 0) {
+    const effectsList = formState.effects.map(e =>
+      `{id:"minecraft:${e.id}",amplifier:${e.amplifier}b,duration:${e.duration}}`
+    ).join(',');
+    nbtParts.push(`active_effects:[${effectsList}]`);
+  }
+
+  // Raw NBT
+  if (formState.rawNBT.trim()) {
+    nbtParts.push(formState.rawNBT.trim());
+  }
+
+  // コマンド生成
+  let command = `/summon minecraft:${formState.entity} ${formState.pos}`;
+  if (nbtParts.length > 0) {
+    command += ` {${nbtParts.join(',')}}`;
+  }
+
   setOutput(command, 'summon', formState);
 }
 
-/**
- * エフェクト一覧を取得
- */
-function getEffects(container) {
-  const effects = [];
-  $$('.effect-item', container).forEach(row => {
-    const select = row.querySelector('.effect-select');
-    const amplifier = row.querySelector('.effect-amplifier');
-    const duration = row.querySelector('.effect-duration');
-    if (select.value) {
-      effects.push({
-        id: select.value,
-        amplifier: parseInt(amplifier.value) || 0,
-        duration: parseInt(duration.value) || 600,
-      });
-    }
-  });
-  return effects;
-}
-
-// スタイル追加
+// スタイル
 const style = document.createElement('style');
 style.textContent = `
-  .options-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: var(--mc-space-sm);
+  /* Minecraft風テーマ */
+  .summon-tool.mc-themed {
+    background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+    border-radius: 0;
+    border: 4px solid #0f0f23;
+    box-shadow:
+      inset 2px 2px 0 rgba(255,255,255,0.1),
+      inset -2px -2px 0 rgba(0,0,0,0.3),
+      0 8px 32px rgba(0,0,0,0.5);
   }
 
-  .option-label {
+  .mc-pixelated {
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+  }
+
+  /* ヘッダー */
+  .mc-header-banner {
+    background: linear-gradient(90deg, #2d5016 0%, #3a6b1e 50%, #2d5016 100%);
+    padding: 20px 24px;
+    margin: -16px -16px 24px -16px;
     display: flex;
     align-items: center;
-    gap: var(--mc-space-xs);
-    font-size: 0.85rem;
-    cursor: pointer;
+    justify-content: space-between;
+    border-bottom: 4px solid #1a3009;
+    position: relative;
   }
 
-  .effect-list {
+  .mc-header-banner::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url("data:image/svg+xml,%3Csvg width='16' height='16' viewBox='0 0 16 16' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='16' height='16' fill='%23000' opacity='0.1'/%3E%3C/svg%3E");
+    pointer-events: none;
+  }
+
+  .header-content {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .header-icon {
+    width: 48px;
+    height: 48px;
+    filter: drop-shadow(2px 2px 0 rgba(0,0,0,0.5));
+  }
+
+  .header-text h2 {
+    margin: 0;
+    color: #ffffff;
+    font-size: 1.5rem;
+    font-weight: bold;
+    text-shadow: 2px 2px 0 #1a3009;
+  }
+
+  .header-subtitle {
+    margin: 4px 0 0 0;
+    color: rgba(255,255,255,0.8);
+    font-size: 0.85rem;
+  }
+
+  .version-badge {
+    background: linear-gradient(180deg, #f2c13d 0%, #d4a12a 100%);
+    color: #1a1a2e;
+    padding: 6px 12px;
+    font-weight: bold;
+    font-size: 0.8rem;
+    border: 2px solid #8b6914;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* セクション */
+  .mc-section {
+    background: rgba(255,255,255,0.05);
+    border: 2px solid rgba(255,255,255,0.1);
+    border-radius: 4px;
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .section-header.clickable {
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .section-header.clickable:hover {
+    opacity: 0.9;
+  }
+
+  .step-number {
+    width: 32px;
+    height: 32px;
+    background: linear-gradient(180deg, #5cb746 0%, #3a8128 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1rem;
+    border: 2px solid #2d5016;
+  }
+
+  .section-header h3 {
+    margin: 0;
+    color: #ffffff;
+    font-size: 1.1rem;
+    flex: 1;
+  }
+
+  .optional-badge, .advanced-badge {
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-weight: normal;
+  }
+
+  .optional-badge {
+    background: rgba(77, 236, 242, 0.2);
+    color: #4decf2;
+  }
+
+  .advanced-badge {
+    background: rgba(170, 0, 255, 0.2);
+    color: #cc66ff;
+  }
+
+  .collapse-icon {
+    color: rgba(255,255,255,0.5);
+    font-size: 0.8rem;
+  }
+
+  /* カテゴリタブ */
+  .category-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .category-tab {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background: rgba(0,0,0,0.3);
+    border: 2px solid rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.7);
+    cursor: pointer;
+    transition: all 0.15s;
+    font-size: 0.85rem;
+  }
+
+  .category-tab:hover {
+    background: rgba(255,255,255,0.1);
+    border-color: var(--cat-color, #5cb746);
+  }
+
+  .category-tab.active {
+    background: linear-gradient(180deg, var(--cat-color, #5cb746) 0%, color-mix(in srgb, var(--cat-color, #5cb746) 70%, black) 100%);
+    border-color: var(--cat-color, #5cb746);
+    color: #ffffff;
+  }
+
+  .tab-icon {
+    width: 24px;
+    height: 24px;
+  }
+
+  /* エンティティグリッド */
+  .entity-grid-container {
+    max-height: 320px;
+    overflow-y: auto;
+    margin-bottom: 16px;
+    border: 2px solid rgba(255,255,255,0.1);
+    background: rgba(0,0,0,0.2);
+  }
+
+  .entity-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 8px;
+    padding: 12px;
+  }
+
+  .entity-card {
     display: flex;
     flex-direction: column;
-    gap: var(--mc-space-sm);
-    margin-bottom: var(--mc-space-sm);
-  }
-
-  .effect-item {
-    display: flex;
-    gap: var(--mc-space-sm);
     align-items: center;
+    gap: 6px;
+    padding: 12px 8px;
+    background: rgba(255,255,255,0.05);
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
   }
 
-  .effect-select {
-    flex: 2;
+  .entity-card:hover {
+    background: rgba(255,255,255,0.1);
+    border-color: rgba(255,255,255,0.3);
+    transform: translateY(-2px);
   }
 
-  .effect-amplifier,
-  .effect-duration {
-    width: 80px;
+  .entity-card.selected {
+    background: rgba(92, 183, 70, 0.2);
+    border-color: #5cb746;
+    box-shadow: 0 0 12px rgba(92, 183, 70, 0.3);
   }
 
-  .remove-effect {
+  .entity-icon {
+    width: 40px;
+    height: 40px;
+    filter: drop-shadow(1px 1px 1px rgba(0,0,0,0.5));
+  }
+
+  .entity-name {
+    color: #ffffff;
+    font-size: 0.8rem;
+    font-weight: 500;
+  }
+
+  .entity-desc {
+    color: rgba(255,255,255,0.5);
+    font-size: 0.65rem;
+  }
+
+  /* 選択中のエンティティ */
+  .selected-entity-display {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    background: linear-gradient(90deg, rgba(92, 183, 70, 0.2) 0%, rgba(92, 183, 70, 0.1) 100%);
+    border: 2px solid #5cb746;
+    border-left: 6px solid #5cb746;
+  }
+
+  .selected-entity-icon {
+    width: 48px;
+    height: 48px;
+  }
+
+  .selected-entity-name {
+    color: #ffffff;
+    font-size: 1.2rem;
+    font-weight: bold;
+  }
+
+  .selected-entity-id {
+    color: #5cb746;
+    font-size: 0.85rem;
+    display: block;
+    margin-top: 4px;
+  }
+
+  /* 座標入力 */
+  .coord-preset-btns {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .coord-preset {
+    padding: 10px 16px;
+    background: rgba(0,0,0,0.3);
+    border: 2px solid rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.8);
+    cursor: pointer;
+    transition: all 0.15s;
+    font-size: 0.85rem;
+  }
+
+  .coord-preset code {
+    display: block;
+    color: #4decf2;
+    margin-top: 4px;
+    font-size: 0.75rem;
+  }
+
+  .coord-preset:hover {
+    background: rgba(255,255,255,0.1);
+  }
+
+  .coord-preset.active {
+    background: rgba(77, 236, 242, 0.2);
+    border-color: #4decf2;
+  }
+
+  .coord-custom {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .coord-custom label {
+    color: rgba(255,255,255,0.7);
+    font-size: 0.9rem;
+  }
+
+  .coord-input {
+    flex: 1;
+    max-width: 200px;
+  }
+
+  /* 名前エディタ */
+  .name-input {
+    width: 100%;
+    margin-bottom: 16px;
+  }
+
+  .name-style-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-bottom: 16px;
+  }
+
+  .color-selector label {
+    color: rgba(255,255,255,0.7);
+    font-size: 0.85rem;
+    display: block;
+    margin-bottom: 8px;
+  }
+
+  .color-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .color-btn {
+    width: 24px;
+    height: 24px;
+    border: 2px solid rgba(0,0,0,0.3);
+    cursor: pointer;
+    transition: transform 0.1s;
+  }
+
+  .color-btn:hover {
+    transform: scale(1.2);
+    z-index: 1;
+  }
+
+  .color-btn.active {
+    border-color: #ffffff;
+    box-shadow: 0 0 6px rgba(255,255,255,0.5);
+  }
+
+  .text-style-btns {
+    display: flex;
+    gap: 4px;
+  }
+
+  .style-btn {
+    width: 36px;
+    height: 36px;
+    background: rgba(0,0,0,0.3);
+    border: 2px solid rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.7);
+    cursor: pointer;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+  }
+
+  .style-btn:hover {
+    background: rgba(255,255,255,0.1);
+  }
+
+  .style-btn.active {
+    background: rgba(242, 193, 61, 0.3);
+    border-color: #f2c13d;
+    color: #f2c13d;
+  }
+
+  .name-preview {
+    background: rgba(0,0,0,0.5);
+    padding: 12px 16px;
+    border: 2px solid rgba(255,255,255,0.1);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .preview-label {
+    color: rgba(255,255,255,0.5);
+    font-size: 0.8rem;
+  }
+
+  .preview-text {
+    color: #ffffff;
+    font-size: 1.1rem;
+  }
+
+  /* 動作設定 */
+  .behavior-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+  }
+
+  .behavior-option {
+    cursor: pointer;
+  }
+
+  .behavior-option input {
+    display: none;
+  }
+
+  .option-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: rgba(0,0,0,0.3);
+    border: 2px solid rgba(255,255,255,0.1);
+    transition: all 0.15s;
+  }
+
+  .behavior-option:hover .option-content {
+    background: rgba(255,255,255,0.05);
+    border-color: rgba(255,255,255,0.2);
+  }
+
+  .behavior-option input:checked + .option-content {
+    background: rgba(92, 183, 70, 0.2);
+    border-color: #5cb746;
+  }
+
+  .option-icon {
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+  }
+
+  .option-text {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .option-name {
+    color: #ffffff;
+    font-weight: 500;
+  }
+
+  .option-desc {
+    color: rgba(255,255,255,0.5);
+    font-size: 0.75rem;
+  }
+
+  /* エフェクト */
+  .effect-list {
+    margin-bottom: 16px;
+  }
+
+  .empty-text {
+    color: rgba(255,255,255,0.4);
+    font-size: 0.85rem;
+    font-style: italic;
+  }
+
+  .effect-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 12px;
+    background: rgba(0,0,0,0.2);
+    border: 1px solid rgba(255,255,255,0.1);
+    margin-bottom: 8px;
+  }
+
+  .effect-name {
+    color: #ffffff;
+    font-weight: 500;
+    min-width: 120px;
+  }
+
+  .effect-controls {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .effect-controls label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: rgba(255,255,255,0.7);
+    font-size: 0.8rem;
+  }
+
+  .effect-level, .effect-duration {
+    width: 70px;
+  }
+
+  .unit {
+    color: rgba(255,255,255,0.4);
+    font-size: 0.75rem;
+  }
+
+  .remove-effect-btn {
     background: none;
     border: none;
-    color: var(--mc-color-redstone);
+    color: #c80000;
+    font-size: 1.2rem;
     cursor: pointer;
-    font-size: 1.25rem;
-    padding: 0 var(--mc-space-sm);
+    padding: 4px 8px;
+  }
+
+  .remove-effect-btn:hover {
+    color: #ff5555;
+  }
+
+  .add-effect-row {
+    display: flex;
+    gap: 12px;
+  }
+
+  .effect-add-select {
+    flex: 1;
+  }
+
+  /* 入力フィールド共通 */
+  .summon-tool .mc-input {
+    background: #1a1a2e;
+    color: #ffffff;
+    border: 2px solid rgba(255,255,255,0.2);
+    padding: 10px 14px;
+    font-size: 0.95rem;
+  }
+
+  .summon-tool .mc-input:focus {
+    border-color: #5cb746;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(92, 183, 70, 0.2);
+  }
+
+  .summon-tool .mc-select {
+    background: #1a1a2e;
+    color: #ffffff;
+    border: 2px solid rgba(255,255,255,0.2);
+    padding: 10px 14px;
+  }
+
+  .summon-tool .mc-btn {
+    background: linear-gradient(180deg, #5cb746 0%, #3a8128 100%);
+    color: #ffffff;
+    border: 2px solid #2d5016;
+    padding: 10px 20px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .summon-tool .mc-btn:hover {
+    background: linear-gradient(180deg, #6dc756 0%, #4a9138 100%);
+    transform: translateY(-1px);
+  }
+
+  .summon-tool .mc-btn-secondary {
+    background: linear-gradient(180deg, #4a4a4a 0%, #333333 100%);
+    border-color: #222222;
+  }
+
+  .summon-tool .mc-btn-secondary:hover {
+    background: linear-gradient(180deg, #5a5a5a 0%, #444444 100%);
+  }
+
+  .help-text {
+    color: rgba(255,255,255,0.5);
+    font-size: 0.85rem;
+    margin-bottom: 12px;
+  }
+
+  /* スクロールバー */
+  .entity-grid-container::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .entity-grid-container::-webkit-scrollbar-track {
+    background: rgba(0,0,0,0.3);
+  }
+
+  .entity-grid-container::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.2);
+  }
+
+  .entity-grid-container::-webkit-scrollbar-thumb:hover {
+    background: rgba(255,255,255,0.3);
+  }
+
+  /* レスポンシブ */
+  @media (max-width: 600px) {
+    .category-tabs {
+      overflow-x: auto;
+      flex-wrap: nowrap;
+      padding-bottom: 8px;
+    }
+
+    .entity-grid {
+      grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+    }
+
+    .behavior-grid {
+      grid-template-columns: 1fr;
+    }
   }
 `;
 document.head.appendChild(style);
