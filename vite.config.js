@@ -9,6 +9,6 @@ export default defineConfig({
   },
   server: {
     port: 3000,
-    open: true,
+    open: false,  // ブラウザ自動起動を無効化
   },
 });

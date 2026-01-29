@@ -220,7 +220,7 @@ npm run mc:data:validate
 npm run dev
 ```
 
-ブラウザで http://localhost:5173/if-minecraft/ が開きます。
+開発サーバーが起動します。アクセス先: http://localhost:3000/if-minecraft/
 
 ---
 
