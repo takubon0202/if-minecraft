@@ -101,8 +101,8 @@
 | AI | サブスク | 月額 | モデル |
 |----|---------|------|--------|
 | Claude Code | Max | $200 | Claude Opus 4.5 |
-| Codex CLI | ChatGPT Plus | $20 | GPT-5.2 Codex |
-| Gemini CLI | Gemini AI Pro | $19.99 | Gemini 3 Pro Preview |
+| Codex CLI | ChatGPT Plus | $20 | GPT-5.2 Codex High |
+| Gemini CLI | Gemini AI Pro | $19.99 | Gemini 3 Pro Preview / Flash Preview |
 
 **合計: 約$240/月（APIキー不要）**
 
@@ -133,13 +133,15 @@ node scripts/setup.js
 | `Not logged in` | `codex --login` |
 | `Rate limit exceeded` | 少し待ってから再試行 |
 
-### Gemini CLI
+### Gemini CLI（3系のみ使用、フォールバックなし）
 
 | エラー | 解決方法 |
 |--------|---------|
 | `gemini: command not found` | `npm install -g @google/gemini-cli` |
-| `ModelNotFoundError` | モデル名を確認 |
-| Gemini 3でエラー | 自動フォールバックで2.5に切り替わる |
+| `ModelNotFoundError` | モデル名を確認（gemini-3-pro-preview / gemini-3-flash-preview） |
+| Gemini 3でエラー | 少し待ってから再試行、または他のAI（Claude/Codex）を使用 |
+
+> **重要**: Gemini 3系のみ使用します。2.5系へのフォールバックは行いません。
 
 ## 関連ドキュメント
 

@@ -5,15 +5,15 @@
  * Minecraftコマンドサイト プロジェクト用
  * Geminiサブスクリプションに含まれるGemini CLIを使用します。
  *
- * モデル優先順位:
- *   1. gemini-3-pro-preview（推奨・デフォルト）
- *   2. gemini-3-flash-preview（高速処理用）
- *   3. gemini-2.5-pro（フォールバック）
- *   4. gemini-2.5-flash（フォールバック）
+ * ★ Gemini 3系のみ使用（2.5系は使用しない）
+ *
+ * 使用モデル:
+ *   - gemini-3-pro-preview（デフォルト・複雑なタスク用）
+ *   - gemini-3-flash-preview（高速処理用）
  *
  * 使用方法:
  *   node scripts/gemini-helper.js "タスク内容"
- *   node scripts/gemini-helper.js --fast "簡単な質問"
+ *   node scripts/gemini-helper.js --flash "簡単な質問"
  *   node scripts/gemini-helper.js --error "エラーメッセージ"
  *   node scripts/gemini-helper.js --file path/to/file.js "修正内容"
  *   node scripts/gemini-helper.js --interactive
@@ -24,21 +24,16 @@ const fs = require('fs');
 const path = require('path');
 const { spawn, execSync } = require('child_process');
 
-// モデル設定（Gemini 3系を優先）
+// ★★★ Gemini 3系のみ使用（フォールバックなし）★★★
 const MODELS = {
-  // メイン（常にこちらを使用）
-  PRO: 'gemini-3-pro-preview',      // 推奨・デフォルト
-  FLASH: 'gemini-3-flash-preview',  // 高速処理用
-
-  // フォールバック（エラー時のみ）
-  PRO_FALLBACK: 'gemini-2.5-pro',
-  FLASH_FALLBACK: 'gemini-2.5-flash'
+  PRO: 'gemini-3-pro-preview',     // デフォルト・複雑なタスク用
+  FLASH: 'gemini-3-flash-preview'  // 高速処理用
 };
 
 // デフォルト設定
 const CONFIG = {
-  model: MODELS.PRO,  // デフォルトはGemini 3 Pro
-  yolo: true  // デフォルトで自動承認モード
+  model: MODELS.PRO,  // デフォルトはGemini 3 Pro Preview
+  yolo: true          // デフォルトで自動承認モード
 };
 
 // プロジェクト情報
@@ -98,19 +93,6 @@ function generatePrompt(task, mode = 'general', fileInfo = null) {
   return prompt;
 }
 
-/**
- * フォールバックモデルを取得
- */
-function getFallbackModel(currentModel) {
-  if (currentModel === MODELS.PRO) {
-    return MODELS.PRO_FALLBACK;
-  }
-  if (currentModel === MODELS.FLASH) {
-    return MODELS.FLASH_FALLBACK;
-  }
-  return null;
-}
-
 function runGeminiInteractive(model) {
   console.log('Gemini CLI を対話モードで起動します...');
   console.log(`モデル: ${model}`);
@@ -129,15 +111,11 @@ function runGeminiInteractive(model) {
 }
 
 /**
- * Gemini CLIを実行（プロンプト指定、フォールバック対応）
+ * Gemini CLIを実行（Gemini 3系のみ、フォールバックなし）
  */
-function runGeminiWithPrompt(prompt, model, yolo = false, isRetry = false) {
-  if (!isRetry) {
-    console.log('Gemini CLI を実行中...');
-  } else {
-    console.log('\nフォールバックモデルで再試行...');
-  }
-  console.log(`モデル: ${model}`);
+function runGeminiWithPrompt(prompt, model, yolo = false) {
+  console.log('Gemini CLI を実行中...');
+  console.log(`モデル: ${model} (Gemini 3系)`);
   if (yolo) console.log('モード: YOLO（自動承認）');
   console.log('');
 
@@ -153,17 +131,10 @@ function runGeminiWithPrompt(prompt, model, yolo = false, isRetry = false) {
 
   gemini.on('close', (code) => {
     if (code !== 0) {
-      // エラー時にフォールバックを試行
-      const fallbackModel = getFallbackModel(model);
-      if (fallbackModel && !isRetry) {
-        console.error(`\n${model} でエラーが発生しました (code: ${code})`);
-        console.log(`フォールバック: ${fallbackModel} を使用します...`);
-        runGeminiWithPrompt(prompt, fallbackModel, yolo, true);
-      } else {
-        console.error(`\nGemini CLI がエラーで終了しました (code: ${code})`);
-        console.log('\n※ 使用量上限に達した可能性があります。');
-        console.log('  制限が回復するまで待つか、他のAI（Claude/Codex）を使用してください。');
-      }
+      console.error(`\nGemini CLI がエラーで終了しました (code: ${code})`);
+      console.log('\n★ Gemini 3系のみ使用しています（フォールバックなし）');
+      console.log('  エラーが続く場合は、しばらく待ってから再試行してください。');
+      console.log('  または他のAI（Claude/Codex）を使用してください。');
     }
   });
 }
@@ -185,15 +156,15 @@ async function main() {
     console.log('Gemini Helper - Google Gemini CLI連携');
     console.log('Minecraftコマンドサイト プロジェクト用');
     console.log('');
-    console.log('モデル優先順位:');
-    console.log(`  1. ${MODELS.PRO} (推奨・デフォルト)`);
-    console.log(`  2. ${MODELS.FLASH} (高速処理用)`);
-    console.log(`  3. ${MODELS.PRO_FALLBACK} (フォールバック)`);
-    console.log(`  4. ${MODELS.FLASH_FALLBACK} (フォールバック)`);
+    console.log('★ Gemini 3系のみ使用（フォールバックなし）');
+    console.log('');
+    console.log('使用モデル:');
+    console.log(`  - ${MODELS.PRO} (デフォルト)`);
+    console.log(`  - ${MODELS.FLASH} (--flash オプション)`);
     console.log('');
     console.log('使用方法:');
-    console.log('  node scripts/gemini-helper.js "タスク内容"        # Gemini 3 Pro');
-    console.log('  node scripts/gemini-helper.js --fast "質問"       # Gemini 3 Flash');
+    console.log('  node scripts/gemini-helper.js "タスク内容"        # Gemini 3 Pro Preview');
+    console.log('  node scripts/gemini-helper.js --flash "質問"      # Gemini 3 Flash Preview');
     console.log('  node scripts/gemini-helper.js --error "エラー"    # エラー解決');
     console.log('  node scripts/gemini-helper.js --file X.js "修正"  # ファイル修正');
     console.log('  node scripts/gemini-helper.js --minecraft "タスク" # MC用タスク');
@@ -203,7 +174,6 @@ async function main() {
     console.log('または直接Gemini CLIを使用:');
     console.log(`  gemini -m ${MODELS.PRO} "タスク"`);
     console.log(`  gemini -m ${MODELS.FLASH} "簡単な質問"`);
-    console.log('  gemini                          # 対話モード');
     console.log('');
     console.log('セットアップ:');
     console.log('  npm install -g @google/gemini-cli');
@@ -238,15 +208,21 @@ async function main() {
   while (i < args.length) {
     const arg = args[i];
 
-    // モデル指定
+    // モデル指定（Gemini 3系のみ許可）
     if (arg === '--model' || arg === '-m') {
-      model = args[i + 1];
+      const requestedModel = args[i + 1];
+      if (requestedModel === MODELS.PRO || requestedModel === MODELS.FLASH) {
+        model = requestedModel;
+      } else {
+        console.warn(`警告: ${requestedModel} は許可されていません。Gemini 3系のみ使用可能です。`);
+        console.log(`デフォルトの ${MODELS.PRO} を使用します。`);
+      }
       i += 2;
       continue;
     }
 
-    // 高速モード（Gemini 3 Flash）
-    if (arg === '--fast' || arg === '-f') {
+    // 高速モード（Gemini 3 Flash Preview）
+    if (arg === '--flash' || arg === '-f') {
       model = MODELS.FLASH;
       i++;
       continue;
@@ -308,7 +284,7 @@ async function main() {
     prompt = generatePrompt(prompt, mode);
   }
 
-  // Gemini実行（フォールバック対応）
+  // Gemini実行（Gemini 3系のみ、フォールバックなし）
   runGeminiWithPrompt(prompt, model, yolo);
 }
 

@@ -58,8 +58,8 @@ node scripts/codex-helper.js --interactive
 # 基本的なタスク（Gemini 3 Pro）
 node scripts/gemini-helper.js "タスク内容"
 
-# 高速処理（Gemini 3 Flash）
-node scripts/gemini-helper.js --fast "簡単な質問"
+# 高速処理（Gemini 3 Flash Preview）
+node scripts/gemini-helper.js --flash "簡単な質問"
 
 # エラー解決
 node scripts/gemini-helper.js --error "エラーメッセージ"
@@ -80,16 +80,16 @@ node scripts/gemini-helper.js --yolo "タスク内容"
 ## モデル一覧
 
 ### Codex
-- `gpt-5.2-codex` - デフォルト
+- `gpt-5.2-codex-high` - デフォルト
 
-### Gemini
+### Gemini（3系のみ使用、フォールバックなし）
 
-| 優先度 | モデル | 用途 |
-|--------|--------|------|
-| 1 | `gemini-3-pro-preview` | 推奨・デフォルト |
-| 2 | `gemini-3-flash-preview` | 高速処理用 |
-| 3 | `gemini-2.5-pro` | フォールバック |
-| 4 | `gemini-2.5-flash` | フォールバック |
+| モデル | 用途 |
+|--------|------|
+| `gemini-3-pro-preview` | **デフォルト** - 複雑なタスク |
+| `gemini-3-flash-preview` | **高速** - 簡単なタスク |
+
+> **重要**: Gemini 3系のみ使用します。2.5系へのフォールバックは行いません。
 
 ## サブスクリプション
 
