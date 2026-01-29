@@ -1371,6 +1371,79 @@ style.textContent = `
       grid-template-columns: 1fr;
     }
   }
+
+  /* ダークモードでのコントラスト改善（青紫/紺テーマ - コマンドブロック） */
+  @media (prefers-color-scheme: dark) {
+    .summon-tool .entity-card {
+      background: rgba(93, 63, 211, 0.1);
+    }
+
+    .summon-tool .entity-card:hover {
+      background: rgba(93, 63, 211, 0.2);
+      border-color: #5d3fd3;
+    }
+
+    .summon-tool .entity-name {
+      color: #f0f0f0;
+    }
+
+    .summon-tool .entity-desc {
+      color: #a0a0a0;
+    }
+
+    .summon-tool .section-header h3 {
+      color: #f0f0f0;
+    }
+
+    .summon-tool .coord-custom label {
+      color: #c0c0c0;
+    }
+
+    .summon-tool .color-selector label {
+      color: #c0c0c0;
+    }
+
+    .summon-tool .preview-label {
+      color: #a0a0a0;
+    }
+
+    .summon-tool .option-name {
+      color: #f0f0f0;
+    }
+
+    .summon-tool .option-desc {
+      color: #a0a0a0;
+    }
+
+    .summon-tool .effect-name {
+      color: #f0f0f0;
+    }
+
+    .summon-tool .effect-controls label {
+      color: #c0c0c0;
+    }
+
+    .summon-tool .help-text {
+      color: #a0a0a0;
+    }
+
+    .summon-tool .mc-input,
+    .summon-tool .mc-select {
+      background: #1e1e3c;
+      color: #f0f0f0;
+      border-color: rgba(93, 63, 211, 0.4);
+    }
+
+    .summon-tool .mc-input:focus,
+    .summon-tool .mc-select:focus {
+      border-color: #5d3fd3;
+      box-shadow: 0 0 0 3px rgba(93, 63, 211, 0.3);
+    }
+
+    .summon-tool .mc-input::placeholder {
+      color: #707090;
+    }
+  }
 `;
 document.head.appendChild(style);
 

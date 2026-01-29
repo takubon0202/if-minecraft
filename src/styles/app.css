@@ -589,3 +589,224 @@
   flex: 1;
   min-width: 200px;
 }
+
+/* --- Dark Mode Contrast Improvements --- */
+@media (prefers-color-scheme: dark) {
+  /* Left Navigation */
+  .left-nav {
+    background-color: #1a1a1a;
+  }
+
+  .nav-header {
+    background-color: #2a2520;
+  }
+
+  .site-title {
+    color: #f0f0f0;
+  }
+
+  .version-selector select {
+    background-color: #2a2a2a;
+    color: #e0e0e0;
+    border-color: #555;
+  }
+
+  .nav-search input {
+    background-color: #2a2a2a;
+    color: #e8e8e8;
+    border-color: #555;
+  }
+
+  .nav-search input::placeholder {
+    color: #888;
+  }
+
+  .nav-search input:focus {
+    border-color: #5cb746;
+    box-shadow: 0 0 0 2px rgba(92, 183, 70, 0.3);
+  }
+
+  .category-title {
+    color: #a0a0a0;
+  }
+
+  .tool-list a {
+    color: #e0e0e0;
+  }
+
+  .tool-list a:hover {
+    background-color: #333;
+  }
+
+  /* Tab Bar */
+  .tab-bar {
+    background-color: #1a1a1a;
+  }
+
+  .tab {
+    background-color: #2a2a2a;
+    color: #d0d0d0;
+    border-color: #444;
+  }
+
+  .tab:hover {
+    background-color: #3a3a3a;
+  }
+
+  .tab.active {
+    background-color: #111;
+    color: #f0f0f0;
+  }
+
+  .tab-add-btn {
+    background-color: #2a2a2a;
+    color: #b0b0b0;
+    border-color: #444;
+  }
+
+  .tab-add-btn:hover {
+    background-color: #5cb746;
+    color: white;
+  }
+
+  /* Main Area */
+  .main-area {
+    background-color: #111;
+  }
+
+  /* Welcome Screen */
+  .welcome-hero h2 {
+    color: #f0f0f0;
+  }
+
+  .welcome-hero p {
+    color: #b0b0b0;
+  }
+
+  .quick-start h3 {
+    color: #a0a0a0;
+  }
+
+  .quick-tool-btn {
+    background-color: #2a2a2a;
+    border-color: #444;
+    color: #e0e0e0;
+  }
+
+  .quick-tool-btn:hover {
+    background-color: #3a3a3a;
+  }
+
+  .quick-tool-btn .label {
+    color: #e0e0e0;
+  }
+
+  /* Side Panel */
+  .side-panel {
+    background-color: #1a1a1a;
+  }
+
+  .panel-tab {
+    color: #a0a0a0;
+  }
+
+  .panel-tab:hover {
+    background-color: #2a2a2a;
+  }
+
+  .panel-tab.active {
+    background-color: #111;
+    color: #f0f0f0;
+  }
+
+  /* Output Panel */
+  .command-output {
+    background-color: #0a0a0a;
+    color: #e0e0e0;
+  }
+
+  .action-btn {
+    background-color: #2a2a2a;
+    color: #d0d0d0;
+    border-color: #444;
+  }
+
+  .action-btn:hover:not(:disabled) {
+    background-color: #5cb746;
+    color: white;
+  }
+
+  /* History Panel */
+  .history-item {
+    border-bottom-color: #333;
+  }
+
+  .history-item:hover {
+    background-color: #2a2a2a;
+  }
+
+  .history-item .command {
+    color: #5cb746;
+  }
+
+  .history-item .time {
+    color: #888;
+  }
+
+  .empty-message {
+    color: #888;
+  }
+
+  /* Help Panel */
+  .help-content {
+    color: #d0d0d0;
+  }
+
+  .help-content h4 {
+    color: #5cb746;
+  }
+
+  .help-content kbd {
+    background-color: #2a2a2a;
+    color: #e0e0e0;
+    border-color: #444;
+  }
+
+  /* Tool Panel */
+  .tool-panel {
+    background-color: #1a1a1a;
+    border-color: #444;
+  }
+
+  .tool-header h2 {
+    color: #f0f0f0;
+  }
+
+  .form-group label {
+    color: #c0c0c0;
+  }
+
+  /* Common Inputs */
+  .mc-input,
+  .mc-select {
+    background-color: #2a2a2a;
+    color: #e8e8e8;
+    border-color: #555;
+  }
+
+  .mc-input:focus,
+  .mc-select:focus {
+    border-color: #5cb746;
+    box-shadow: 0 0 0 2px rgba(92, 183, 70, 0.3);
+  }
+
+  .mc-input::placeholder {
+    color: #888;
+  }
+
+  /* Site Footer */
+  .site-footer {
+    background-color: #0a0a0a;
+    color: #888;
+  }
+}
