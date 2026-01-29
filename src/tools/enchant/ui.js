@@ -11,11 +11,28 @@ import { getInviconUrl } from '../../core/wiki-images.js';
 // 最大レベル定数
 const ABSOLUTE_MAX_LEVEL = 255;  // ゲーム内で設定可能な絶対最大値
 
+// カテゴリアイコン用のアイテムID
+const CATEGORY_ICONS = {
+  weapon: 'netherite_sword',
+  tool: 'netherite_pickaxe',
+  armor: 'netherite_chestplate',
+  helmet: 'netherite_helmet',
+  chestplate: 'netherite_chestplate',
+  leggings: 'netherite_leggings',
+  boots: 'netherite_boots',
+  bow: 'bow',
+  crossbow: 'crossbow',
+  trident: 'trident',
+  fishing: 'fishing_rod',
+  universal: 'enchanted_book',
+  curse: 'wither_skeleton_skull',
+};
+
 // 全42種エンチャント（カテゴリ別）- defaultMaxはMinecraftのデフォルト最大レベル
 const ENCHANT_CATEGORIES = {
   weapon: {
-    name: '⚔️ 武器（剣）',
-    icon: '⚔️',
+    name: '武器（剣）',
+    iconItem: 'netherite_sword',
     enchants: [
       { id: 'sharpness', name: 'ダメージ増加', en: 'Sharpness', defaultMax: 5, desc: '近接攻撃ダメージ増加' },
       { id: 'smite', name: 'アンデッド特効', en: 'Smite', defaultMax: 5, desc: 'アンデッド系に追加ダメージ' },
@@ -30,8 +47,8 @@ const ENCHANT_CATEGORIES = {
     ]
   },
   tool: {
-    name: '⛏️ ツール',
-    icon: '⛏️',
+    name: 'ツール',
+    iconItem: 'netherite_pickaxe',
     enchants: [
       { id: 'efficiency', name: '効率強化', en: 'Efficiency', defaultMax: 5, desc: '採掘速度増加' },
       { id: 'silk_touch', name: 'シルクタッチ', en: 'Silk Touch', defaultMax: 1, desc: 'ブロックをそのまま回収' },
@@ -39,8 +56,8 @@ const ENCHANT_CATEGORIES = {
     ]
   },
   armor: {
-    name: '🛡️ 防具（共通）',
-    icon: '🛡️',
+    name: '防具（共通）',
+    iconItem: 'netherite_chestplate',
     enchants: [
       { id: 'protection', name: 'ダメージ軽減', en: 'Protection', defaultMax: 4, desc: '全ダメージ軽減' },
       { id: 'fire_protection', name: '火炎耐性', en: 'Fire Protection', defaultMax: 4, desc: '火炎ダメージ軽減' },
@@ -50,28 +67,28 @@ const ENCHANT_CATEGORIES = {
     ]
   },
   helmet: {
-    name: '⛑️ ヘルメット',
-    icon: '⛑️',
+    name: 'ヘルメット',
+    iconItem: 'netherite_helmet',
     enchants: [
       { id: 'respiration', name: '水中呼吸', en: 'Respiration', defaultMax: 3, desc: '水中での呼吸時間延長' },
       { id: 'aqua_affinity', name: '水中採掘', en: 'Aqua Affinity', defaultMax: 1, desc: '水中採掘速度アップ' },
     ]
   },
   chestplate: {
-    name: '🦺 チェストプレート',
-    icon: '🦺',
+    name: 'チェストプレート',
+    iconItem: 'netherite_chestplate',
     enchants: []
   },
   leggings: {
-    name: '👖 レギンス',
-    icon: '👖',
+    name: 'レギンス',
+    iconItem: 'netherite_leggings',
     enchants: [
       { id: 'swift_sneak', name: 'スニーク速度上昇', en: 'Swift Sneak', defaultMax: 3, desc: 'スニーク時の移動速度アップ' },
     ]
   },
   boots: {
-    name: '👟 ブーツ',
-    icon: '👟',
+    name: 'ブーツ',
+    iconItem: 'netherite_boots',
     enchants: [
       { id: 'feather_falling', name: '落下耐性', en: 'Feather Falling', defaultMax: 4, desc: '落下ダメージ軽減' },
       { id: 'depth_strider', name: '水中歩行', en: 'Depth Strider', defaultMax: 3, desc: '水中移動速度アップ' },
@@ -80,8 +97,8 @@ const ENCHANT_CATEGORIES = {
     ]
   },
   bow: {
-    name: '🏹 弓',
-    icon: '🏹',
+    name: '弓',
+    iconItem: 'bow',
     enchants: [
       { id: 'power', name: '射撃ダメージ増加', en: 'Power', defaultMax: 5, desc: '矢のダメージ増加' },
       { id: 'punch', name: 'パンチ', en: 'Punch', defaultMax: 2, desc: '矢のノックバック増加' },
@@ -90,8 +107,8 @@ const ENCHANT_CATEGORIES = {
     ]
   },
   crossbow: {
-    name: '🎯 クロスボウ',
-    icon: '🎯',
+    name: 'クロスボウ',
+    iconItem: 'crossbow',
     enchants: [
       { id: 'multishot', name: '拡散', en: 'Multishot', defaultMax: 1, desc: '3本同時発射' },
       { id: 'piercing', name: '貫通', en: 'Piercing', defaultMax: 4, desc: '敵を貫通' },
@@ -99,8 +116,8 @@ const ENCHANT_CATEGORIES = {
     ]
   },
   trident: {
-    name: '🔱 トライデント',
-    icon: '🔱',
+    name: 'トライデント',
+    iconItem: 'trident',
     enchants: [
       { id: 'loyalty', name: '忠誠', en: 'Loyalty', defaultMax: 3, desc: '投げると戻ってくる' },
       { id: 'impaling', name: '水生特効', en: 'Impaling', defaultMax: 5, desc: '水中Mobに追加ダメージ' },
@@ -109,24 +126,24 @@ const ENCHANT_CATEGORIES = {
     ]
   },
   fishing: {
-    name: '🎣 釣り竿',
-    icon: '🎣',
+    name: '釣り竿',
+    iconItem: 'fishing_rod',
     enchants: [
       { id: 'luck_of_the_sea', name: '宝釣り', en: 'Luck of the Sea', defaultMax: 3, desc: 'レアアイテム確率アップ' },
       { id: 'lure', name: '入れ食い', en: 'Lure', defaultMax: 3, desc: '釣れるまでの時間短縮' },
     ]
   },
   universal: {
-    name: '🔧 汎用',
-    icon: '🔧',
+    name: '汎用',
+    iconItem: 'enchanted_book',
     enchants: [
       { id: 'unbreaking', name: '耐久力', en: 'Unbreaking', defaultMax: 3, desc: '耐久値消費軽減' },
       { id: 'mending', name: '修繕', en: 'Mending', defaultMax: 1, desc: '経験値で耐久回復' },
     ]
   },
   curse: {
-    name: '💀 呪い',
-    icon: '💀',
+    name: '呪い',
+    iconItem: 'wither_skeleton_skull',
     enchants: [
       { id: 'vanishing_curse', name: '消滅の呪い', en: 'Curse of Vanishing', defaultMax: 1, desc: '死亡時に消滅' },
       { id: 'binding_curse', name: '束縛の呪い', en: 'Curse of Binding', defaultMax: 1, desc: '外せなくなる' },
@@ -403,7 +420,7 @@ export function render(manifest) {
             ${Object.entries(ENCHANT_CATEGORIES).map(([catId, cat]) => `
               <div class="enchant-category" data-category="${catId}">
                 <button type="button" class="category-header">
-                  <span class="cat-icon">${cat.icon}</span>
+                  <img class="cat-icon-img" src="${getInviconUrl(cat.iconItem)}" alt="${cat.name}" onerror="this.style.opacity='0.3'">
                   <span class="cat-name">${cat.name}</span>
                   <span class="cat-count">(${cat.enchants.length})</span>
                   <span class="cat-arrow">▶</span>
@@ -985,8 +1002,11 @@ style.textContent = `
     background: var(--mc-color-stone-300);
   }
 
-  .cat-icon {
-    font-size: 1.1rem;
+  .cat-icon-img {
+    width: 24px;
+    height: 24px;
+    image-rendering: pixelated;
+    flex-shrink: 0;
   }
 
   .cat-name {

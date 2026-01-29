@@ -47,6 +47,17 @@ const ITEM_NAME_MAP = {
   'bow': 'Bow',
   'crossbow': 'Crossbow',
 
+  // === その他の武器・ツール ===
+  'trident': 'Trident',
+  'fishing_rod': 'Fishing_Rod',
+  'mace': 'Mace',
+  'shield': 'Shield',
+  'shears': 'Shears',
+  'flint_and_steel': 'Flint_and_Steel',
+  'brush': 'Brush',
+  'carrot_on_a_stick': 'Carrot_on_a_Stick',
+  'warped_fungus_on_a_stick': 'Warped_Fungus_on_a_Stick',
+
   // === ポーション（効果なし/汎用） ===
   'potion': 'Water_Bottle',
   'splash_potion': 'Splash_Water_Bottle',
