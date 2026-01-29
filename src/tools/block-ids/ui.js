@@ -449,60 +449,60 @@ const BLOCKS = [
   { id: 'bee_nest', name: 'ミツバチの巣', desc: '自然生成されるハチの巣', category: 'functional' },
 
   // === その他 (Other) ===
-  { id: 'spawner', name: 'スポナー', desc: 'モンスターを生成', category: 'other', icon: '👾' },
-  { id: 'trial_spawner', name: 'トライアルスポナー', desc: 'トライアルチャンバーのスポナー', category: 'other', icon: '⚔️' },
-  { id: 'vault', name: 'ヴォールト', desc: 'トライアルチャンバーの報酬', category: 'other', icon: '🔐' },
-  { id: 'barrier', name: 'バリアブロック', desc: '透明な通れないブロック', category: 'other', icon: '🚫' },
-  { id: 'light', name: '光ブロック', desc: '透明な光源', category: 'other', icon: '💡' },
-  { id: 'structure_void', name: 'ストラクチャーヴォイド', desc: 'ストラクチャー用空白', category: 'other', icon: '⬜' },
-  { id: 'structure_block', name: 'ストラクチャーブロック', desc: '構造物の保存・読込', category: 'other', icon: '🏗️' },
-  { id: 'jigsaw', name: 'ジグソーブロック', desc: '構造物の接続', category: 'other', icon: '🧩' },
-  { id: 'command_block', name: 'コマンドブロック', desc: 'コマンドを実行', category: 'other', icon: '🟧' },
-  { id: 'chain_command_block', name: 'チェーンコマンドブロック', desc: '連鎖コマンド実行', category: 'other', icon: '🟩' },
-  { id: 'repeating_command_block', name: 'リピートコマンドブロック', desc: '繰り返しコマンド実行', category: 'other', icon: '🟪' },
-  { id: 'sculk', name: 'スカルク', desc: 'ディープダークのブロック', category: 'other', icon: '🟦' },
-  { id: 'sculk_vein', name: 'スカルクヴェイン', desc: 'スカルクの薄い層', category: 'other', icon: '🟦' },
-  { id: 'sculk_catalyst', name: 'スカルクカタリスト', desc: 'モブの死でスカルクを広げる', category: 'other', icon: '🟦' },
-  { id: 'sculk_shrieker', name: 'スカルクシュリーカー', desc: 'ウォーデンを呼ぶ', category: 'other', icon: '📢' },
-  { id: 'water', name: '水', desc: '水源ブロック', category: 'other', icon: '💧' },
-  { id: 'lava', name: '溶岩', desc: '溶岩源ブロック', category: 'other', icon: '🔥' },
-  { id: 'fire', name: '火', desc: '燃えるブロック', category: 'other', icon: '🔥' },
-  { id: 'soul_fire', name: 'ソウルファイア', desc: '青い炎', category: 'other', icon: '🔵' },
-  { id: 'crying_obsidian', name: '泣く黒曜石', desc: 'リスポーンアンカーの材料', category: 'other', icon: '💜' },
-  { id: 'obsidian', name: '黒曜石', desc: 'ネザーポータルの材料', category: 'other', icon: '⬛' },
-  { id: 'bedrock', name: '岩盤', desc: '破壊不可能なブロック', category: 'other', icon: '⬛' },
-  { id: 'end_portal_frame', name: 'エンドポータルフレーム', desc: 'エンドへのポータル', category: 'other', icon: '🟩' },
-  { id: 'end_portal', name: 'エンドポータル', desc: 'エンドへワープ', category: 'other', icon: '⬛' },
-  { id: 'nether_portal', name: 'ネザーポータル', desc: 'ネザーへワープ', category: 'other', icon: '🟣' },
-  { id: 'end_gateway', name: 'エンドゲートウェイ', desc: 'エンド内をテレポート', category: 'other', icon: '⬛' },
-  { id: 'dragon_egg', name: 'ドラゴンの卵', desc: 'エンダードラゴンを倒すと出現', category: 'other', icon: '🥚' },
-  { id: 'sponge', name: 'スポンジ', desc: '水を吸収', category: 'other', icon: '🟨' },
-  { id: 'wet_sponge', name: '濡れたスポンジ', desc: '水を吸収したスポンジ', category: 'other', icon: '🟨' },
-  { id: 'cobweb', name: 'クモの巣', desc: '移動速度を低下', category: 'other', icon: '🕸️' },
-  { id: 'hay_block', name: '干草の俵', desc: '麦9個で作成・落下ダメージ軽減', category: 'other', icon: '🌾' },
-  { id: 'melon', name: 'スイカ', desc: 'スイカの実', category: 'other', icon: '🍉' },
-  { id: 'pumpkin', name: 'カボチャ', desc: 'カボチャの実', category: 'other', icon: '🎃' },
-  { id: 'carved_pumpkin', name: '彫られたカボチャ', desc: '顔が彫られたカボチャ', category: 'other', icon: '🎃' },
-  { id: 'jack_o_lantern', name: 'ジャック・オ・ランタン', desc: '光るカボチャ', category: 'other', icon: '🎃' },
-  { id: 'cake', name: 'ケーキ', desc: '7回食べられる', category: 'other', icon: '🎂' },
-  { id: 'candle', name: 'ロウソク', desc: '光源・ケーキに乗せられる', category: 'other', icon: '🕯️' },
-  { id: 'skeleton_skull', name: 'スケルトンの頭', desc: 'スケルトンの頭蓋骨', category: 'other', icon: '💀' },
-  { id: 'wither_skeleton_skull', name: 'ウィザースケルトンの頭', desc: 'ウィザー召喚に必要', category: 'other', icon: '💀' },
-  { id: 'zombie_head', name: 'ゾンビの頭', desc: 'ゾンビの頭', category: 'other', icon: '🧟' },
-  { id: 'creeper_head', name: 'クリーパーの頭', desc: 'クリーパーの頭', category: 'other', icon: '💚' },
-  { id: 'piglin_head', name: 'ピグリンの頭', desc: 'ピグリンの頭', category: 'other', icon: '🐷' },
-  { id: 'dragon_head', name: 'ドラゴンの頭', desc: 'エンダードラゴンの頭', category: 'other', icon: '🐉' },
-  { id: 'player_head', name: 'プレイヤーの頭', desc: 'プレイヤーの頭', category: 'other', icon: '👤' },
-  { id: 'heavy_core', name: 'ヘビーコア', desc: 'メイスの材料', category: 'other', icon: '⚙️' },
-  { id: 'copper_grate', name: '銅の格子', desc: '銅製の装飾ブロック', category: 'building', icon: '🟧' },
-  { id: 'copper_bulb', name: '銅の電球', desc: 'レッドストーンで光る銅製光源', category: 'redstone', icon: '💡' },
-  { id: 'copper_door', name: '銅のドア', desc: '銅製のドア', category: 'redstone', icon: '🚪' },
-  { id: 'copper_trapdoor', name: '銅のトラップドア', desc: '銅製のトラップドア', category: 'redstone', icon: '🪤' },
-  { id: 'chiseled_copper', name: '模様入りの銅', desc: '装飾用の銅ブロック', category: 'building', icon: '🟧' },
-  { id: 'tuff_bricks', name: '凝灰岩レンガ', desc: '凝灰岩から作るレンガ', category: 'building', icon: '🧱' },
-  { id: 'chiseled_tuff', name: '模様入り凝灰岩', desc: '装飾用の凝灰岩', category: 'building', icon: '🪨' },
-  { id: 'chiseled_tuff_bricks', name: '模様入り凝灰岩レンガ', desc: '装飾用の凝灰岩レンガ', category: 'building', icon: '🧱' },
-  { id: 'polished_tuff', name: '磨かれた凝灰岩', desc: '凝灰岩を加工したもの', category: 'building', icon: '🪨' },
+  { id: 'spawner', name: 'スポナー', desc: 'モンスターを生成', category: 'other' },
+  { id: 'trial_spawner', name: 'トライアルスポナー', desc: 'トライアルチャンバーのスポナー', category: 'other' },
+  { id: 'vault', name: 'ヴォールト', desc: 'トライアルチャンバーの報酬', category: 'other' },
+  { id: 'barrier', name: 'バリアブロック', desc: '透明な通れないブロック', category: 'other' },
+  { id: 'light', name: '光ブロック', desc: '透明な光源', category: 'other' },
+  { id: 'structure_void', name: 'ストラクチャーヴォイド', desc: 'ストラクチャー用空白', category: 'other' },
+  { id: 'structure_block', name: 'ストラクチャーブロック', desc: '構造物の保存・読込', category: 'other' },
+  { id: 'jigsaw', name: 'ジグソーブロック', desc: '構造物の接続', category: 'other' },
+  { id: 'command_block', name: 'コマンドブロック', desc: 'コマンドを実行', category: 'other' },
+  { id: 'chain_command_block', name: 'チェーンコマンドブロック', desc: '連鎖コマンド実行', category: 'other' },
+  { id: 'repeating_command_block', name: 'リピートコマンドブロック', desc: '繰り返しコマンド実行', category: 'other' },
+  { id: 'sculk', name: 'スカルク', desc: 'ディープダークのブロック', category: 'other' },
+  { id: 'sculk_vein', name: 'スカルクヴェイン', desc: 'スカルクの薄い層', category: 'other' },
+  { id: 'sculk_catalyst', name: 'スカルクカタリスト', desc: 'モブの死でスカルクを広げる', category: 'other' },
+  { id: 'sculk_shrieker', name: 'スカルクシュリーカー', desc: 'ウォーデンを呼ぶ', category: 'other' },
+  { id: 'water', name: '水', desc: '水源ブロック', category: 'other' },
+  { id: 'lava', name: '溶岩', desc: '溶岩源ブロック', category: 'other' },
+  { id: 'fire', name: '火', desc: '燃えるブロック', category: 'other' },
+  { id: 'soul_fire', name: 'ソウルファイア', desc: '青い炎', category: 'other' },
+  { id: 'crying_obsidian', name: '泣く黒曜石', desc: 'リスポーンアンカーの材料', category: 'other' },
+  { id: 'obsidian', name: '黒曜石', desc: 'ネザーポータルの材料', category: 'other' },
+  { id: 'bedrock', name: '岩盤', desc: '破壊不可能なブロック', category: 'other' },
+  { id: 'end_portal_frame', name: 'エンドポータルフレーム', desc: 'エンドへのポータル', category: 'other' },
+  { id: 'end_portal', name: 'エンドポータル', desc: 'エンドへワープ', category: 'other' },
+  { id: 'nether_portal', name: 'ネザーポータル', desc: 'ネザーへワープ', category: 'other' },
+  { id: 'end_gateway', name: 'エンドゲートウェイ', desc: 'エンド内をテレポート', category: 'other' },
+  { id: 'dragon_egg', name: 'ドラゴンの卵', desc: 'エンダードラゴンを倒すと出現', category: 'other' },
+  { id: 'sponge', name: 'スポンジ', desc: '水を吸収', category: 'other' },
+  { id: 'wet_sponge', name: '濡れたスポンジ', desc: '水を吸収したスポンジ', category: 'other' },
+  { id: 'cobweb', name: 'クモの巣', desc: '移動速度を低下', category: 'other' },
+  { id: 'hay_block', name: '干草の俵', desc: '麦9個で作成・落下ダメージ軽減', category: 'other' },
+  { id: 'melon', name: 'スイカ', desc: 'スイカの実', category: 'other' },
+  { id: 'pumpkin', name: 'カボチャ', desc: 'カボチャの実', category: 'other' },
+  { id: 'carved_pumpkin', name: '彫られたカボチャ', desc: '顔が彫られたカボチャ', category: 'other' },
+  { id: 'jack_o_lantern', name: 'ジャック・オ・ランタン', desc: '光るカボチャ', category: 'other' },
+  { id: 'cake', name: 'ケーキ', desc: '7回食べられる', category: 'other' },
+  { id: 'candle', name: 'ロウソク', desc: '光源・ケーキに乗せられる', category: 'other' },
+  { id: 'skeleton_skull', name: 'スケルトンの頭', desc: 'スケルトンの頭蓋骨', category: 'other' },
+  { id: 'wither_skeleton_skull', name: 'ウィザースケルトンの頭', desc: 'ウィザー召喚に必要', category: 'other' },
+  { id: 'zombie_head', name: 'ゾンビの頭', desc: 'ゾンビの頭', category: 'other' },
+  { id: 'creeper_head', name: 'クリーパーの頭', desc: 'クリーパーの頭', category: 'other' },
+  { id: 'piglin_head', name: 'ピグリンの頭', desc: 'ピグリンの頭', category: 'other' },
+  { id: 'dragon_head', name: 'ドラゴンの頭', desc: 'エンダードラゴンの頭', category: 'other' },
+  { id: 'player_head', name: 'プレイヤーの頭', desc: 'プレイヤーの頭', category: 'other' },
+  { id: 'heavy_core', name: 'ヘビーコア', desc: 'メイスの材料', category: 'other' },
+  { id: 'copper_grate', name: '銅の格子', desc: '銅製の装飾ブロック', category: 'building' },
+  { id: 'copper_bulb', name: '銅の電球', desc: 'レッドストーンで光る銅製光源', category: 'redstone' },
+  { id: 'copper_door', name: '銅のドア', desc: '銅製のドア', category: 'redstone' },
+  { id: 'copper_trapdoor', name: '銅のトラップドア', desc: '銅製のトラップドア', category: 'redstone' },
+  { id: 'chiseled_copper', name: '模様入りの銅', desc: '装飾用の銅ブロック', category: 'building' },
+  { id: 'tuff_bricks', name: '凝灰岩レンガ', desc: '凝灰岩から作るレンガ', category: 'building' },
+  { id: 'chiseled_tuff', name: '模様入り凝灰岩', desc: '装飾用の凝灰岩', category: 'building' },
+  { id: 'chiseled_tuff_bricks', name: '模様入り凝灰岩レンガ', desc: '装飾用の凝灰岩レンガ', category: 'building' },
+  { id: 'polished_tuff', name: '磨かれた凝灰岩', desc: '凝灰岩を加工したもの', category: 'building' },
 ];
 
 // 状態管理
@@ -646,7 +646,7 @@ function renderResults(container) {
       <div class="block-grid">
         ${displayBlocks.map(block => `
           <div class="block-item" data-id="${block.id}" title="${block.desc}">
-            <span class="block-icon">${block.icon}</span>
+            <img class="block-icon" src="${getBlockImageUrl(block.id)}" alt="${block.name}" loading="lazy">
             <span class="block-name">${block.name}</span>
             <span class="block-id">${block.id}</span>
           </div>
@@ -659,7 +659,7 @@ function renderResults(container) {
       <div class="block-list">
         ${displayBlocks.map(block => `
           <div class="block-item list-item" data-id="${block.id}">
-            <span class="block-icon">${block.icon}</span>
+            <img class="block-icon" src="${getBlockImageUrl(block.id)}" alt="${block.name}" loading="lazy">
             <div class="block-info">
               <span class="block-name">${block.name}</span>
               <span class="block-id">minecraft:${block.id}</span>
@@ -821,8 +821,11 @@ style.textContent = `
   }
 
   .block-grid .block-icon {
-    font-size: 1.5rem;
+    width: 32px;
+    height: 32px;
     margin-bottom: var(--mc-space-xs);
+    image-rendering: pixelated;
+    object-fit: contain;
   }
 
   .block-grid .block-name {
@@ -866,9 +869,10 @@ style.textContent = `
   }
 
   .block-list .block-icon {
-    font-size: 1.25rem;
-    width: 30px;
-    text-align: center;
+    width: 32px;
+    height: 32px;
+    image-rendering: pixelated;
+    object-fit: contain;
   }
 
   .block-list .block-info {
