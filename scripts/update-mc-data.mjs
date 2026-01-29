@@ -134,6 +134,10 @@ async function getEffects() {
 // フォールバックデータ（オフライン時やAPI障害時）
 function getFallbackItems() {
   return [
+    // 基本ブロック（アイテムとしても存在）
+    'minecraft:stone', 'minecraft:dirt', 'minecraft:grass_block', 'minecraft:cobblestone',
+    'minecraft:oak_planks', 'minecraft:oak_log', 'minecraft:sand', 'minecraft:gravel',
+    // ツール・武器
     'minecraft:diamond_sword', 'minecraft:diamond_pickaxe', 'minecraft:diamond_axe',
     'minecraft:diamond_shovel', 'minecraft:diamond_hoe', 'minecraft:netherite_sword',
     'minecraft:netherite_pickaxe', 'minecraft:bow', 'minecraft:crossbow',
