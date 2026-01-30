@@ -11,6 +11,7 @@ import { initNav } from './nav.js';
 import { initSidePanel } from './sidepanel.js';
 import { loadTool, getToolManifest } from './shell.js';
 import { initTooltip } from '../core/mc-tooltip.js';
+import { getVersionGroup, getVersionNote } from '../core/version-compat.js';
 
 // ツールマニフェストをインポート
 // リファレンス
@@ -219,7 +220,7 @@ function restoreState() {
   }
 
   // バージョンを復元
-  const savedVersion = storage.load('version', '1.21.11');
+  const savedVersion = storage.load('version', '1.21');
   workspaceStore.set('version', savedVersion);
 
   // バージョンセレクターを更新
@@ -227,6 +228,18 @@ function restoreState() {
   if (versionSelect) {
     versionSelect.value = savedVersion;
   }
+
+  // バージョン情報を更新
+  updateVersionInfo(savedVersion);
+}
+
+/**
+ * バージョン情報を表示
+ */
+function updateVersionInfo(version) {
+  const group = getVersionGroup(version);
+  const note = getVersionNote(version);
+  console.log(`Version: ${version} (${group}) - ${note}`);
 }
 
 /**
@@ -334,7 +347,11 @@ $('#mc-version')?.addEventListener('change', async (e) => {
   const version = e.target.value;
   workspaceStore.set('version', version);
   storage.save('version', version);
+  updateVersionInfo(version);
   await loadVersionData();
+
+  // バージョン変更イベントを発火
+  window.dispatchEvent(new CustomEvent('mc-version-change', { detail: { version } }));
 });
 
 // DOMContentLoaded時に初期化

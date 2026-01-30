@@ -109,7 +109,7 @@ class Store {
 export const workspaceStore = new Store({
   tabs: [],
   activeTabId: null,
-  version: '1.21.11',
+  version: '1.21', // デフォルトは最新バージョン
 });
 
 export const dataStore = new Store({

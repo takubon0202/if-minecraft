@@ -3,6 +3,7 @@
  */
 
 import { $, debounce } from '../../core/dom.js';
+import { workspaceStore } from '../../core/store.js';
 import { setOutput } from '../../app/sidepanel.js';
 import {
   renderJsonTextEditor,
@@ -11,6 +12,7 @@ import {
   MC_COLORS,
 } from '../../components/json-text-editor.js';
 import { getInviconUrl } from '../../core/wiki-images.js';
+import { getVersionNote, compareVersions } from '../../core/version-compat.js';
 
 let editorInstance = null;
 
@@ -69,28 +71,9 @@ export function render(manifest) {
           })}
         </div>
 
-        <!-- バージョン選択 -->
+        <!-- バージョン情報 -->
         <div class="form-group">
-          <label>出力バージョン</label>
-          <div class="version-options">
-            <label class="option-label">
-              <input type="radio" name="tellraw-version" value="1.21.5+" checked>
-              1.21.5+ (最新 - SNBT形式)
-            </label>
-            <label class="option-label">
-              <input type="radio" name="tellraw-version" value="1.20+">
-              1.20.3 - 1.21.4
-            </label>
-            <label class="option-label">
-              <input type="radio" name="tellraw-version" value="1.16+">
-              1.16 - 1.20.2
-            </label>
-            <label class="option-label">
-              <input type="radio" name="tellraw-version" value="1.13+">
-              1.13 - 1.15
-            </label>
-          </div>
-          <p class="version-note" id="version-note"></p>
+          <p class="version-note" id="tellraw-version-note"></p>
         </div>
       </form>
 
@@ -116,30 +99,36 @@ export function init(container) {
   // ターゲット変更
   $('#tellraw-target', container)?.addEventListener('change', updateCommand);
 
-  // バージョン変更
-  container.querySelectorAll('input[name="tellraw-version"]').forEach(radio => {
-    radio.addEventListener('change', updateCommand);
+  // グローバルバージョン変更時にコマンド再生成
+  window.addEventListener('mc-version-change', () => {
+    updateVersionDisplay();
+    updateCommand();
   });
 
-  // 初期コマンド生成
+  // 初期表示
+  updateVersionDisplay();
   updateCommand();
 }
 
 /**
- * バージョンノートを更新
+ * バージョン表示を更新
  */
-function updateVersionNote(version) {
-  const note = document.getElementById('version-note');
-  if (!note) return;
+function updateVersionDisplay() {
+  const version = workspaceStore.get('version') || '1.21';
+  const note = document.getElementById('tellraw-version-note');
 
-  const notes = {
-    '1.21.5+': 'click_event/hover_event形式、run_commandはスラッシュ不要',
-    '1.20+': 'clickEvent/hoverEvent形式（JSON）',
-    '1.16+': 'clickEvent/hoverEvent形式（JSON）',
-    '1.13+': 'clickEvent/hoverEvent形式（JSON）',
-  };
+  if (note) {
+    const versionNote = getVersionNote(version);
 
-  note.textContent = notes[version] || '';
+    // tellrawが使えないバージョンの警告
+    if (compareVersions(version, '1.7') < 0) {
+      note.textContent = '注意: このバージョンでは /tellraw コマンドは使用できません';
+      note.style.color = 'var(--mc-color-redstone)';
+    } else {
+      note.textContent = `現在のバージョン: ${version} - ${versionNote}`;
+      note.style.color = 'var(--mc-color-diamond)';
+    }
+  }
 }
 
 /**
@@ -147,11 +136,22 @@ function updateVersionNote(version) {
  */
 function updateCommand() {
   const target = $('#tellraw-target')?.value || '@a';
-  const version = document.querySelector('input[name="tellraw-version"]:checked')?.value || '1.21.5+';
+  const globalVersion = workspaceStore.get('version') || '1.21';
   const components = editorInstance?.getData() || [];
 
-  // バージョンノートを更新
-  updateVersionNote(version);
+  // バージョンをcomponentsToJson用の形式に変換
+  let version = '1.21.5+';
+  if (compareVersions(globalVersion, '1.21') >= 0) {
+    version = '1.21.5+';
+  } else if (compareVersions(globalVersion, '1.20') >= 0) {
+    version = '1.20+';
+  } else if (compareVersions(globalVersion, '1.16') >= 0) {
+    version = '1.16+';
+  } else if (compareVersions(globalVersion, '1.13') >= 0) {
+    version = '1.13+';
+  } else {
+    version = '1.12-';
+  }
 
   // ゲーム画面プレビューを更新
   updateGamePreview(components);
@@ -161,7 +161,7 @@ function updateCommand() {
 
   const command = `/tellraw ${target} ${jsonText}`;
 
-  setOutput(command, 'tellraw', { target, version, components });
+  setOutput(command, 'tellraw', { target, version: globalVersion, components });
 }
 
 /**

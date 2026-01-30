@@ -34,9 +34,26 @@
         <div class="header-controls">
           <div class="version-selector">
             <label for="mc-version">バージョン:</label>
-            <select id="mc-version">
-              <option value="1.21.11">1.21.11</option>
-              <option value="latest">Latest</option>
+            <select id="mc-version" class="mc-select mc-version-selector">
+              <optgroup label="最新">
+                <option value="1.21" selected>1.21.x (最新)</option>
+                <option value="1.20.5">1.20.5 - 1.20.6</option>
+              </optgroup>
+              <optgroup label="モダン (1.16-1.20.4)">
+                <option value="1.20">1.20 - 1.20.4</option>
+                <option value="1.19">1.19.x</option>
+                <option value="1.18">1.18.x</option>
+                <option value="1.17">1.17.x</option>
+                <option value="1.16">1.16.x</option>
+              </optgroup>
+              <optgroup label="クラシック (1.13-1.15)">
+                <option value="1.15">1.15.x</option>
+                <option value="1.14">1.14.x</option>
+                <option value="1.13">1.13.x (The Flattening)</option>
+              </optgroup>
+              <optgroup label="レガシー (1.12.x)">
+                <option value="1.12">1.12.x (レガシー)</option>
+              </optgroup>
             </select>
           </div>
         </div>
@@ -102,7 +119,7 @@
         <div class="welcome-screen" id="welcome-screen">
           <div class="welcome-hero">
             <h2>Minecraft コマンド生成ツール</h2>
-            <p>Java Edition 1.21.11 対応</p>
+            <p>Java Edition 1.12.2 〜 1.21.x 対応</p>
           </div>
 
           <div class="quick-start">

@@ -399,7 +399,7 @@ function stopObfuscatedAnimation(editorId) {
  * JSON Text ComponentをJSON/SNBT文字列に変換
  * @param {Array} components - コンポーネント配列
  * @param {Object} options - オプション
- * @param {string} options.version - 出力バージョン ('1.21.5+', '1.20+', '1.16+', '1.13+')
+ * @param {string} options.version - 出力バージョン ('1.21.5+', '1.20+', '1.16+', '1.13+', '1.12-')
  * @param {boolean} options.arrayFormat - 配列形式で出力
  */
 export function componentsToJson(components, options = {}) {
@@ -414,29 +414,35 @@ export function componentsToJson(components, options = {}) {
     return JSON.stringify(components[0].text);
   }
 
-  // 1.21.5+では新形式（SNBT、click_event/hover_event）
+  // バージョン判定
   const isNewFormat = version === '1.21.5+';
+  const isLegacy = version === '1.12-';
 
   // 複数セグメントまたはスタイル付きの場合
   const result = components.map(comp => {
     const obj = { text: comp.text };
+
+    // 色（1.12でも使用可能）
     if (comp.color) obj.color = comp.color;
+
+    // スタイル（1.12でも使用可能）
     if (comp.bold) obj.bold = true;
     if (comp.italic) obj.italic = true;
     if (comp.underlined) obj.underlined = true;
     if (comp.strikethrough) obj.strikethrough = true;
     if (comp.obfuscated) obj.obfuscated = true;
 
-    // クリックイベント
+    // クリックイベント（1.12でも使用可能だがキャメルケース）
     if (comp.clickEvent) {
       if (isNewFormat) {
         obj.click_event = convertClickEventToNewFormat(comp.clickEvent);
       } else {
+        // 1.12-1.20.x はキャメルケース
         obj.clickEvent = comp.clickEvent;
       }
     }
 
-    // ホバーイベント
+    // ホバーイベント（1.12でも使用可能だがキャメルケース）
     if (comp.hoverEvent) {
       if (isNewFormat) {
         obj.hover_event = convertHoverEventToNewFormat(comp.hoverEvent);

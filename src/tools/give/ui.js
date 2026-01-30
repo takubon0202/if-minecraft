@@ -3,10 +3,11 @@
  */
 
 import { $, $$, createElement, debounce } from '../../core/dom.js';
-import { dataStore } from '../../core/store.js';
+import { dataStore, workspaceStore } from '../../core/store.js';
 import { setOutput } from '../../app/sidepanel.js';
 import { generateGiveCommand } from './engine.js';
 import { getInviconUrl } from '../../core/wiki-images.js';
+import { getVersionGroup, getVersionNote } from '../../core/version-compat.js';
 
 // フォーム状態
 let formState = {
@@ -29,8 +30,9 @@ export function render(manifest) {
       <div class="tool-header">
         <img src="${getInviconUrl(manifest.iconItem || 'chest')}" class="tool-header-icon mc-wiki-image" width="32" height="32" alt="">
         <h2>${manifest.title}</h2>
-        <span class="version-badge">1.21.5+</span>
+        <span class="version-badge" id="give-version-badge">1.21+</span>
       </div>
+      <p class="version-note" id="give-version-note"></p>
 
       <form class="tool-form" id="give-form">
         <!-- ターゲット -->
@@ -144,8 +146,31 @@ export function init(container) {
     addEnchantRow(container);
   });
 
-  // 初期コマンド生成
+  // バージョン変更時にコマンド再生成
+  window.addEventListener('mc-version-change', () => {
+    updateVersionDisplay(container);
+    updateCommand(container);
+  });
+
+  // 初期表示
+  updateVersionDisplay(container);
   updateCommand(container);
+}
+
+/**
+ * バージョン表示を更新
+ */
+function updateVersionDisplay(container) {
+  const version = workspaceStore.get('version') || '1.21';
+  const badge = $('#give-version-badge', container);
+  const note = $('#give-version-note', container);
+
+  if (badge) {
+    badge.textContent = version + '+';
+  }
+  if (note) {
+    note.textContent = getVersionNote(version);
+  }
 }
 
 /**
@@ -247,8 +272,11 @@ function updateCommand(container) {
     rawComponents: $('#give-raw', container).value,
   };
 
-  // コマンド生成
-  const command = generateGiveCommand(formState);
+  // 現在のバージョンを取得
+  const version = workspaceStore.get('version') || '1.21';
+
+  // コマンド生成（バージョン指定）
+  const command = generateGiveCommand(formState, version);
 
   // 出力パネルに表示
   setOutput(command, 'give', formState);
