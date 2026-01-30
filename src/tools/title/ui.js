@@ -3,6 +3,7 @@
  */
 
 import { $, $$, debounce } from '../../core/dom.js';
+import { workspaceStore } from '../../core/store.js';
 import { setOutput } from '../../app/sidepanel.js';
 import {
   renderJsonTextEditor,
@@ -10,6 +11,7 @@ import {
   componentsToJson,
 } from '../../components/json-text-editor.js';
 import { getInviconUrl } from '../../core/wiki-images.js';
+import { compareVersions, getVersionNote } from '../../core/version-compat.js';
 
 let titleEditor = null;
 let subtitleEditor = null;
@@ -23,8 +25,9 @@ export function render(manifest) {
       <div class="tool-header">
         <img src="${getInviconUrl(manifest.iconItem || 'name_tag')}" class="tool-header-icon mc-wiki-image" width="32" height="32" alt="">
         <h2>${manifest.title}</h2>
-        <span class="version-badge">1.21.5+</span>
+        <span class="version-badge" id="title-version-badge">1.21+</span>
       </div>
+      <p class="version-note" id="title-version-note"></p>
 
       <!-- ゲーム画面風プレビュー -->
       <div class="mc-title-screen-preview" id="title-game-preview">
@@ -50,6 +53,22 @@ export function render(manifest) {
               <div class="mc-hotbar-slot"></div>
               <div class="mc-hotbar-slot"></div>
             </div>
+          </div>
+        </div>
+
+        <!-- プレビュー統計バー -->
+        <div class="preview-stats-bar">
+          <div class="stat-item">
+            <span class="stat-label">タイプ</span>
+            <span class="stat-value" id="title-stat-type">タイトル</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">ターゲット</span>
+            <span class="stat-value" id="title-stat-target">@a</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">文字数</span>
+            <span class="stat-value" id="title-stat-chars">0</span>
           </div>
         </div>
       </div>
@@ -174,7 +193,38 @@ export function init(container) {
   $('#title-fadeout', container)?.addEventListener('input', debounce(updateCommand, 150));
   $('#title-include-times', container)?.addEventListener('change', updateCommand);
 
+  // グローバルバージョン変更時にコマンド再生成
+  window.addEventListener('mc-version-change', () => {
+    updateVersionDisplay(container);
+    updateCommand();
+  });
+
+  // 初期表示
+  updateVersionDisplay(container);
   updateCommand();
+}
+
+/**
+ * バージョン表示を更新
+ */
+function updateVersionDisplay(container) {
+  const version = workspaceStore.get('version') || '1.21';
+  const badge = $('#title-version-badge', container);
+  const note = $('#title-version-note', container);
+
+  if (badge) {
+    badge.textContent = version + '+';
+  }
+  if (note) {
+    // titleが使えないバージョンの警告
+    if (compareVersions(version, '1.8') < 0) {
+      note.textContent = '注意: このバージョンでは /title コマンドは使用できません';
+      note.style.color = 'var(--mc-color-redstone)';
+    } else {
+      note.textContent = getVersionNote(version);
+      note.style.color = 'var(--mc-color-diamond)';
+    }
+  }
 }
 
 /**
@@ -195,6 +245,26 @@ function updateCommand() {
   // ゲーム画面プレビューを更新
   updateGamePreview(type, titleComponents, subtitleComponents);
 
+  // 統計バーを更新
+  updateTitleStats(target, type, titleComponents, subtitleComponents);
+
+  // 現在のバージョンを取得
+  const globalVersion = workspaceStore.get('version') || '1.21';
+
+  // バージョンをcomponentsToJson用の形式に変換
+  let jsonVersion = '1.21.5+';
+  if (compareVersions(globalVersion, '1.21') >= 0) {
+    jsonVersion = '1.21.5+';
+  } else if (compareVersions(globalVersion, '1.20') >= 0) {
+    jsonVersion = '1.20+';
+  } else if (compareVersions(globalVersion, '1.16') >= 0) {
+    jsonVersion = '1.16+';
+  } else if (compareVersions(globalVersion, '1.13') >= 0) {
+    jsonVersion = '1.13+';
+  } else {
+    jsonVersion = '1.12-';
+  }
+
   const commands = [];
 
   // タイミング設定
@@ -202,8 +272,8 @@ function updateCommand() {
     commands.push(`/title ${target} times ${fadeIn} ${stay} ${fadeOut}`);
   }
 
-  // コマンド生成（1.21.5+形式）
-  const jsonOptions = { version: '1.21.5+' };
+  // コマンド生成（バージョン対応）
+  const jsonOptions = { version: jsonVersion };
 
   if (type === 'title' || type === 'both') {
     const json = componentsToJson(titleComponents, jsonOptions);
@@ -221,7 +291,7 @@ function updateCommand() {
   }
 
   const command = commands.join('\n');
-  setOutput(command, 'title', { target, type, fadeIn, stay, fadeOut });
+  setOutput(command, 'title', { target, type, fadeIn, stay, fadeOut, version: globalVersion });
 }
 
 /**
@@ -259,6 +329,45 @@ function updateGamePreview(type, titleComponents, subtitleComponents) {
     actionbar.style.display = 'block';
     actionbar.innerHTML = renderComponents(titleComponents, false);
     startTitleObfuscatedAnimation('title-preview-actionbar');
+  }
+}
+
+/**
+ * 統計バーを更新
+ */
+function updateTitleStats(target, type, titleComponents, subtitleComponents) {
+  const statTypeEl = document.getElementById('title-stat-type');
+  const statTargetEl = document.getElementById('title-stat-target');
+  const statCharsEl = document.getElementById('title-stat-chars');
+
+  // タイプ表示
+  const typeNames = {
+    title: 'タイトル',
+    subtitle: 'サブタイトル',
+    actionbar: 'アクションバー',
+    both: 'タイトル+サブ'
+  };
+  if (statTypeEl) {
+    statTypeEl.textContent = typeNames[type] || 'タイトル';
+  }
+
+  // ターゲット表示
+  if (statTargetEl) {
+    statTargetEl.textContent = target;
+  }
+
+  // 文字数を計算
+  if (statCharsEl) {
+    let totalChars = 0;
+    titleComponents.forEach(c => {
+      totalChars += (c.text || '').length;
+    });
+    if (type === 'both' || type === 'subtitle') {
+      subtitleComponents.forEach(c => {
+        totalChars += (c.text || '').length;
+      });
+    }
+    statCharsEl.textContent = totalChars;
   }
 }
 
@@ -510,6 +619,35 @@ style.textContent = `
   .mc-underlined { text-decoration: underline; }
   .mc-strikethrough { text-decoration: line-through; }
   .mc-obfuscated { font-family: 'Minecraft', monospace; letter-spacing: 1px; }
+
+  /* プレビュー統計バー */
+  .preview-stats-bar {
+    display: flex;
+    gap: var(--mc-space-lg);
+    padding: var(--mc-space-sm) var(--mc-space-md);
+    margin-top: var(--mc-space-sm);
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .preview-stats-bar .stat-item {
+    display: flex;
+    align-items: center;
+    gap: var(--mc-space-xs);
+  }
+
+  .preview-stats-bar .stat-label {
+    font-size: 0.75rem;
+    color: #888;
+  }
+
+  .preview-stats-bar .stat-value {
+    font-size: 0.85rem;
+    font-weight: bold;
+    color: var(--mc-color-diamond, #55ffff);
+    font-family: var(--mc-font-mono, monospace);
+  }
 `;
 document.head.appendChild(style);
 

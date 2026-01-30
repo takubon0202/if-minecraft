@@ -432,12 +432,25 @@ export function render(manifest) {
                 <div class="category-enchants" style="display: none;">
                   ${cat.enchants.map(e => `
                     <div class="enchant-item" data-enchant="${e.id}" data-default-max="${e.defaultMax}" title="${e.desc}">
-                      <span class="enchant-name">${e.name}</span>
-                      <span class="enchant-en">${e.en}</span>
-                      <div class="enchant-level-info">
-                        <span class="enchant-default-max">通常Max: ${e.defaultMax}</span>
-                        <span class="enchant-cmd-max">コマンド: 255</span>
+                      <div class="enchant-item-header">
+                        <span class="enchant-name">${e.name}</span>
+                        <span class="enchant-en">${e.en}</span>
                       </div>
+                      <div class="enchant-level-selector">
+                        <label class="level-label">Lv:</label>
+                        <input type="number" class="enchant-level-input mc-input"
+                               data-enchant="${e.id}" data-default-max="${e.defaultMax}"
+                               value="${e.defaultMax}" min="1" max="255"
+                               onclick="event.stopPropagation()">
+                        <div class="level-presets">
+                          <button type="button" class="level-preset-btn" data-level="${e.defaultMax}"
+                                  data-enchant="${e.id}" onclick="event.stopPropagation()" title="通常最大">Max</button>
+                          <button type="button" class="level-preset-btn extreme" data-level="255"
+                                  data-enchant="${e.id}" onclick="event.stopPropagation()" title="コマンド最大">255</button>
+                        </div>
+                      </div>
+                      <button type="button" class="enchant-add-btn" data-enchant="${e.id}"
+                              data-default-max="${e.defaultMax}" title="追加">+</button>
                     </div>
                   `).join('')}
                 </div>
@@ -514,19 +527,37 @@ export function render(manifest) {
         </div>
       </form>
 
-      <!-- プレビュー -->
+      <!-- Minecraft風ゲーム画面プレビュー -->
       <div class="enchant-preview-section">
         <h3>プレビュー</h3>
-        <div class="enchant-preview">
-          <div class="preview-item" id="preview-item">
-            <div class="item-icon-wrapper">
-              <img class="item-icon-img" id="item-icon-img" src="" alt="">
-            </div>
-            <div class="item-name" id="item-name">ダイヤの剣</div>
-            <div class="item-id" id="item-id">minecraft:diamond_sword</div>
+        <div class="mc-inventory-preview">
+          <!-- インベントリスロット風表示 -->
+          <div class="mc-inv-slot-large" id="preview-slot">
+            <img class="mc-inv-item-img" id="item-icon-img" src="" alt="">
+            <span class="mc-inv-count" id="item-count-display">1</span>
           </div>
-          <div class="preview-enchants" id="preview-enchants">
-            <p class="text-muted">エンチャントなし</p>
+
+          <!-- Minecraft風ツールチップ -->
+          <div class="mc-item-tooltip" id="item-tooltip">
+            <div class="tooltip-name" id="item-name">ダイヤの剣</div>
+            <div class="tooltip-enchants" id="preview-enchants">
+              <p class="text-muted">エンチャントなし</p>
+            </div>
+            <div class="tooltip-meta">
+              <span class="tooltip-id" id="item-id">minecraft:diamond_sword</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- アイテム情報バー -->
+        <div class="item-stats-bar" id="item-stats">
+          <div class="stat-item">
+            <span class="stat-label">エンチャント</span>
+            <span class="stat-value" id="enchant-total">0</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">レベル合計</span>
+            <span class="stat-value" id="level-total">0</span>
           </div>
         </div>
       </div>
@@ -596,17 +627,40 @@ export function init(container) {
     filterEnchants(container);
   }, 150));
 
-  // エンチャント追加
-  delegate(container, 'click', '.enchant-item', (e, target) => {
+  // エンチャント追加（追加ボタンクリック）
+  delegate(container, 'click', '.enchant-add-btn', (e, target) => {
+    e.stopPropagation();
     const enchantId = target.dataset.enchant;
     const defaultMax = parseInt(target.dataset.defaultMax) || 5;
+    const levelInput = $(`.enchant-level-input[data-enchant="${enchantId}"]`, container);
+    const level = parseInt(levelInput?.value) || defaultMax;
 
     if (!selectedEnchants.find(e => e.id === enchantId)) {
-      // デフォルトの最大レベルで追加（ユーザーは後で255まで上げられる）
-      selectedEnchants.push({ id: enchantId, level: defaultMax, defaultMax });
-      target.classList.add('selected');
+      selectedEnchants.push({ id: enchantId, level: Math.min(255, Math.max(1, level)), defaultMax });
+      target.closest('.enchant-item')?.classList.add('selected');
       renderSelectedEnchants(container);
       updateCommand(container);
+    }
+  });
+
+  // レベルプリセットボタン（グリッド内）
+  delegate(container, 'click', '.level-preset-btn', (e, target) => {
+    e.stopPropagation();
+    const enchantId = target.dataset.enchant;
+    const level = parseInt(target.dataset.level);
+    const levelInput = $(`.enchant-level-input[data-enchant="${enchantId}"]`, container);
+    if (levelInput) {
+      levelInput.value = level;
+    }
+  });
+
+  // エンチャントレベル入力でEnterキー押下時に追加
+  delegate(container, 'keypress', '.enchant-level-input', (e, target) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const enchantId = target.dataset.enchant;
+      const addBtn = $(`.enchant-add-btn[data-enchant="${enchantId}"]`, container);
+      addBtn?.click();
     }
   });
 
@@ -666,10 +720,20 @@ export function init(container) {
   });
 
   // オプション変更
-  ['#opt-unbreakable', '#opt-hide-enchants', '#opt-hide-unbreakable', '#custom-name', '#item-count'].forEach(sel => {
+  ['#opt-unbreakable', '#opt-hide-enchants', '#opt-hide-unbreakable', '#custom-name'].forEach(sel => {
     $(sel, container)?.addEventListener('change', () => updateCommand(container));
     $(sel, container)?.addEventListener('input', debounce(() => updateCommand(container), 150));
   });
+
+  // 個数変更（プレビューも更新）
+  $('#item-count', container)?.addEventListener('change', () => {
+    updatePreview(container);
+    updateCommand(container);
+  });
+  $('#item-count', container)?.addEventListener('input', debounce(() => {
+    updatePreview(container);
+    updateCommand(container);
+  }, 150));
 
   // バージョン変更時にコマンド再生成
   window.addEventListener('mc-version-change', () => {
@@ -752,17 +816,24 @@ function renderSelectedEnchants(container) {
     const isMaxLevel = e.level === 255;
     return `
       <div class="selected-enchant ${isCurse ? 'curse' : ''} ${isOverDefault ? 'over-default' : ''} ${isMaxLevel ? 'max-level' : ''}">
-        <span class="enchant-label">${info?.name || e.id}</span>
-        <div class="enchant-level-wrapper">
-          <input type="number" class="enchant-level mc-input" data-enchant="${e.id}"
-                 value="${e.level}" min="1" max="${ABSOLUTE_MAX_LEVEL}">
-          <span class="default-max-hint" title="通常の最大レベル">(通常:${defaultMax})</span>
+        <div class="enchant-info">
+          <span class="enchant-label">${info?.name || e.id}</span>
+          <span class="enchant-level-display">Lv.${e.level}</span>
         </div>
-        <div class="level-quick-btns">
-          <button type="button" class="level-quick-btn" data-enchant="${e.id}" data-level="${defaultMax}">Max</button>
-          <button type="button" class="level-quick-btn extreme" data-enchant="${e.id}" data-level="255">255</button>
+        <div class="enchant-level-control">
+          <div class="level-input-wrapper">
+            <input type="number" class="enchant-level mc-input" data-enchant="${e.id}"
+                   value="${e.level}" min="1" max="${ABSOLUTE_MAX_LEVEL}" aria-label="レベル">
+            <span class="level-suffix">Lv</span>
+          </div>
+          <div class="level-quick-controls">
+            <button type="button" class="level-quick-btn quick-btn-preset" data-enchant="${e.id}" data-level="1" title="レベル1">I</button>
+            <button type="button" class="level-quick-btn quick-btn-normal" data-enchant="${e.id}" data-level="${defaultMax}" title="通常最大 (${defaultMax})">Max</button>
+            <button type="button" class="level-quick-btn quick-btn-extreme" data-enchant="${e.id}" data-level="255" title="最大 (255)">255</button>
+          </div>
+          <span class="level-status-badge">${isMaxLevel ? '★' : isOverDefault ? '●' : ''}</span>
         </div>
-        <button type="button" class="enchant-remove" data-enchant="${e.id}">×</button>
+        <button type="button" class="enchant-remove" data-enchant="${e.id}" aria-label="削除">×</button>
       </div>
     `;
   }).join('');
@@ -789,15 +860,23 @@ function updatePreview(container) {
   const itemIdEl = $('#item-id', container);
   const itemIconImg = $('#item-icon-img', container);
   const previewEnchantsEl = $('#preview-enchants', container);
+  const itemCountDisplay = $('#item-count-display', container);
+  const enchantTotalEl = $('#enchant-total', container);
+  const levelTotalEl = $('#level-total', container);
+  const previewSlot = $('#preview-slot', container);
+  const itemTooltip = $('#item-tooltip', container);
 
   const useCustom = $('#use-custom-item', container)?.checked;
   const customId = $('#custom-item-id', container)?.value;
   const catId = $('#item-category', container)?.value;
   const itemId = $('#item-select', container)?.value;
+  const count = parseInt($('#item-count', container)?.value) || 1;
 
   // アイテム名とアイコン
+  let itemName = 'アイテム';
   if (useCustom && customId) {
     const customItemId = customId.split(':').pop() || customId;
+    itemName = customItemId;
     if (itemNameEl) itemNameEl.textContent = customItemId;
     if (itemIdEl) itemIdEl.textContent = customId.startsWith('minecraft:') ? customId : `minecraft:${customId}`;
     // カスタムアイテムもInvicon画像を試行
@@ -810,7 +889,8 @@ function updatePreview(container) {
   } else {
     const cat = ITEM_CATEGORIES[catId];
     const item = cat?.items.find(i => i.id === itemId);
-    if (itemNameEl) itemNameEl.textContent = item?.name || 'アイテム';
+    itemName = item?.name || 'アイテム';
+    if (itemNameEl) itemNameEl.textContent = itemName;
     if (itemIdEl) itemIdEl.textContent = `minecraft:${itemId}`;
 
     // Wiki Invicon画像を設定
@@ -820,6 +900,12 @@ function updatePreview(container) {
       itemIconImg.style.opacity = '1';
       itemIconImg.onerror = () => { itemIconImg.style.opacity = '0.3'; };
     }
+  }
+
+  // アイテム個数表示（2以上のみ表示）
+  if (itemCountDisplay) {
+    itemCountDisplay.textContent = count > 1 ? count : '';
+    itemCountDisplay.style.display = count > 1 ? 'block' : 'none';
   }
 
   // エンチャント一覧
@@ -840,6 +926,35 @@ function updatePreview(container) {
           </div>
         `;
       }).join('');
+    }
+  }
+
+  // 統計バー更新
+  const enchantCount = selectedEnchants.length;
+  const levelSum = selectedEnchants.reduce((sum, e) => sum + e.level, 0);
+
+  if (enchantTotalEl) {
+    enchantTotalEl.textContent = enchantCount;
+  }
+  if (levelTotalEl) {
+    levelTotalEl.textContent = levelSum;
+  }
+
+  // ツールチップ名にエンチャント色を適用
+  if (itemNameEl) {
+    if (selectedEnchants.length > 0) {
+      itemNameEl.classList.add('enchanted');
+    } else {
+      itemNameEl.classList.remove('enchanted');
+    }
+  }
+
+  // スロットにエンチャントグロー効果
+  if (previewSlot) {
+    if (selectedEnchants.length > 0) {
+      previewSlot.classList.add('enchanted');
+    } else {
+      previewSlot.classList.remove('enchanted');
     }
   }
 }
@@ -1127,8 +1242,8 @@ style.textContent = `
 
   .category-enchants {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 4px;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 6px;
     padding: var(--mc-space-sm);
     background: var(--mc-bg-panel);
   }
@@ -1136,17 +1251,16 @@ style.textContent = `
   .enchant-item {
     display: flex;
     flex-direction: column;
-    gap: 2px;
-    padding: 8px;
+    gap: 6px;
+    padding: 10px;
     background: var(--mc-bg-surface);
     border: 2px solid transparent;
-    cursor: pointer;
+    border-radius: 4px;
     transition: all 0.15s;
   }
 
   .enchant-item:hover {
     background: var(--mc-color-stone-300);
-    transform: translateY(-1px);
   }
 
   .enchant-item.selected {
@@ -1154,9 +1268,16 @@ style.textContent = `
     border-color: var(--mc-color-grass-main);
   }
 
+  .enchant-item .enchant-item-header {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
   .enchant-item .enchant-name {
-    font-size: 0.8rem;
+    font-size: 0.85rem;
     font-weight: bold;
+    color: var(--mc-text-primary);
   }
 
   .enchant-item .enchant-en {
@@ -1164,24 +1285,95 @@ style.textContent = `
     color: var(--mc-text-muted);
   }
 
-  .enchant-item .enchant-level-info {
+  /* レベル選択UI */
+  .enchant-level-selector {
     display: flex;
-    gap: 8px;
-    margin-top: 2px;
+    align-items: center;
+    gap: 6px;
+    margin-top: 4px;
   }
 
-  .enchant-item .enchant-default-max {
-    font-size: 0.65rem;
+  .enchant-level-selector .level-label {
+    font-size: 0.75rem;
+    color: var(--mc-text-muted);
+    font-weight: bold;
+  }
+
+  .enchant-level-selector .enchant-level-input {
+    width: 55px;
+    padding: 4px 6px;
+    font-size: 0.85rem;
+    font-weight: bold;
+    text-align: center;
+    background: var(--mc-bg-panel);
+    border: 2px solid var(--mc-border-dark);
     color: var(--mc-color-diamond);
-    background: rgba(85, 255, 255, 0.1);
-    padding: 1px 4px;
-    border-radius: 2px;
+    border-radius: 3px;
   }
 
-  .enchant-item .enchant-cmd-max {
-    font-size: 0.6rem;
+  .enchant-level-selector .enchant-level-input:focus {
+    outline: none;
+    border-color: var(--mc-color-diamond);
+    box-shadow: 0 0 0 2px rgba(77, 236, 242, 0.2);
+  }
+
+  .enchant-level-selector .level-presets {
+    display: flex;
+    gap: 3px;
+  }
+
+  .enchant-level-selector .level-preset-btn {
+    padding: 3px 6px;
+    font-size: 0.65rem;
+    font-weight: bold;
+    border-radius: 3px;
+    border: 1px solid var(--mc-border-dark);
+    background: var(--mc-bg-surface);
+    color: var(--mc-text-primary);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .enchant-level-selector .level-preset-btn:hover {
+    background: var(--mc-color-grass-light);
+    border-color: var(--mc-color-grass-main);
+    color: white;
+  }
+
+  .enchant-level-selector .level-preset-btn.extreme {
+    background: linear-gradient(135deg, rgba(255, 170, 0, 0.3) 0%, rgba(255, 107, 107, 0.3) 100%);
+    border-color: var(--mc-color-gold);
     color: var(--mc-color-gold);
-    opacity: 0.7;
+  }
+
+  .enchant-level-selector .level-preset-btn.extreme:hover {
+    background: linear-gradient(135deg, #ffaa00 0%, #ff6b6b 100%);
+    color: white;
+    box-shadow: 0 0 6px rgba(255, 170, 0, 0.5);
+  }
+
+  /* 追加ボタン */
+  .enchant-add-btn {
+    align-self: flex-end;
+    padding: 4px 12px;
+    font-size: 1rem;
+    font-weight: bold;
+    background: var(--mc-color-grass-main);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .enchant-add-btn:hover {
+    background: var(--mc-color-grass-light);
+    transform: scale(1.05);
+  }
+
+  .enchant-item.selected .enchant-add-btn {
+    background: var(--mc-text-muted);
+    cursor: not-allowed;
   }
 
   .enchant-info-hint {
@@ -1209,7 +1401,7 @@ style.textContent = `
     background: var(--mc-bg-panel);
     border: 1px solid var(--mc-border-dark);
     min-height: 60px;
-    max-height: 250px;
+    max-height: 300px;
     overflow-y: auto;
   }
 
@@ -1217,79 +1409,174 @@ style.textContent = `
     display: flex;
     align-items: center;
     gap: var(--mc-space-sm);
-    padding: var(--mc-space-xs) var(--mc-space-sm);
+    padding: 8px 12px;
     background: var(--mc-bg-surface);
-    border-left: 3px solid var(--mc-color-grass-main);
+    border-left: 4px solid var(--mc-color-grass-main);
+    border-radius: 0 4px 4px 0;
+    transition: all 0.2s;
+  }
+
+  .selected-enchant:hover {
+    background: rgba(92, 183, 70, 0.1);
   }
 
   .selected-enchant.curse {
     border-left-color: var(--mc-color-redstone);
   }
 
+  .selected-enchant .enchant-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 100px;
+  }
+
   .selected-enchant .enchant-label {
-    flex: 1;
     font-size: 0.85rem;
+    font-weight: bold;
+    color: var(--mc-text-primary);
+  }
+
+  .selected-enchant .enchant-level-display {
+    font-size: 0.7rem;
+    color: var(--mc-color-diamond);
+    font-family: var(--mc-font-mono);
+  }
+
+  .selected-enchant .enchant-level-control {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+  }
+
+  .selected-enchant .level-input-wrapper {
+    display: flex;
+    align-items: center;
+    position: relative;
   }
 
   .selected-enchant .enchant-level {
-    width: 70px;
-  }
-
-  .selected-enchant .enchant-remove {
-    width: 24px;
-    height: 24px;
-    background: none;
-    border: none;
-    color: var(--mc-color-redstone);
-    cursor: pointer;
-    font-size: 1.2rem;
-  }
-
-  .selected-enchant .enchant-level-wrapper {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-  }
-
-  .selected-enchant .default-max-hint {
-    font-size: 0.65rem;
-    color: var(--mc-text-muted);
-    white-space: nowrap;
-  }
-
-  .selected-enchant .level-quick-btns {
-    display: flex;
-    gap: 2px;
-  }
-
-  .selected-enchant .level-quick-btn {
-    padding: 2px 6px;
+    width: 55px;
+    padding: 4px 6px;
+    font-size: 0.85rem;
+    font-weight: bold;
+    text-align: center;
     background: var(--mc-bg-panel);
-    border: 1px solid var(--mc-border-dark);
-    cursor: pointer;
-    font-size: 0.65rem;
-    border-radius: 2px;
+    border: 2px solid var(--mc-border-dark);
+    color: var(--mc-text-primary);
+    border-radius: 3px;
     transition: all 0.15s;
   }
 
-  .selected-enchant .level-quick-btn:hover {
-    background: var(--mc-color-grass-light);
+  .selected-enchant .enchant-level:hover {
     border-color: var(--mc-color-grass-main);
+    background: rgba(92, 183, 70, 0.1);
   }
 
-  .selected-enchant .level-quick-btn.extreme {
-    background: linear-gradient(135deg, #ff6b6b 0%, #ffa500 100%);
+  .selected-enchant .enchant-level:focus {
+    outline: none;
+    border-color: var(--mc-color-diamond);
+    box-shadow: 0 0 0 2px rgba(77, 236, 242, 0.2);
+  }
+
+  .selected-enchant .level-suffix {
+    font-size: 0.65rem;
+    color: var(--mc-text-muted);
+    margin-left: 3px;
+    font-weight: bold;
+  }
+
+  .selected-enchant .level-quick-controls {
+    display: flex;
+    gap: 3px;
+  }
+
+  .selected-enchant .level-quick-btn {
+    padding: 4px 8px;
+    font-size: 0.7rem;
+    font-weight: bold;
+    border-radius: 3px;
+    border: 1px solid var(--mc-border-dark);
+    background: var(--mc-bg-surface);
+    color: var(--mc-text-primary);
+    cursor: pointer;
+    transition: all 0.15s;
+    min-width: 32px;
+  }
+
+  .selected-enchant .level-quick-btn:hover {
+    transform: translateY(-1px);
+  }
+
+  .selected-enchant .level-quick-btn.quick-btn-preset {
+    min-width: 28px;
+  }
+
+  .selected-enchant .level-quick-btn.quick-btn-preset:hover {
+    background: var(--mc-color-stone-400);
+    border-color: var(--mc-color-stone-500);
+  }
+
+  .selected-enchant .level-quick-btn.quick-btn-normal:hover {
+    background: var(--mc-color-grass-light);
+    border-color: var(--mc-color-grass-main);
+    color: white;
+  }
+
+  .selected-enchant .level-quick-btn.quick-btn-extreme {
+    background: linear-gradient(135deg, rgba(255, 107, 107, 0.8) 0%, rgba(255, 165, 0, 0.8) 100%);
     color: white;
     border-color: #ff6b6b;
   }
 
-  .selected-enchant .level-quick-btn.extreme:hover {
-    background: linear-gradient(135deg, #ff4444 0%, #ff8800 100%);
+  .selected-enchant .level-quick-btn.quick-btn-extreme:hover {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ff9100 100%);
+    border-color: #ff4444;
+    box-shadow: 0 0 8px rgba(255, 107, 107, 0.5);
+  }
+
+  .selected-enchant .level-status-badge {
+    font-size: 0.8rem;
+    color: var(--mc-color-gold);
+    min-width: 14px;
+    text-align: center;
+  }
+
+  .selected-enchant .enchant-remove {
+    width: 28px;
+    height: 28px;
+    background: rgba(200, 0, 0, 0.1);
+    border: 1px solid transparent;
+    border-radius: 4px;
+    color: var(--mc-color-redstone);
+    cursor: pointer;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+  }
+
+  .selected-enchant .enchant-remove:hover {
+    background: var(--mc-color-redstone);
+    color: white;
+    border-color: #a00000;
   }
 
   .selected-enchant.over-default {
     border-left-color: var(--mc-color-gold);
-    background: rgba(255, 170, 0, 0.1);
+    background: rgba(255, 170, 0, 0.08);
+  }
+
+  .selected-enchant.over-default .enchant-level {
+    border-color: var(--mc-color-gold);
+    background: rgba(242, 193, 61, 0.15);
+    color: var(--mc-color-gold);
+  }
+
+  .selected-enchant.over-default .enchant-level-display {
+    color: var(--mc-color-gold);
   }
 
   /* 属性 */
@@ -1377,6 +1664,147 @@ style.textContent = `
     color: var(--mc-text-muted);
   }
 
+  /* Minecraft風インベントリプレビュー */
+  .mc-inventory-preview {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--mc-space-md);
+    padding: var(--mc-space-md);
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border: 3px solid #3d3d3d;
+    border-radius: 4px;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+  }
+
+  /* インベントリスロット（大） */
+  .mc-inv-slot-large {
+    position: relative;
+    width: 64px;
+    height: 64px;
+    background: linear-gradient(135deg, #8b8b8b 0%, #373737 100%);
+    border: 2px solid;
+    border-color: #373737 #fff #fff #373737;
+    box-shadow: inset 2px 2px 0 #555, inset -2px -2px 0 #1a1a1a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .mc-inv-slot-large.enchanted {
+    animation: slot-enchant-glow 2s ease-in-out infinite;
+  }
+
+  @keyframes slot-enchant-glow {
+    0%, 100% {
+      box-shadow: inset 2px 2px 0 #555, inset -2px -2px 0 #1a1a1a, 0 0 10px rgba(170, 0, 255, 0.4);
+    }
+    50% {
+      box-shadow: inset 2px 2px 0 #555, inset -2px -2px 0 #1a1a1a, 0 0 20px rgba(170, 0, 255, 0.7), 0 0 30px rgba(85, 255, 255, 0.3);
+    }
+  }
+
+  .mc-inv-item-img {
+    width: 48px;
+    height: 48px;
+    image-rendering: pixelated;
+    filter: drop-shadow(2px 2px 2px rgba(0,0,0,0.5));
+    transition: transform 0.2s ease, filter 0.2s ease;
+  }
+
+  .mc-inv-slot-large:hover .mc-inv-item-img {
+    transform: scale(1.1);
+    filter: drop-shadow(2px 2px 2px rgba(0,0,0,0.5)) brightness(1.2);
+  }
+
+  .mc-inv-slot-large.enchanted .mc-inv-item-img {
+    filter: drop-shadow(2px 2px 2px rgba(0,0,0,0.5)) drop-shadow(0 0 5px rgba(170, 0, 255, 0.5));
+  }
+
+  .mc-inv-count {
+    position: absolute;
+    bottom: 2px;
+    right: 4px;
+    font-family: 'Minecraft', monospace;
+    font-size: 14px;
+    font-weight: bold;
+    color: white;
+    text-shadow: 2px 2px 0 #3f3f3f, -1px -1px 0 #3f3f3f;
+    line-height: 1;
+  }
+
+  /* Minecraft風ツールチップ */
+  .mc-item-tooltip {
+    flex: 1;
+    background: linear-gradient(180deg, #100010 0%, #1a001a 100%);
+    border: 2px solid;
+    border-color: #5000aa #28007f #28007f #5000aa;
+    padding: 8px 12px;
+    min-width: 180px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.5);
+  }
+
+  .mc-item-tooltip .tooltip-name {
+    font-family: 'Minecraft', sans-serif;
+    font-size: 1rem;
+    font-weight: bold;
+    color: #fff;
+    margin-bottom: 4px;
+    text-shadow: 1px 1px 0 #3f3f3f;
+  }
+
+  .mc-item-tooltip .tooltip-name.enchanted {
+    color: #55ffff;
+    text-shadow: 0 0 10px rgba(85, 255, 255, 0.5);
+  }
+
+  .mc-item-tooltip .tooltip-enchants {
+    border-top: 1px solid rgba(128, 0, 255, 0.3);
+    padding-top: 6px;
+    margin-top: 4px;
+  }
+
+  .mc-item-tooltip .tooltip-meta {
+    border-top: 1px solid rgba(128, 0, 255, 0.2);
+    padding-top: 6px;
+    margin-top: 8px;
+  }
+
+  .mc-item-tooltip .tooltip-id {
+    font-family: var(--mc-font-mono);
+    font-size: 0.7rem;
+    color: #555;
+  }
+
+  /* アイテムステータスバー */
+  .item-stats-bar {
+    display: flex;
+    gap: var(--mc-space-lg);
+    padding: var(--mc-space-sm) var(--mc-space-md);
+    margin-top: var(--mc-space-sm);
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+  }
+
+  .item-stats-bar .stat-item {
+    display: flex;
+    align-items: center;
+    gap: var(--mc-space-xs);
+  }
+
+  .item-stats-bar .stat-label {
+    font-size: 0.75rem;
+    color: var(--mc-text-muted);
+  }
+
+  .item-stats-bar .stat-value {
+    font-size: 0.85rem;
+    font-weight: bold;
+    color: var(--mc-color-diamond);
+    font-family: var(--mc-font-mono);
+  }
+
+  /* 旧プレビュースタイル（後方互換） */
   .enchant-preview {
     display: flex;
     gap: var(--mc-space-lg);
@@ -1419,7 +1847,7 @@ style.textContent = `
     font-family: monospace;
   }
 
-  .preview-enchants {
+  .preview-enchants, .tooltip-enchants {
     flex: 1;
     font-size: 0.85rem;
   }
@@ -1674,6 +2102,31 @@ style.textContent = `
     .enchant-tool .mc-input:focus {
       border-color: #aa00ff;
       box-shadow: 0 0 0 2px rgba(170, 0, 255, 0.3);
+    }
+
+    /* Minecraft風プレビューダークモード */
+    .enchant-tool .mc-inventory-preview {
+      background: linear-gradient(135deg, #0d0d1a 0%, #0a0f1e 100%);
+    }
+
+    .enchant-tool .mc-item-tooltip {
+      background: linear-gradient(180deg, #0a000a 0%, #0d000d 100%);
+    }
+
+    .enchant-tool .mc-item-tooltip .tooltip-name {
+      color: #e8e8e8;
+    }
+
+    .enchant-tool .mc-item-tooltip .tooltip-id {
+      color: #666;
+    }
+
+    .enchant-tool .item-stats-bar {
+      background: rgba(0, 0, 0, 0.4);
+    }
+
+    .enchant-tool .item-stats-bar .stat-label {
+      color: #888;
     }
   }
 `;

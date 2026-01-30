@@ -5,8 +5,10 @@
  */
 
 import { $, $$, debounce, delegate } from '../../core/dom.js';
+import { workspaceStore } from '../../core/store.js';
 import { setOutput } from '../../app/sidepanel.js';
 import { getInviconUrl, getEffectIconUrl } from '../../core/wiki-images.js';
+import { compareVersions, getVersionGroup, getVersionNote } from '../../core/version-compat.js';
 
 // 全エフェクト一覧（33種類+）- colorは色付き円のフォールバック用
 const EFFECTS = [
@@ -103,8 +105,9 @@ export function render(manifest) {
       <div class="tool-header">
         <img src="${getInviconUrl(manifest.iconItem || 'potion')}" class="tool-header-icon mc-wiki-image" width="32" height="32" alt="">
         <h2>${manifest.title}</h2>
-        <span class="version-badge">1.21.5+</span>
+        <span class="version-badge" id="potion-version-badge">1.21+</span>
       </div>
+      <p class="version-note" id="potion-version-note"></p>
 
       <form class="tool-form" id="potion-form">
         <!-- ポーションタイプ選択（タブ形式） -->
@@ -193,22 +196,42 @@ export function render(manifest) {
         </div>
       </form>
 
-      <!-- プレビュー -->
+      <!-- Minecraft風ゲーム画面プレビュー -->
       <div class="potion-preview-section">
         <h3>プレビュー</h3>
-        <div class="potion-preview">
-          <div class="preview-bottle-area">
-            <div class="preview-bottle" id="preview-bottle">
-              <div class="bottle-liquid" id="bottle-liquid"></div>
-              <div class="bottle-particles" id="bottle-particles"></div>
-            </div>
-            <div class="preview-type" id="preview-type">通常のポーション</div>
+        <div class="mc-inventory-preview">
+          <!-- インベントリスロット風表示 -->
+          <div class="mc-inv-slot-large potion-slot" id="potion-preview-slot">
+            <img class="mc-inv-item-img" id="potion-icon-img" src="" alt="">
+            <span class="mc-inv-count" id="potion-count-display">1</span>
+            <div class="liquid-overlay" id="liquid-overlay"></div>
           </div>
-          <div class="preview-info">
-            <div class="preview-name" id="preview-name">ポーション</div>
-            <div class="preview-effects" id="preview-effects">
+
+          <!-- Minecraft風ツールチップ -->
+          <div class="mc-item-tooltip potion-tooltip" id="potion-item-tooltip">
+            <div class="tooltip-name" id="potion-preview-name">ポーション</div>
+            <div class="tooltip-effects" id="preview-effects">
               <p class="text-muted">エフェクトなし</p>
             </div>
+            <div class="tooltip-meta">
+              <span class="tooltip-id" id="potion-type-display">minecraft:potion</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- アイテム情報バー -->
+        <div class="item-stats-bar">
+          <div class="stat-item">
+            <span class="stat-label">タイプ</span>
+            <span class="stat-value" id="potion-stat-type">通常</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">エフェクト</span>
+            <span class="stat-value" id="potion-stat-effects">0</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">合計時間</span>
+            <span class="stat-value" id="potion-stat-duration">0:00</span>
           </div>
         </div>
       </div>
@@ -248,14 +271,43 @@ export function init(container) {
     renderEffectGrid(container, activeTab?.dataset.type || 'beneficial');
   }, 150));
 
-  // エフェクト追加
-  delegate(container, 'click', '.effect-item', (e, target) => {
+  // エフェクト追加（追加ボタンクリック）
+  delegate(container, 'click', '.effect-add-btn', (e, target) => {
+    e.stopPropagation();
     const effectId = target.dataset.effect;
+    const effectItem = target.closest('.effect-item');
+
     if (!selectedEffects.find(e => e.id === effectId)) {
-      selectedEffects.push({ id: effectId, duration: 600, amplifier: 0, infinite: false });
-      target.classList.add('selected');
+      // 入力値を取得
+      const levelInput = effectItem?.querySelector(`.effect-level-input[data-effect="${effectId}"]`);
+      const durationInput = effectItem?.querySelector(`.effect-duration-input[data-effect="${effectId}"]`);
+      const infiniteInput = effectItem?.querySelector(`.effect-infinite-input[data-effect="${effectId}"]`);
+
+      const amplifier = Math.max(0, (parseInt(levelInput?.value) || 1) - 1);
+      const durationSec = parseInt(durationInput?.value) || 30;
+      const infinite = infiniteInput?.checked || false;
+      const duration = infinite ? -1 : durationSec * 20;
+
+      selectedEffects.push({ id: effectId, duration, amplifier, infinite });
+      effectItem?.classList.add('selected');
       renderSelectedEffects(container);
       updateCommand(container);
+    }
+  });
+
+  // グリッド内の無限チェックボックス変更時
+  delegate(container, 'change', '.effect-infinite-input', (e, target) => {
+    e.stopPropagation();
+    const effectId = target.dataset.effect;
+    const effectItem = target.closest('.effect-item');
+    const durationInput = effectItem?.querySelector(`.effect-duration-input[data-effect="${effectId}"]`);
+    if (durationInput) {
+      durationInput.disabled = target.checked;
+      if (target.checked) {
+        durationInput.value = '∞';
+      } else {
+        durationInput.value = '30';
+      }
     }
   });
 
@@ -334,8 +386,39 @@ export function init(container) {
     }, 150));
   });
 
+  // グローバルバージョン変更時にコマンド再生成
+  window.addEventListener('mc-version-change', () => {
+    updateVersionDisplay(container);
+    updateCommand(container);
+  });
+
+  // 初期表示
+  updateVersionDisplay(container);
   updatePreview(container);
   updateCommand(container);
+}
+
+/**
+ * バージョン表示を更新
+ */
+function updateVersionDisplay(container) {
+  const version = workspaceStore.get('version') || '1.21';
+  const badge = $('#potion-version-badge', container);
+  const note = $('#potion-version-note', container);
+
+  if (badge) {
+    badge.textContent = version + '+';
+  }
+  if (note) {
+    // ポーションコマンドの警告
+    if (compareVersions(version, '1.9') < 0) {
+      note.textContent = '注意: このバージョンでは効果付きポーションの付与には異なる形式が必要です';
+      note.style.color = 'var(--mc-color-redstone)';
+    } else {
+      note.textContent = getVersionNote(version);
+      note.style.color = 'var(--mc-color-diamond)';
+    }
+  }
 }
 
 /**
@@ -367,8 +450,31 @@ function renderEffectGrid(container, type) {
            data-effect="${e.id}"
            style="--effect-color: ${e.color}"
            title="${e.en}">
-        <span class="effect-icon">${renderEffectIcon(e.id, e.color, 18)}</span>
-        <span class="effect-name">${e.name}</span>
+        <div class="effect-item-header">
+          <span class="effect-icon">${renderEffectIcon(e.id, e.color, 18)}</span>
+          <span class="effect-name">${e.name}</span>
+        </div>
+        <div class="effect-level-selector">
+          <div class="effect-input-group">
+            <label>Lv:</label>
+            <input type="number" class="effect-level-input mc-input"
+                   data-effect="${e.id}" value="1" min="1" max="255"
+                   onclick="event.stopPropagation()">
+          </div>
+          <div class="effect-input-group">
+            <label>秒:</label>
+            <input type="number" class="effect-duration-input mc-input"
+                   data-effect="${e.id}" value="30" min="1" max="99999"
+                   onclick="event.stopPropagation()">
+          </div>
+          <label class="effect-infinite-check">
+            <input type="checkbox" class="effect-infinite-input" data-effect="${e.id}"
+                   onclick="event.stopPropagation()">
+            <span>∞</span>
+          </label>
+          <button type="button" class="effect-add-btn" data-effect="${e.id}"
+                  onclick="event.stopPropagation()" title="追加">+</button>
+        </div>
       </div>
     `;
   }).join('');
@@ -433,44 +539,79 @@ function renderSelectedEffects(container) {
  * プレビューを更新
  */
 function updatePreview(container) {
-  const liquid = $('#bottle-liquid', container);
-  const particles = $('#bottle-particles', container);
-  const typeEl = $('#preview-type', container);
-  const nameEl = $('#preview-name', container);
+  const iconImg = $('#potion-icon-img', container);
+  const liquidOverlay = $('#liquid-overlay', container);
+  const nameEl = $('#potion-preview-name', container);
   const effectsEl = $('#preview-effects', container);
-  const bottleEl = $('#preview-bottle', container);
+  const typeDisplayEl = $('#potion-type-display', container);
+  const countDisplayEl = $('#potion-count-display', container);
+  const previewSlot = $('#potion-preview-slot', container);
+
+  // 統計バー
+  const statTypeEl = $('#potion-stat-type', container);
+  const statEffectsEl = $('#potion-stat-effects', container);
+  const statDurationEl = $('#potion-stat-duration', container);
 
   const activeType = $('.type-tab.active', container);
   const potionType = POTION_TYPES.find(t => t.id === activeType?.dataset.type) || POTION_TYPES[0];
   const customName = $('#potion-name', container)?.value;
+  const count = parseInt($('#potion-count', container)?.value) || 1;
   const useColor = $('#potion-use-color', container)?.checked;
   const customColor = $('#potion-color', container)?.value;
 
-  // ボトルタイプによるクラス変更
-  if (bottleEl) {
-    bottleEl.className = `preview-bottle ${potionType.id}`;
+  // アイコン設定
+  if (iconImg) {
+    iconImg.src = getInviconUrl(potionType.id);
+    iconImg.alt = potionType.name;
+    iconImg.style.opacity = '1';
+    iconImg.onerror = () => { iconImg.style.opacity = '0.3'; };
   }
 
-  // 液体の色
-  if (liquid) {
+  // 液体オーバーレイの色
+  if (liquidOverlay) {
+    let liquidColor;
     if (useColor && customColor) {
-      liquid.style.backgroundColor = customColor;
+      liquidColor = customColor;
     } else if (selectedEffects.length > 0) {
       const firstEffect = EFFECTS.find(e => e.id === selectedEffects[0].id);
-      liquid.style.backgroundColor = firstEffect?.color || '#3F76E4';
+      liquidColor = firstEffect?.color || '#3F76E4';
     } else {
-      liquid.style.backgroundColor = '#3F76E4';
+      liquidColor = '#3F76E4';
     }
+    liquidOverlay.style.backgroundColor = liquidColor;
   }
 
-  // タイプ表示
-  if (typeEl) {
-    typeEl.textContent = potionType.name;
+  // タイプID表示
+  if (typeDisplayEl) {
+    typeDisplayEl.textContent = `minecraft:${potionType.id}`;
+  }
+
+  // 個数表示
+  if (countDisplayEl) {
+    countDisplayEl.textContent = count > 1 ? count : '';
+    countDisplayEl.style.display = count > 1 ? 'block' : 'none';
   }
 
   // 名前表示
   if (nameEl) {
-    nameEl.textContent = customName || 'ポーション';
+    nameEl.textContent = customName || potionType.name;
+    if (selectedEffects.length > 0) {
+      nameEl.classList.add('enchanted');
+    } else {
+      nameEl.classList.remove('enchanted');
+    }
+  }
+
+  // スロットのエフェクトグロー
+  if (previewSlot) {
+    if (selectedEffects.length > 0) {
+      previewSlot.classList.add('has-effects');
+      // 最初のエフェクトの色でグロー
+      const firstEffect = EFFECTS.find(e => e.id === selectedEffects[0].id);
+      previewSlot.style.setProperty('--effect-glow-color', firstEffect?.color || '#3F76E4');
+    } else {
+      previewSlot.classList.remove('has-effects');
+    }
   }
 
   // エフェクト一覧
@@ -482,12 +623,33 @@ function updatePreview(container) {
         const info = EFFECTS.find(ef => ef.id === e.id);
         const level = e.amplifier > 0 ? ` ${toRoman(e.amplifier + 1)}` : '';
         const time = formatDuration(e.duration);
+        const isBeneficial = info?.type === 'beneficial';
         return `
-          <div class="preview-effect-item" style="color: ${info?.color || '#fff'}">
+          <div class="preview-effect-item ${isBeneficial ? 'beneficial' : 'harmful'}" style="color: ${info?.color || '#fff'}">
             ${renderEffectIcon(e.id, info?.color || '#fff', 16)} ${info?.name || e.id}${level} <span class="time">(${time})</span>
           </div>
         `;
       }).join('');
+    }
+  }
+
+  // 統計バー更新
+  const typeNames = { potion: '通常', splash_potion: 'スプラッシュ', lingering_potion: '残留', tipped_arrow: '矢' };
+  if (statTypeEl) statTypeEl.textContent = typeNames[potionType.id] || '通常';
+  if (statEffectsEl) statEffectsEl.textContent = selectedEffects.length;
+
+  // 合計時間計算
+  if (statDurationEl) {
+    if (selectedEffects.length === 0) {
+      statDurationEl.textContent = '0:00';
+    } else {
+      const hasInfinite = selectedEffects.some(e => e.duration === -1);
+      if (hasInfinite) {
+        statDurationEl.textContent = '∞';
+      } else {
+        const maxDuration = Math.max(...selectedEffects.map(e => e.duration));
+        statDurationEl.textContent = formatDuration(maxDuration);
+      }
     }
   }
 }
@@ -518,7 +680,7 @@ function applyPreset(presetId, container) {
 }
 
 /**
- * コマンドを更新（1.21.5形式）
+ * コマンドを更新（バージョン対応）
  */
 function updateCommand(container) {
   const activeType = $('.type-tab.active', container);
@@ -528,6 +690,37 @@ function updateCommand(container) {
   const useColor = $('#potion-use-color', container)?.checked;
   const color = $('#potion-color', container)?.value;
 
+  // 現在のバージョンを取得
+  const version = workspaceStore.get('version') || '1.21';
+  const versionGroup = getVersionGroup(version);
+
+  let command;
+
+  if (versionGroup === 'latest' || versionGroup === 'component') {
+    // 1.20.5+ コンポーネント形式
+    command = generateComponentCommand(container, potionType, count, customName, useColor, color);
+  } else if (versionGroup === 'nbt-modern' || versionGroup === 'nbt-legacy') {
+    // 1.13-1.20.4 NBT形式
+    command = generateNBTCommand(container, potionType, count, customName, useColor, color);
+  } else {
+    // 1.12- レガシー形式
+    command = generateLegacyCommand(container, potionType, count, customName, useColor, color);
+  }
+
+  setOutput(command, 'potion', {
+    potionType,
+    count,
+    customName,
+    effects: selectedEffects,
+    customColor: useColor ? color : null,
+    version
+  });
+}
+
+/**
+ * コンポーネント形式（1.20.5+）
+ */
+function generateComponentCommand(container, potionType, count, customName, useColor, color) {
   const components = [];
 
   // カスタム名
@@ -554,7 +747,6 @@ function updateCommand(container) {
   if (useColor && color) {
     const colorInt = parseInt(color.replace('#', ''), 16);
     if (selectedEffects.length > 0) {
-      // potion_contentsにマージ
       const lastComp = components[components.length - 1];
       if (lastComp && lastComp.startsWith('potion_contents=')) {
         components[components.length - 1] = lastComp.replace('}', `,custom_color:${colorInt}}`);
@@ -572,13 +764,145 @@ function updateCommand(container) {
     command += ` ${count}`;
   }
 
-  setOutput(command, 'potion', {
-    potionType,
-    count,
-    customName,
-    effects: selectedEffects,
-    customColor: useColor ? color : null
-  });
+  return command;
+}
+
+/**
+ * NBT形式（1.13-1.20.4）
+ */
+function generateNBTCommand(container, potionType, count, customName, useColor, color) {
+  const nbtParts = [];
+
+  // カスタム名
+  if (customName) {
+    nbtParts.push(`display:{Name:'{"text":"${customName}"}'}`);
+  }
+
+  // ポーション効果
+  if (selectedEffects.length > 0) {
+    const effectsList = selectedEffects.map(e => {
+      const ampInput = $(`.effect-amplifier[data-effect="${e.id}"]`, container)?.value;
+      const durInput = $(`.effect-duration[data-effect="${e.id}"]`, container)?.value;
+      const isInfinite = $(`.effect-infinite[data-effect="${e.id}"]`, container)?.checked;
+
+      const amplifier = Math.max(0, (parseInt(ampInput) || 1) - 1);
+      const duration = isInfinite ? 999999 : (parseInt(durInput) || 30) * 20;
+
+      return `{Id:${getEffectNumericId(e.id)},Amplifier:${amplifier}b,Duration:${duration}}`;
+    }).join(',');
+    nbtParts.push(`CustomPotionEffects:[${effectsList}]`);
+  }
+
+  // カスタム色
+  if (useColor && color) {
+    const colorInt = parseInt(color.replace('#', ''), 16);
+    nbtParts.push(`CustomPotionColor:${colorInt}`);
+  }
+
+  let command = `/give @p minecraft:${potionType}`;
+  if (nbtParts.length > 0) {
+    command += `{${nbtParts.join(',')}}`;
+  }
+  if (count > 1) {
+    command += ` ${count}`;
+  }
+
+  return command;
+}
+
+/**
+ * レガシー形式（1.12-）
+ */
+function generateLegacyCommand(container, potionType, count, customName, useColor, color) {
+  // 1.12ではポーションは damage value で指定
+  const nbtParts = [];
+
+  // カスタム名
+  if (customName) {
+    nbtParts.push(`display:{Name:"${customName}"}`);
+  }
+
+  // ポーション効果
+  if (selectedEffects.length > 0) {
+    const effectsList = selectedEffects.map(e => {
+      const ampInput = $(`.effect-amplifier[data-effect="${e.id}"]`, container)?.value;
+      const durInput = $(`.effect-duration[data-effect="${e.id}"]`, container)?.value;
+      const isInfinite = $(`.effect-infinite[data-effect="${e.id}"]`, container)?.checked;
+
+      const amplifier = Math.max(0, (parseInt(ampInput) || 1) - 1);
+      const duration = isInfinite ? 999999 : (parseInt(durInput) || 30) * 20;
+
+      return `{Id:${getEffectNumericId(e.id)}b,Amplifier:${amplifier}b,Duration:${duration}}`;
+    }).join(',');
+    nbtParts.push(`CustomPotionEffects:[${effectsList}]`);
+  }
+
+  // カスタム色
+  if (useColor && color) {
+    const colorInt = parseInt(color.replace('#', ''), 16);
+    nbtParts.push(`CustomPotionColor:${colorInt}`);
+  }
+
+  // 1.12ではアイテムID形式が異なる
+  const legacyPotionId = potionType === 'splash_potion' ? 'splash_potion'
+    : potionType === 'lingering_potion' ? 'lingering_potion'
+    : potionType === 'tipped_arrow' ? 'tipped_arrow'
+    : 'potion';
+
+  let command = `/give @p minecraft:${legacyPotionId} ${count} 0`;
+  if (nbtParts.length > 0) {
+    command += ` {${nbtParts.join(',')}}`;
+  }
+
+  return command;
+}
+
+/**
+ * エフェクトの数値IDを取得（1.12-1.20.4用）
+ */
+function getEffectNumericId(effectId) {
+  const effectIdMap = {
+    'speed': 1,
+    'slowness': 2,
+    'haste': 3,
+    'mining_fatigue': 4,
+    'strength': 5,
+    'instant_health': 6,
+    'instant_damage': 7,
+    'jump_boost': 8,
+    'nausea': 9,
+    'regeneration': 10,
+    'resistance': 11,
+    'fire_resistance': 12,
+    'water_breathing': 13,
+    'invisibility': 14,
+    'blindness': 15,
+    'night_vision': 16,
+    'hunger': 17,
+    'weakness': 18,
+    'poison': 19,
+    'wither': 20,
+    'health_boost': 21,
+    'absorption': 22,
+    'saturation': 23,
+    'glowing': 24,
+    'levitation': 25,
+    'luck': 26,
+    'unluck': 27,
+    'slow_falling': 28,
+    'conduit_power': 29,
+    'dolphins_grace': 30,
+    'bad_omen': 31,
+    'hero_of_the_village': 32,
+    'darkness': 33,
+    'trial_omen': 34,
+    'raid_omen': 35,
+    'wind_charged': 36,
+    'weaving': 37,
+    'oozing': 38,
+    'infested': 39,
+  };
+  return effectIdMap[effectId] || 1;
 }
 
 function toRoman(num) {
@@ -638,6 +962,119 @@ style.textContent = `
   }
 
   .effect-item .effect-name { font-size: 0.75rem; flex: 1; }
+
+  /* エフェクトグリッドアイテム（レベル入力付き） */
+  .effect-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 8px;
+    padding: var(--mc-space-sm);
+    background: var(--mc-bg-panel);
+    max-height: 350px;
+    overflow-y: auto;
+  }
+
+  .effect-item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 8px;
+    background: var(--mc-bg-surface);
+    border: 2px solid transparent;
+    border-radius: 4px;
+    border-left: 3px solid var(--effect-color);
+    transition: all 0.15s;
+  }
+
+  .effect-item:hover {
+    background: rgba(92, 183, 70, 0.1);
+  }
+
+  .effect-item.selected {
+    background: rgba(92, 183, 70, 0.2);
+    border-color: var(--mc-color-grass-main);
+  }
+
+  .effect-item.beneficial { border-left-color: #5CB746; }
+  .effect-item.harmful { border-left-color: #E74C3C; }
+  .effect-item.neutral { border-left-color: #95A5A6; }
+
+  .effect-item .effect-item-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .effect-item .effect-level-selector {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .effect-item .effect-input-group {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+  }
+
+  .effect-item .effect-input-group label {
+    font-size: 0.65rem;
+    color: var(--mc-text-muted);
+    font-weight: bold;
+  }
+
+  .effect-item .effect-level-input,
+  .effect-item .effect-duration-input {
+    width: 45px;
+    padding: 3px 4px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    text-align: center;
+    background: var(--mc-bg-panel);
+    border: 1px solid var(--mc-border-dark);
+    color: var(--mc-color-diamond);
+    border-radius: 3px;
+  }
+
+  .effect-item .effect-level-input:focus,
+  .effect-item .effect-duration-input:focus {
+    outline: none;
+    border-color: var(--mc-color-diamond);
+  }
+
+  .effect-item .effect-infinite-check {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    font-size: 0.7rem;
+    color: var(--mc-color-gold);
+    cursor: pointer;
+  }
+
+  .effect-item .effect-add-btn {
+    padding: 3px 8px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    background: var(--mc-color-grass-main);
+    color: white;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    margin-left: auto;
+    transition: all 0.15s;
+  }
+
+  .effect-item .effect-add-btn:hover {
+    background: var(--mc-color-grass-light);
+    transform: scale(1.05);
+  }
+
+  .effect-item.selected .effect-add-btn {
+    background: var(--mc-text-muted);
+    cursor: not-allowed;
+  }
+
   .effect-header .effect-label { flex: 1; font-weight: bold; font-size: 0.85rem; }
   .effect-header .effect-remove {
     width: 24px;
@@ -694,91 +1131,159 @@ style.textContent = `
     color: var(--mc-text-muted);
     text-transform: uppercase;
   }
-  .potion-preview { display: flex; gap: var(--mc-space-xl); align-items: flex-start; }
-  .preview-bottle-area { text-align: center; }
 
-  /* ボトル描画 */
-  .preview-bottle {
-    width: 64px;
-    height: 80px;
+  /* Minecraft風インベントリプレビュー */
+  .potion-tool .mc-inventory-preview {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--mc-space-md);
+    padding: var(--mc-space-md);
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border: 3px solid #3d3d3d;
+    border-radius: 4px;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+  }
+
+  .potion-tool .mc-inv-slot-large {
     position: relative;
-    margin: 0 auto var(--mc-space-sm);
+    width: 64px;
+    height: 64px;
+    background: linear-gradient(135deg, #8b8b8b 0%, #373737 100%);
+    border: 2px solid;
+    border-color: #373737 #fff #fff #373737;
+    box-shadow: inset 2px 2px 0 #555, inset -2px -2px 0 #1a1a1a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
   }
-  .preview-bottle::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 24px;
-    height: 16px;
-    background: linear-gradient(to bottom, #666, #444);
-    border-radius: 4px 4px 0 0;
+
+  .potion-tool .mc-inv-slot-large.has-effects {
+    animation: potion-glow 2s ease-in-out infinite;
   }
-  .preview-bottle::after {
-    content: '';
-    position: absolute;
-    top: 16px;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(to right, rgba(255,255,255,0.15), transparent, rgba(0,0,0,0.1));
-    border: 3px solid #555;
-    border-radius: 0 0 16px 16px;
+
+  @keyframes potion-glow {
+    0%, 100% {
+      box-shadow: inset 2px 2px 0 #555, inset -2px -2px 0 #1a1a1a, 0 0 10px var(--effect-glow-color, #3F76E4);
+    }
+    50% {
+      box-shadow: inset 2px 2px 0 #555, inset -2px -2px 0 #1a1a1a, 0 0 20px var(--effect-glow-color, #3F76E4), 0 0 30px var(--effect-glow-color, #3F76E4);
+    }
   }
-  .bottle-liquid {
+
+  .potion-tool .mc-inv-item-img {
+    width: 48px;
+    height: 48px;
+    image-rendering: pixelated;
+    filter: drop-shadow(2px 2px 2px rgba(0,0,0,0.5));
+    transition: transform 0.2s ease;
+    z-index: 2;
+    position: relative;
+  }
+
+  .potion-tool .liquid-overlay {
     position: absolute;
-    bottom: 8px;
-    left: 8px;
-    right: 8px;
-    height: 55%;
+    bottom: 12px;
+    left: 18px;
+    right: 18px;
+    height: 28px;
     background: #3F76E4;
-    border-radius: 0 0 12px 12px;
-    transition: background-color 0.3s;
+    border-radius: 0 0 8px 8px;
+    opacity: 0.6;
     z-index: 1;
-    box-shadow: inset 0 -4px 8px rgba(0,0,0,0.2);
+    transition: background-color 0.3s;
+    mix-blend-mode: multiply;
   }
 
-  /* ポーションタイプ別アニメーション */
-  .preview-bottle.splash_potion { transform: rotate(-15deg); }
-  .preview-bottle.lingering_potion .bottle-liquid {
-    animation: potionPulse 2s ease-in-out infinite;
-  }
-  @keyframes potionPulse {
-    0%, 100% { opacity: 1; box-shadow: inset 0 -4px 8px rgba(0,0,0,0.2); }
-    50% { opacity: 0.8; box-shadow: inset 0 -4px 12px rgba(0,0,0,0.3), 0 0 8px currentColor; }
+  .potion-tool .mc-inv-slot-large:hover .mc-inv-item-img {
+    transform: scale(1.1);
   }
 
-  /* 効果付きの矢 */
-  .preview-bottle.tipped_arrow { width: 48px; height: 100px; }
-  .preview-bottle.tipped_arrow::before { display: none; }
-  .preview-bottle.tipped_arrow::after {
-    border-radius: 0;
-    border: none;
-    background: linear-gradient(to bottom, transparent 0%, #8B4513 10%, #8B4513 90%, transparent 100%);
-    clip-path: polygon(50% 0%, 60% 5%, 60% 85%, 70% 85%, 50% 100%, 30% 85%, 40% 85%, 40% 5%);
+  .potion-tool .mc-inv-count {
+    position: absolute;
+    bottom: 2px;
+    right: 4px;
+    font-family: 'Minecraft', monospace;
+    font-size: 14px;
+    font-weight: bold;
+    color: white;
+    text-shadow: 2px 2px 0 #3f3f3f;
+    line-height: 1;
+    z-index: 3;
   }
-  .preview-bottle.tipped_arrow .bottle-liquid {
-    bottom: auto;
-    top: 0;
-    height: 20%;
-    border-radius: 0;
-    left: 35%;
-    right: 35%;
+
+  .potion-tool .mc-item-tooltip {
+    flex: 1;
+    background: linear-gradient(180deg, #100010 0%, #1a001a 100%);
+    border: 2px solid;
+    border-color: #5000aa #28007f #28007f #5000aa;
+    padding: 8px 12px;
+    min-width: 180px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.5);
+  }
+
+  .potion-tool .tooltip-name {
+    font-size: 1rem;
+    font-weight: bold;
+    color: #fff;
+    margin-bottom: 4px;
+  }
+
+  .potion-tool .tooltip-name.enchanted {
+    color: #55ffff;
+    text-shadow: 0 0 10px rgba(85, 255, 255, 0.5);
+  }
+
+  .potion-tool .tooltip-effects {
+    border-top: 1px solid rgba(128, 0, 255, 0.3);
+    padding-top: 6px;
+    margin-top: 4px;
+  }
+
+  .potion-tool .tooltip-meta {
+    border-top: 1px solid rgba(128, 0, 255, 0.2);
+    padding-top: 6px;
+    margin-top: 8px;
+  }
+
+  .potion-tool .tooltip-id {
+    font-family: var(--mc-font-mono);
+    font-size: 0.7rem;
+    color: #555;
+  }
+
+  .potion-tool .item-stats-bar {
+    display: flex;
+    gap: var(--mc-space-lg);
+    padding: var(--mc-space-sm) var(--mc-space-md);
+    margin-top: var(--mc-space-sm);
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+  }
+
+  .potion-tool .stat-item {
+    display: flex;
+    align-items: center;
+    gap: var(--mc-space-xs);
+  }
+
+  .potion-tool .stat-label {
+    font-size: 0.75rem;
+    color: var(--mc-text-muted);
+  }
+
+  .potion-tool .stat-value {
+    font-size: 0.85rem;
+    font-weight: bold;
+    color: var(--mc-color-diamond);
+    font-family: var(--mc-font-mono);
   }
 
   /* プレビュー情報 */
-  .preview-type { font-size: 0.75rem; color: var(--mc-text-muted); }
-  .preview-info { flex: 1; }
-  .preview-name {
-    font-size: 1.1rem;
-    font-weight: bold;
-    margin-bottom: var(--mc-space-sm);
-    color: var(--mc-color-diamond);
-    text-shadow: 0 0 8px rgba(77, 236, 242, 0.3);
-  }
-  .preview-effect-item { display: flex; align-items: center; gap: 6px; padding: 2px 0; }
+  .preview-effect-item { display: flex; align-items: center; gap: 6px; padding: 2px 0; font-size: 0.85rem; }
   .preview-effect-item .time { opacity: 0.7; font-size: 0.8em; }
+  .preview-effect-item.beneficial { color: #5CB746; }
+  .preview-effect-item.harmful { color: #E74C3C; }
 
   /* レスポンシブ */
   @media (max-width: 600px) {

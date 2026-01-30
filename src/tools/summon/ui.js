@@ -5,9 +5,11 @@
  */
 
 import { $, $$, createElement, debounce, delegate } from '../../core/dom.js';
+import { workspaceStore } from '../../core/store.js';
 import { setOutput } from '../../app/sidepanel.js';
 import { getInviconUrl, getSpawnEggUrl } from '../../core/wiki-images.js';
 import { applyTooltip, addItemData } from '../../core/mc-tooltip.js';
+import { compareVersions, getVersionGroup, getVersionNote } from '../../core/version-compat.js';
 
 // エンティティカテゴリ（カテゴリ別に整理）
 const ENTITY_CATEGORIES = {
@@ -233,8 +235,9 @@ export function render(manifest) {
             <p class="header-subtitle">エンティティを召喚するコマンドを生成</p>
           </div>
         </div>
-        <span class="version-badge">1.21.5+</span>
+        <span class="version-badge" id="summon-version-badge">1.21+</span>
       </div>
+      <p class="version-note" id="summon-version-note"></p>
 
       <form class="tool-form mc-form" id="summon-form">
 
@@ -451,6 +454,45 @@ export function render(manifest) {
           </div>
         </section>
       </form>
+
+      <!-- Minecraft風ゲーム画面プレビュー -->
+      <div class="summon-preview-section">
+        <h3>プレビュー</h3>
+        <div class="mc-inventory-preview summon-preview">
+          <!-- エンティティスロット風表示 -->
+          <div class="mc-inv-slot-large entity-slot" id="summon-preview-slot">
+            <img class="mc-inv-item-img" id="summon-preview-icon" src="" alt="">
+          </div>
+
+          <!-- Minecraft風ツールチップ -->
+          <div class="mc-item-tooltip entity-tooltip" id="summon-item-tooltip">
+            <div class="tooltip-name" id="summon-preview-name">エンティティ</div>
+            <div class="tooltip-attrs" id="summon-preview-attrs">
+              <p class="text-muted">属性なし</p>
+            </div>
+            <div class="tooltip-effects" id="summon-preview-effects"></div>
+            <div class="tooltip-meta">
+              <span class="tooltip-id" id="summon-preview-id">minecraft:pig</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- アイテム情報バー -->
+        <div class="item-stats-bar">
+          <div class="stat-item">
+            <span class="stat-label">座標</span>
+            <span class="stat-value" id="summon-stat-pos">~ ~ ~</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">属性</span>
+            <span class="stat-value" id="summon-stat-attrs">0</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">エフェクト</span>
+            <span class="stat-value" id="summon-stat-effects">0</span>
+          </div>
+        </div>
+      </div>
     </div>
   `;
 }
@@ -609,9 +651,39 @@ export function init(container) {
     updateCommand(container);
   }, 200));
 
+  // グローバルバージョン変更時にコマンド再生成
+  window.addEventListener('mc-version-change', () => {
+    updateVersionDisplay(container);
+    updateCommand(container);
+  });
+
   // 初期状態
   $('#summon-persistence', container).checked = true;
+  updateVersionDisplay(container);
   updateCommand(container);
+}
+
+/**
+ * バージョン表示を更新
+ */
+function updateVersionDisplay(container) {
+  const version = workspaceStore.get('version') || '1.21';
+  const badge = $('#summon-version-badge', container);
+  const note = $('#summon-version-note', container);
+
+  if (badge) {
+    badge.textContent = version + '+';
+  }
+  if (note) {
+    // summonが使えないバージョンの警告
+    if (compareVersions(version, '1.4') < 0) {
+      note.textContent = '注意: このバージョンでは /summon コマンドは使用できません';
+      note.style.color = 'var(--mc-color-redstone)';
+    } else {
+      note.textContent = getVersionNote(version);
+      note.style.color = 'var(--mc-color-diamond)';
+    }
+  }
 }
 
 /**
@@ -695,12 +767,16 @@ function updateNamePreview(container) {
 }
 
 /**
- * コマンドを生成・更新
+ * コマンドを生成・更新（バージョン対応）
  */
 function updateCommand(container) {
+  // 現在のバージョンを取得
+  const version = workspaceStore.get('version') || '1.21';
+  const versionGroup = getVersionGroup(version);
+
   const nbtParts = [];
 
-  // カスタム名（JSONテキスト形式）
+  // カスタム名（JSONテキスト形式 - バージョンで形式が異なる）
   if (formState.customName) {
     const jsonText = {
       text: formState.customName,
@@ -709,8 +785,14 @@ function updateCommand(container) {
     if (formState.nameBold) jsonText.bold = true;
     if (formState.nameItalic) jsonText.italic = true;
 
-    const jsonStr = JSON.stringify(jsonText).replace(/"/g, '\\"');
-    nbtParts.push(`CustomName:"${jsonStr}"`);
+    if (versionGroup === 'legacy') {
+      // 1.12- では単純文字列
+      nbtParts.push(`CustomName:"${formState.customName}"`);
+    } else {
+      // 1.13+ では JSON形式
+      const jsonStr = JSON.stringify(jsonText).replace(/"/g, '\\"');
+      nbtParts.push(`CustomName:"${jsonStr}"`);
+    }
     nbtParts.push('CustomNameVisible:1b');
   }
 
@@ -721,12 +803,22 @@ function updateCommand(container) {
   if (formState.persistenceRequired) nbtParts.push('PersistenceRequired:1b');
   if (formState.glowing) nbtParts.push('Glowing:1b');
 
-  // エフェクト
+  // エフェクト（バージョンで形式が異なる）
   if (formState.effects.length > 0) {
-    const effectsList = formState.effects.map(e =>
-      `{id:"minecraft:${e.id}",amplifier:${e.amplifier}b,duration:${e.duration}}`
-    ).join(',');
-    nbtParts.push(`active_effects:[${effectsList}]`);
+    if (versionGroup === 'latest' || versionGroup === 'component') {
+      // 1.20.5+ active_effects形式
+      const effectsList = formState.effects.map(e =>
+        `{id:"minecraft:${e.id}",amplifier:${e.amplifier}b,duration:${e.duration}}`
+      ).join(',');
+      nbtParts.push(`active_effects:[${effectsList}]`);
+    } else {
+      // 1.13-1.20.4 ActiveEffects形式
+      const effectsList = formState.effects.map(e => {
+        const effectId = getEffectNumericIdForSummon(e.id);
+        return `{Id:${effectId}b,Amplifier:${e.amplifier}b,Duration:${e.duration}}`;
+      }).join(',');
+      nbtParts.push(`ActiveEffects:[${effectsList}]`);
+    }
   }
 
   // Raw NBT
@@ -735,12 +827,196 @@ function updateCommand(container) {
   }
 
   // コマンド生成
-  let command = `/summon minecraft:${formState.entity} ${formState.pos}`;
+  let entityId = formState.entity;
+
+  // 1.12以前ではエンティティIDが異なる場合がある
+  if (versionGroup === 'legacy') {
+    entityId = getLegacyEntityId(formState.entity);
+  }
+
+  let command = `/summon minecraft:${entityId} ${formState.pos}`;
   if (nbtParts.length > 0) {
     command += ` {${nbtParts.join(',')}}`;
   }
 
-  setOutput(command, 'summon', formState);
+  // プレビュー更新
+  updateSummonPreview(container);
+
+  setOutput(command, 'summon', { ...formState, version });
+}
+
+/**
+ * Summonプレビューを更新
+ */
+function updateSummonPreview(container) {
+  const iconImg = $('#summon-preview-icon', container);
+  const nameEl = $('#summon-preview-name', container);
+  const idEl = $('#summon-preview-id', container);
+  const attrsEl = $('#summon-preview-attrs', container);
+  const effectsEl = $('#summon-preview-effects', container);
+  const previewSlot = $('#summon-preview-slot', container);
+
+  // 統計バー
+  const statPosEl = $('#summon-stat-pos', container);
+  const statAttrsEl = $('#summon-stat-attrs', container);
+  const statEffectsEl = $('#summon-stat-effects', container);
+
+  // エンティティ情報を取得
+  let entityInfo = null;
+  for (const cat of Object.values(ENTITY_CATEGORIES)) {
+    entityInfo = cat.entities.find(e => e.id === formState.entity);
+    if (entityInfo) break;
+  }
+
+  // アイコン設定
+  if (iconImg) {
+    iconImg.src = getSpawnEggUrl(formState.entity);
+    iconImg.alt = entityInfo?.name || formState.entity;
+    iconImg.style.opacity = '1';
+    iconImg.onerror = () => {
+      iconImg.src = getInviconUrl(formState.entity + '_spawn_egg');
+      iconImg.onerror = () => { iconImg.style.opacity = '0.3'; };
+    };
+  }
+
+  // 名前表示
+  if (nameEl) {
+    const displayName = formState.customName || entityInfo?.name || formState.entity;
+    nameEl.textContent = displayName;
+
+    // カスタム名の色を適用
+    if (formState.customName) {
+      const colorHex = TEXT_COLORS.find(c => c.id === formState.nameColor)?.hex || '#FFFFFF';
+      nameEl.style.color = colorHex;
+      if (formState.nameBold) nameEl.style.fontWeight = 'bold';
+      if (formState.nameItalic) nameEl.style.fontStyle = 'italic';
+    } else {
+      nameEl.style.color = '';
+      nameEl.style.fontWeight = '';
+      nameEl.style.fontStyle = '';
+    }
+  }
+
+  // ID表示
+  if (idEl) {
+    idEl.textContent = `minecraft:${formState.entity}`;
+  }
+
+  // 属性表示
+  if (attrsEl) {
+    const attrs = [];
+    if (formState.noAI) attrs.push('NoAI');
+    if (formState.silent) attrs.push('Silent');
+    if (formState.invulnerable) attrs.push('無敵');
+    if (formState.persistenceRequired) attrs.push('永続');
+    if (formState.glowing) attrs.push('発光');
+
+    if (attrs.length === 0) {
+      attrsEl.innerHTML = '<p class="text-muted">属性なし</p>';
+    } else {
+      attrsEl.innerHTML = attrs.map(a => `<div class="preview-attr">${a}</div>`).join('');
+    }
+  }
+
+  // エフェクト表示
+  if (effectsEl) {
+    if (formState.effects.length === 0) {
+      effectsEl.innerHTML = '';
+      effectsEl.style.display = 'none';
+    } else {
+      effectsEl.style.display = 'block';
+      effectsEl.innerHTML = `
+        <div class="effects-label">エフェクト:</div>
+        ${formState.effects.map(e => {
+          const info = EFFECTS.find(ef => ef.id === e.id);
+          const level = e.amplifier > 0 ? ` ${toRoman(e.amplifier + 1)}` : '';
+          return `<div class="preview-effect">${info?.name || e.id}${level}</div>`;
+        }).join('')}
+      `;
+    }
+  }
+
+  // スロットのグロー効果
+  if (previewSlot) {
+    const hasCustomization = formState.customName || formState.effects.length > 0 ||
+      formState.noAI || formState.invulnerable || formState.glowing;
+    if (hasCustomization) {
+      previewSlot.classList.add('customized');
+    } else {
+      previewSlot.classList.remove('customized');
+    }
+  }
+
+  // 統計バー更新
+  if (statPosEl) statPosEl.textContent = formState.pos;
+  if (statAttrsEl) {
+    let attrCount = 0;
+    if (formState.noAI) attrCount++;
+    if (formState.silent) attrCount++;
+    if (formState.invulnerable) attrCount++;
+    if (formState.persistenceRequired) attrCount++;
+    if (formState.glowing) attrCount++;
+    statAttrsEl.textContent = attrCount;
+  }
+  if (statEffectsEl) statEffectsEl.textContent = formState.effects.length;
+}
+
+function toRoman(num) {
+  const roman = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
+  return roman[num] || num.toString();
+}
+
+/**
+ * エフェクトの数値IDを取得（summon用）
+ */
+function getEffectNumericIdForSummon(effectId) {
+  const effectIdMap = {
+    'speed': 1,
+    'slowness': 2,
+    'haste': 3,
+    'mining_fatigue': 4,
+    'strength': 5,
+    'instant_health': 6,
+    'instant_damage': 7,
+    'jump_boost': 8,
+    'nausea': 9,
+    'regeneration': 10,
+    'resistance': 11,
+    'fire_resistance': 12,
+    'water_breathing': 13,
+    'invisibility': 14,
+    'blindness': 15,
+    'night_vision': 16,
+    'hunger': 17,
+    'weakness': 18,
+    'poison': 19,
+    'wither': 20,
+    'health_boost': 21,
+    'absorption': 22,
+    'saturation': 23,
+    'glowing': 24,
+    'levitation': 25,
+    'luck': 26,
+    'unluck': 27,
+    'slow_falling': 28,
+    'conduit_power': 29,
+    'dolphins_grace': 30,
+    'bad_omen': 31,
+    'hero_of_the_village': 32,
+    'darkness': 33,
+  };
+  return effectIdMap[effectId] || 1;
+}
+
+/**
+ * 1.12以前のエンティティIDを取得
+ */
+function getLegacyEntityId(entityId) {
+  const legacyIdMap = {
+    'zombified_piglin': 'zombie_pigman',
+    'mooshroom': 'mooshroom',
+  };
+  return legacyIdMap[entityId] || entityId;
 }
 
 // スタイル
@@ -1444,6 +1720,163 @@ style.textContent = `
     .summon-tool .mc-input::placeholder {
       color: #707090;
     }
+  }
+
+  /* Summonプレビューセクション */
+  .summon-preview-section {
+    margin-top: var(--mc-space-lg);
+    padding: var(--mc-space-md);
+    background: var(--mc-bg-surface);
+    border: 2px solid var(--mc-border-dark);
+    border-radius: 6px;
+  }
+
+  .summon-preview-section h3 {
+    margin: 0 0 var(--mc-space-md) 0;
+    font-size: 0.9rem;
+    color: var(--mc-text-muted);
+    text-transform: uppercase;
+  }
+
+  /* Minecraft風インベントリプレビュー */
+  .summon-tool .mc-inventory-preview {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--mc-space-md);
+    padding: var(--mc-space-md);
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border: 3px solid #3d3d3d;
+    border-radius: 4px;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+  }
+
+  .summon-tool .mc-inv-slot-large {
+    position: relative;
+    width: 64px;
+    height: 64px;
+    background: linear-gradient(135deg, #8b8b8b 0%, #373737 100%);
+    border: 2px solid;
+    border-color: #373737 #fff #fff #373737;
+    box-shadow: inset 2px 2px 0 #555, inset -2px -2px 0 #1a1a1a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .summon-tool .mc-inv-slot-large.customized {
+    animation: entity-glow 2s ease-in-out infinite;
+  }
+
+  @keyframes entity-glow {
+    0%, 100% {
+      box-shadow: inset 2px 2px 0 #555, inset -2px -2px 0 #1a1a1a, 0 0 10px rgba(93, 63, 211, 0.4);
+    }
+    50% {
+      box-shadow: inset 2px 2px 0 #555, inset -2px -2px 0 #1a1a1a, 0 0 20px rgba(93, 63, 211, 0.7), 0 0 30px rgba(93, 63, 211, 0.3);
+    }
+  }
+
+  .summon-tool .mc-inv-item-img {
+    width: 48px;
+    height: 48px;
+    image-rendering: pixelated;
+    filter: drop-shadow(2px 2px 2px rgba(0,0,0,0.5));
+    transition: transform 0.2s ease;
+  }
+
+  .summon-tool .mc-inv-slot-large:hover .mc-inv-item-img {
+    transform: scale(1.1);
+  }
+
+  .summon-tool .mc-item-tooltip {
+    flex: 1;
+    background: linear-gradient(180deg, #100010 0%, #1a001a 100%);
+    border: 2px solid;
+    border-color: #5d3fd3 #3a2890 #3a2890 #5d3fd3;
+    padding: 8px 12px;
+    min-width: 180px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.5);
+  }
+
+  .summon-tool .tooltip-name {
+    font-size: 1rem;
+    font-weight: bold;
+    color: #fff;
+    margin-bottom: 4px;
+  }
+
+  .summon-tool .tooltip-attrs {
+    border-top: 1px solid rgba(93, 63, 211, 0.3);
+    padding-top: 6px;
+    margin-top: 4px;
+  }
+
+  .summon-tool .preview-attr {
+    color: #aaa;
+    font-size: 0.85rem;
+    padding: 2px 0;
+  }
+
+  .summon-tool .tooltip-effects {
+    border-top: 1px solid rgba(93, 63, 211, 0.2);
+    padding-top: 6px;
+    margin-top: 6px;
+  }
+
+  .summon-tool .effects-label {
+    color: #888;
+    font-size: 0.75rem;
+    margin-bottom: 4px;
+  }
+
+  .summon-tool .preview-effect {
+    color: #55ffff;
+    font-size: 0.85rem;
+    padding: 2px 0;
+  }
+
+  .summon-tool .tooltip-meta {
+    border-top: 1px solid rgba(93, 63, 211, 0.2);
+    padding-top: 6px;
+    margin-top: 8px;
+  }
+
+  .summon-tool .tooltip-id {
+    font-family: var(--mc-font-mono);
+    font-size: 0.7rem;
+    color: #555;
+  }
+
+  .summon-tool .item-stats-bar {
+    display: flex;
+    gap: var(--mc-space-lg);
+    padding: var(--mc-space-sm) var(--mc-space-md);
+    margin-top: var(--mc-space-sm);
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+  }
+
+  .summon-tool .stat-item {
+    display: flex;
+    align-items: center;
+    gap: var(--mc-space-xs);
+  }
+
+  .summon-tool .stat-label {
+    font-size: 0.75rem;
+    color: var(--mc-text-muted);
+  }
+
+  .summon-tool .stat-value {
+    font-size: 0.85rem;
+    font-weight: bold;
+    color: var(--mc-color-diamond);
+    font-family: var(--mc-font-mono);
+  }
+
+  .summon-tool .text-muted {
+    color: var(--mc-text-muted);
   }
 `;
 document.head.appendChild(style);

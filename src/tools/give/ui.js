@@ -124,6 +124,42 @@ export function render(manifest) {
                     placeholder='例: damage=100,custom_model_data=1234'></textarea>
         </div>
       </form>
+
+      <!-- Minecraft風ゲーム画面プレビュー -->
+      <div class="give-preview-section">
+        <h3>プレビュー</h3>
+        <div class="mc-inventory-preview">
+          <!-- インベントリスロット風表示 -->
+          <div class="mc-inv-slot-large" id="give-preview-slot">
+            <img class="mc-inv-item-img" id="give-item-icon" src="" alt="">
+            <span class="mc-inv-count" id="give-item-count">1</span>
+          </div>
+
+          <!-- Minecraft風ツールチップ -->
+          <div class="mc-item-tooltip" id="give-item-tooltip">
+            <div class="tooltip-name" id="give-item-name">アイテム</div>
+            <div class="tooltip-enchants" id="give-preview-enchants">
+              <p class="text-muted">エンチャントなし</p>
+            </div>
+            <div class="tooltip-lore" id="give-preview-lore"></div>
+            <div class="tooltip-meta">
+              <span class="tooltip-id" id="give-item-id">minecraft:stone</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- アイテム情報バー -->
+        <div class="item-stats-bar">
+          <div class="stat-item">
+            <span class="stat-label">ターゲット</span>
+            <span class="stat-value" id="give-stat-target">@p</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">エンチャント</span>
+            <span class="stat-value" id="give-stat-enchants">0</span>
+          </div>
+        </div>
+      </div>
     </div>
   `;
 }
@@ -278,6 +314,9 @@ function updateCommand(container) {
   // コマンド生成（バージョン指定）
   const command = generateGiveCommand(formState, version);
 
+  // プレビュー更新
+  updatePreview(container);
+
   // 出力パネルに表示
   setOutput(command, 'give', formState);
 }
@@ -298,6 +337,120 @@ function getEnchantments(container) {
     }
   });
   return enchants;
+}
+
+// エンチャント名マップ
+const ENCHANT_NAMES = {
+  sharpness: 'ダメージ増加',
+  smite: 'アンデッド特効',
+  unbreaking: '耐久力',
+  efficiency: '効率強化',
+  fortune: '幸運',
+  silk_touch: 'シルクタッチ',
+  protection: 'ダメージ軽減',
+  fire_aspect: '火属性',
+  looting: 'ドロップ増加',
+  mending: '修繕',
+};
+
+/**
+ * 数字をローマ数字に変換
+ */
+function toRoman(num) {
+  if (num <= 0 || num > 3999) return num.toString();
+  const values = [1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1];
+  const numerals = ['M', 'CM', 'D', 'CD', 'C', 'XC', 'L', 'XL', 'X', 'IX', 'V', 'IV', 'I'];
+  let result = '';
+  for (let i = 0; i < values.length; i++) {
+    while (num >= values[i]) {
+      result += numerals[i];
+      num -= values[i];
+    }
+  }
+  return result;
+}
+
+/**
+ * プレビューを更新
+ */
+function updatePreview(container) {
+  const itemIconEl = $('#give-item-icon', container);
+  const itemNameEl = $('#give-item-name', container);
+  const itemIdEl = $('#give-item-id', container);
+  const itemCountEl = $('#give-item-count', container);
+  const previewEnchantsEl = $('#give-preview-enchants', container);
+  const previewLoreEl = $('#give-preview-lore', container);
+  const statTargetEl = $('#give-stat-target', container);
+  const statEnchantsEl = $('#give-stat-enchants', container);
+  const previewSlot = $('#give-preview-slot', container);
+
+  // アイテムIDからアイコンを取得
+  const itemId = formState.item.replace('minecraft:', '');
+  if (itemIconEl) {
+    itemIconEl.src = getInviconUrl(itemId);
+    itemIconEl.alt = itemId;
+    itemIconEl.style.opacity = '1';
+    itemIconEl.onerror = () => { itemIconEl.style.opacity = '0.3'; };
+  }
+
+  // アイテム名
+  if (itemNameEl) {
+    const displayName = formState.customName || itemId;
+    itemNameEl.textContent = displayName;
+    if (formState.enchantments.length > 0) {
+      itemNameEl.classList.add('enchanted');
+    } else {
+      itemNameEl.classList.remove('enchanted');
+    }
+  }
+
+  // アイテムID
+  if (itemIdEl) {
+    itemIdEl.textContent = formState.item.startsWith('minecraft:') ? formState.item : `minecraft:${formState.item}`;
+  }
+
+  // 個数表示
+  if (itemCountEl) {
+    itemCountEl.textContent = formState.count > 1 ? formState.count : '';
+    itemCountEl.style.display = formState.count > 1 ? 'block' : 'none';
+  }
+
+  // エンチャント表示
+  if (previewEnchantsEl) {
+    if (formState.enchantments.length === 0) {
+      previewEnchantsEl.innerHTML = '<p class="text-muted">エンチャントなし</p>';
+    } else {
+      previewEnchantsEl.innerHTML = formState.enchantments.map(e => {
+        const name = ENCHANT_NAMES[e.id] || e.id;
+        return `<div class="preview-enchant">${name} ${toRoman(e.level)}</div>`;
+      }).join('');
+    }
+  }
+
+  // 説明文表示
+  if (previewLoreEl) {
+    if (formState.lore) {
+      const lines = formState.lore.split('\n').filter(l => l.trim());
+      previewLoreEl.innerHTML = lines.map(line => `<div class="lore-line">${line}</div>`).join('');
+      previewLoreEl.style.display = 'block';
+    } else {
+      previewLoreEl.innerHTML = '';
+      previewLoreEl.style.display = 'none';
+    }
+  }
+
+  // 統計バー
+  if (statTargetEl) statTargetEl.textContent = formState.target;
+  if (statEnchantsEl) statEnchantsEl.textContent = formState.enchantments.length;
+
+  // エンチャントグロー効果
+  if (previewSlot) {
+    if (formState.enchantments.length > 0) {
+      previewSlot.classList.add('enchanted');
+    } else {
+      previewSlot.classList.remove('enchanted');
+    }
+  }
 }
 
 // スタイル追加
@@ -372,6 +525,172 @@ style.textContent = `
   textarea.mc-code {
     font-family: var(--mc-font-mono);
     font-size: 0.8rem;
+  }
+
+  /* プレビューセクション */
+  .give-preview-section {
+    margin-top: var(--mc-space-lg);
+    padding: var(--mc-space-md);
+    background: var(--mc-bg-surface);
+    border: 1px solid var(--mc-border-dark);
+  }
+
+  .give-preview-section h3 {
+    margin: 0 0 var(--mc-space-md) 0;
+    font-size: 0.9rem;
+    color: var(--mc-text-muted);
+  }
+
+  /* Minecraft風インベントリプレビュー */
+  .give-tool .mc-inventory-preview {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--mc-space-md);
+    padding: var(--mc-space-md);
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border: 3px solid #3d3d3d;
+    border-radius: 4px;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+  }
+
+  .give-tool .mc-inv-slot-large {
+    position: relative;
+    width: 64px;
+    height: 64px;
+    background: linear-gradient(135deg, #8b8b8b 0%, #373737 100%);
+    border: 2px solid;
+    border-color: #373737 #fff #fff #373737;
+    box-shadow: inset 2px 2px 0 #555, inset -2px -2px 0 #1a1a1a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .give-tool .mc-inv-slot-large.enchanted {
+    animation: slot-enchant-glow 2s ease-in-out infinite;
+  }
+
+  @keyframes slot-enchant-glow {
+    0%, 100% {
+      box-shadow: inset 2px 2px 0 #555, inset -2px -2px 0 #1a1a1a, 0 0 10px rgba(170, 0, 255, 0.4);
+    }
+    50% {
+      box-shadow: inset 2px 2px 0 #555, inset -2px -2px 0 #1a1a1a, 0 0 20px rgba(170, 0, 255, 0.7), 0 0 30px rgba(85, 255, 255, 0.3);
+    }
+  }
+
+  .give-tool .mc-inv-item-img {
+    width: 48px;
+    height: 48px;
+    image-rendering: pixelated;
+    filter: drop-shadow(2px 2px 2px rgba(0,0,0,0.5));
+    transition: transform 0.2s ease;
+  }
+
+  .give-tool .mc-inv-slot-large:hover .mc-inv-item-img {
+    transform: scale(1.1);
+  }
+
+  .give-tool .mc-inv-count {
+    position: absolute;
+    bottom: 2px;
+    right: 4px;
+    font-family: 'Minecraft', monospace;
+    font-size: 14px;
+    font-weight: bold;
+    color: white;
+    text-shadow: 2px 2px 0 #3f3f3f;
+    line-height: 1;
+  }
+
+  .give-tool .mc-item-tooltip {
+    flex: 1;
+    background: linear-gradient(180deg, #100010 0%, #1a001a 100%);
+    border: 2px solid;
+    border-color: #5000aa #28007f #28007f #5000aa;
+    padding: 8px 12px;
+    min-width: 180px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.5);
+  }
+
+  .give-tool .tooltip-name {
+    font-size: 1rem;
+    font-weight: bold;
+    color: #fff;
+    margin-bottom: 4px;
+  }
+
+  .give-tool .tooltip-name.enchanted {
+    color: #55ffff;
+    text-shadow: 0 0 10px rgba(85, 255, 255, 0.5);
+  }
+
+  .give-tool .tooltip-enchants {
+    border-top: 1px solid rgba(128, 0, 255, 0.3);
+    padding-top: 6px;
+    margin-top: 4px;
+  }
+
+  .give-tool .tooltip-lore {
+    border-top: 1px solid rgba(128, 0, 255, 0.2);
+    padding-top: 6px;
+    margin-top: 6px;
+  }
+
+  .give-tool .lore-line {
+    color: #aa00aa;
+    font-size: 0.85rem;
+    font-style: italic;
+  }
+
+  .give-tool .tooltip-meta {
+    border-top: 1px solid rgba(128, 0, 255, 0.2);
+    padding-top: 6px;
+    margin-top: 8px;
+  }
+
+  .give-tool .tooltip-id {
+    font-family: var(--mc-font-mono);
+    font-size: 0.7rem;
+    color: #555;
+  }
+
+  .give-tool .preview-enchant {
+    color: #aaa;
+    font-size: 0.85rem;
+    padding: 2px 0;
+  }
+
+  .give-tool .item-stats-bar {
+    display: flex;
+    gap: var(--mc-space-lg);
+    padding: var(--mc-space-sm) var(--mc-space-md);
+    margin-top: var(--mc-space-sm);
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+  }
+
+  .give-tool .stat-item {
+    display: flex;
+    align-items: center;
+    gap: var(--mc-space-xs);
+  }
+
+  .give-tool .stat-label {
+    font-size: 0.75rem;
+    color: var(--mc-text-muted);
+  }
+
+  .give-tool .stat-value {
+    font-size: 0.85rem;
+    font-weight: bold;
+    color: var(--mc-color-diamond);
+    font-family: var(--mc-font-mono);
+  }
+
+  .give-tool .text-muted {
+    color: var(--mc-text-muted);
   }
 `;
 document.head.appendChild(style);

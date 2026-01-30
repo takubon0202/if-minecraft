@@ -313,6 +313,21 @@ body {
   margin-left: auto;
 }
 
+/* --- Version Note --- */
+.version-note {
+  margin: var(--mc-space-xs) 0 var(--mc-space-md) 0;
+  font-size: 0.8rem;
+  color: var(--mc-color-diamond);
+  padding: 6px 12px;
+  background: rgba(77, 236, 242, 0.1);
+  border-left: 3px solid var(--mc-color-diamond);
+  border-radius: 0 4px 4px 0;
+}
+
+.version-note:empty {
+  display: none;
+}
+
 /* --- Form Groups --- */
 .form-group {
   margin-bottom: var(--mc-space-md);

@@ -22,6 +22,8 @@ const ITEM_FILE_MAP = {
   'written_book': 'Written_Book.gif',
   'compass': 'Compass.gif',
   'clock': 'Clock.gif',
+  // === 経験値の瓶（GIF形式） ===
+  'experience_bottle': 'Bottle_o%27_Enchanting.gif',
   // === ポーション系 - ITEM_NAME_MAPで個別に定義（GIF形式は使用しない） ===
   // 注意: Wikiではポーションは効果ごとに異なる画像があるため、
   // 基本アイテム（Water_Bottle等）はITEM_NAME_MAPで定義
@@ -68,7 +70,6 @@ const ITEM_NAME_MAP = {
   'fire_charge': 'Fire_Charge',
   'ender_pearl': 'Ender_Pearl',
   'ender_eye': 'Eye_of_Ender',
-  'experience_bottle': 'Bottle_o%27_Enchanting',
   'enchanted_book': 'Enchanted_Book',
   'written_book': 'Written_Book',
   'writable_book': 'Book_and_Quill',
