@@ -312,22 +312,87 @@ export function updatePreview(editorId, components) {
 
   if (!components || components.length === 0) {
     preview.innerHTML = '<span class="preview-placeholder">テキストを入力するとプレビューが表示されます</span>';
+    stopObfuscatedAnimation(editorId);
     return;
   }
 
-  preview.innerHTML = components.map(comp => {
-    let style = '';
-    if (comp.color && MC_COLORS[comp.color]) {
-      style += `color: ${MC_COLORS[comp.color]};`;
-    }
-    if (comp.bold) style += 'font-weight: bold;';
-    if (comp.italic) style += 'font-style: italic;';
-    if (comp.underlined) style += 'text-decoration: underline;';
-    if (comp.strikethrough) style += 'text-decoration: line-through;';
-    if (comp.obfuscated) return `<span class="mc-obfuscated" style="${style}">${comp.text}</span>`;
+  preview.innerHTML = components.map((comp, index) => {
+    const classes = ['mc-text-segment'];
 
-    return `<span style="${style}">${escapeHtml(comp.text)}</span>`;
+    // 色クラス
+    if (comp.color) {
+      classes.push(`mc-color-${comp.color.replace('_', '-')}`);
+    } else {
+      classes.push('mc-color-white');
+    }
+
+    // スタイルクラス
+    if (comp.bold) classes.push('mc-bold');
+    if (comp.italic) classes.push('mc-italic');
+    if (comp.underlined) classes.push('mc-underlined');
+    if (comp.strikethrough) classes.push('mc-strikethrough');
+
+    // クリック/ホバーイベント表示
+    let eventIndicators = '';
+    if (comp.clickEvent) {
+      classes.push('mc-clickable');
+      eventIndicators += `<span class="mc-event-indicator mc-click-indicator" title="クリック: ${comp.clickEvent.action}">⚡</span>`;
+    }
+    if (comp.hoverEvent) {
+      classes.push('mc-hoverable');
+      eventIndicators += `<span class="mc-event-indicator mc-hover-indicator" title="ホバー: ${comp.hoverEvent.action}">💬</span>`;
+    }
+
+    // 難読化テキスト
+    if (comp.obfuscated) {
+      classes.push('mc-obfuscated');
+      return `<span class="${classes.join(' ')}" data-text="${escapeHtml(comp.text)}" data-index="${index}">${escapeHtml(comp.text)}</span>${eventIndicators}`;
+    }
+
+    return `<span class="${classes.join(' ')}">${escapeHtml(comp.text)}</span>${eventIndicators}`;
   }).join('');
+
+  // 難読化アニメーション開始
+  startObfuscatedAnimation(editorId);
+}
+
+// 難読化アニメーション管理
+const obfuscatedIntervals = new Map();
+const OBFUSCATED_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()';
+
+function startObfuscatedAnimation(editorId) {
+  stopObfuscatedAnimation(editorId);
+
+  const preview = $(`#${editorId}-preview`);
+  if (!preview) return;
+
+  const obfuscatedElements = preview.querySelectorAll('.mc-obfuscated');
+  if (obfuscatedElements.length === 0) return;
+
+  const intervalId = setInterval(() => {
+    obfuscatedElements.forEach(el => {
+      const originalText = el.dataset.text || '';
+      let newText = '';
+      for (let i = 0; i < originalText.length; i++) {
+        if (originalText[i] === ' ') {
+          newText += ' ';
+        } else {
+          newText += OBFUSCATED_CHARS[Math.floor(Math.random() * OBFUSCATED_CHARS.length)];
+        }
+      }
+      el.textContent = newText;
+    });
+  }, 50);
+
+  obfuscatedIntervals.set(editorId, intervalId);
+}
+
+function stopObfuscatedAnimation(editorId) {
+  const intervalId = obfuscatedIntervals.get(editorId);
+  if (intervalId) {
+    clearInterval(intervalId);
+    obfuscatedIntervals.delete(editorId);
+  }
 }
 
 /**
@@ -608,11 +673,15 @@ style.textContent = `
   }
 
   .jte-preview-box {
-    background-color: var(--mc-color-obsidian);
+    background-color: rgba(0, 0, 0, 0.5);
     color: white;
     padding: var(--mc-space-md);
     min-height: 40px;
-    font-family: var(--mc-font-mono);
+    font-family: 'Minecraft', 'Courier New', monospace;
+    font-size: 16px;
+    line-height: 1.5;
+    -webkit-font-smoothing: none;
+    image-rendering: pixelated;
   }
 
   .jte-preview-box .preview-placeholder {
@@ -620,13 +689,40 @@ style.textContent = `
     font-style: italic;
   }
 
-  .mc-obfuscated {
-    animation: mcObfuscate 0.1s infinite;
-  }
+  /* Minecraft カラークラス */
+  .mc-text-segment { display: inline; }
+  .mc-color-black { color: #000000; text-shadow: 1px 1px 0 #000000; }
+  .mc-color-dark-blue { color: #0000AA; text-shadow: 1px 1px 0 #00002A; }
+  .mc-color-dark-green { color: #00AA00; text-shadow: 1px 1px 0 #002A00; }
+  .mc-color-dark-aqua { color: #00AAAA; text-shadow: 1px 1px 0 #002A2A; }
+  .mc-color-dark-red { color: #AA0000; text-shadow: 1px 1px 0 #2A0000; }
+  .mc-color-dark-purple { color: #AA00AA; text-shadow: 1px 1px 0 #2A002A; }
+  .mc-color-gold { color: #FFAA00; text-shadow: 1px 1px 0 #2A2A00; }
+  .mc-color-gray { color: #AAAAAA; text-shadow: 1px 1px 0 #2A2A2A; }
+  .mc-color-dark-gray { color: #555555; text-shadow: 1px 1px 0 #151515; }
+  .mc-color-blue { color: #5555FF; text-shadow: 1px 1px 0 #15153F; }
+  .mc-color-green { color: #55FF55; text-shadow: 1px 1px 0 #153F15; }
+  .mc-color-aqua { color: #55FFFF; text-shadow: 1px 1px 0 #153F3F; }
+  .mc-color-red { color: #FF5555; text-shadow: 1px 1px 0 #3F1515; }
+  .mc-color-light-purple { color: #FF55FF; text-shadow: 1px 1px 0 #3F153F; }
+  .mc-color-yellow { color: #FFFF55; text-shadow: 1px 1px 0 #3F3F15; }
+  .mc-color-white { color: #FFFFFF; text-shadow: 1px 1px 0 #3F3F3F; }
 
-  @keyframes mcObfuscate {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
+  /* Minecraft スタイルクラス */
+  .mc-bold { font-weight: bold; text-shadow: 2px 1px 0 currentColor, 1px 1px 0 rgba(0,0,0,0.5) !important; }
+  .mc-italic { font-style: italic; }
+  .mc-underlined { text-decoration: underline; }
+  .mc-strikethrough { text-decoration: line-through; }
+  .mc-obfuscated { font-family: 'Minecraft', monospace; }
+
+  /* イベントインジケーター */
+  .mc-clickable { cursor: pointer; }
+  .mc-clickable:hover { text-decoration: underline; }
+  .mc-event-indicator {
+    font-size: 0.7em;
+    vertical-align: super;
+    margin-left: 2px;
+    opacity: 0.7;
   }
 `;
 document.head.appendChild(style);

@@ -714,3 +714,302 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--mc-color-stone-400);
 }
+
+/* ============================================
+ * MINECRAFT GAME PREVIEW STYLES
+ * Authentic Minecraft UI/Chat/Title rendering
+ * ============================================ */
+
+/* --- Minecraft Font --- */
+.mc-font {
+  font-family: 'Minecraft', 'Courier New', monospace;
+  -webkit-font-smoothing: none;
+  -moz-osx-font-smoothing: unset;
+  font-smooth: never;
+  image-rendering: pixelated;
+}
+
+/* --- Minecraft Color Palette --- */
+:root {
+  --mc-chat-black: #000000;
+  --mc-chat-dark-blue: #0000AA;
+  --mc-chat-dark-green: #00AA00;
+  --mc-chat-dark-aqua: #00AAAA;
+  --mc-chat-dark-red: #AA0000;
+  --mc-chat-dark-purple: #AA00AA;
+  --mc-chat-gold: #FFAA00;
+  --mc-chat-gray: #AAAAAA;
+  --mc-chat-dark-gray: #555555;
+  --mc-chat-blue: #5555FF;
+  --mc-chat-green: #55FF55;
+  --mc-chat-aqua: #55FFFF;
+  --mc-chat-red: #FF5555;
+  --mc-chat-light-purple: #FF55FF;
+  --mc-chat-yellow: #FFFF55;
+  --mc-chat-white: #FFFFFF;
+}
+
+/* --- Chat Preview (Tellraw) --- */
+.mc-chat-preview {
+  background: rgba(0, 0, 0, 0.5);
+  padding: 8px 12px;
+  font-family: 'Minecraft', 'Courier New', monospace;
+  font-size: 18px;
+  line-height: 1.4;
+  color: white;
+  border-radius: 4px;
+  min-height: 60px;
+  position: relative;
+  overflow: hidden;
+  -webkit-font-smoothing: none;
+}
+
+.mc-chat-preview::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAYAAACp8Z5+AAAAHklEQVQImWNgYGD4z8DAwMDAxAAGYAYYgBnAAEQAAC4IBgGqQ8ThAAAAAElFTkSuQmCC") repeat;
+  opacity: 0.03;
+  pointer-events: none;
+}
+
+.mc-chat-preview .chat-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+}
+
+/* --- Text Shadow (Minecraft style) --- */
+.mc-text-shadow {
+  text-shadow: 2px 2px 0px rgba(0, 0, 0, 0.4);
+}
+
+/* Color classes with shadow */
+.mc-color-black { color: var(--mc-chat-black); text-shadow: 2px 2px 0 #000000; }
+.mc-color-dark_blue { color: var(--mc-chat-dark-blue); text-shadow: 2px 2px 0 #00002A; }
+.mc-color-dark_green { color: var(--mc-chat-dark-green); text-shadow: 2px 2px 0 #002A00; }
+.mc-color-dark_aqua { color: var(--mc-chat-dark-aqua); text-shadow: 2px 2px 0 #002A2A; }
+.mc-color-dark_red { color: var(--mc-chat-dark-red); text-shadow: 2px 2px 0 #2A0000; }
+.mc-color-dark_purple { color: var(--mc-chat-dark-purple); text-shadow: 2px 2px 0 #2A002A; }
+.mc-color-gold { color: var(--mc-chat-gold); text-shadow: 2px 2px 0 #2A2A00; }
+.mc-color-gray { color: var(--mc-chat-gray); text-shadow: 2px 2px 0 #2A2A2A; }
+.mc-color-dark_gray { color: var(--mc-chat-dark-gray); text-shadow: 2px 2px 0 #151515; }
+.mc-color-blue { color: var(--mc-chat-blue); text-shadow: 2px 2px 0 #15153F; }
+.mc-color-green { color: var(--mc-chat-green); text-shadow: 2px 2px 0 #153F15; }
+.mc-color-aqua { color: var(--mc-chat-aqua); text-shadow: 2px 2px 0 #153F3F; }
+.mc-color-red { color: var(--mc-chat-red); text-shadow: 2px 2px 0 #3F1515; }
+.mc-color-light_purple { color: var(--mc-chat-light-purple); text-shadow: 2px 2px 0 #3F153F; }
+.mc-color-yellow { color: var(--mc-chat-yellow); text-shadow: 2px 2px 0 #3F3F15; }
+.mc-color-white { color: var(--mc-chat-white); text-shadow: 2px 2px 0 #3F3F3F; }
+
+/* Text styles */
+.mc-bold { font-weight: bold; }
+.mc-italic { font-style: italic; }
+.mc-underlined { text-decoration: underline; }
+.mc-strikethrough { text-decoration: line-through; }
+.mc-obfuscated {
+  animation: mcObfuscate 0.1s infinite;
+}
+
+@keyframes mcObfuscate {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
+}
+
+/* --- Title Preview --- */
+.mc-title-preview {
+  background: linear-gradient(180deg, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.6) 50%, rgba(0,0,0,0.3) 100%);
+  padding: 40px 20px;
+  text-align: center;
+  font-family: 'Minecraft', 'Courier New', monospace;
+  position: relative;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  border-radius: 8px;
+  overflow: hidden;
+  -webkit-font-smoothing: none;
+}
+
+.mc-title-preview::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='100' height='100' fill='%23000'/%3E%3C/svg%3E");
+  opacity: 0.1;
+  pointer-events: none;
+}
+
+.mc-title-text {
+  font-size: 48px;
+  color: white;
+  text-shadow: 4px 4px 0 #3f3f3f;
+  margin-bottom: 10px;
+  z-index: 1;
+}
+
+.mc-subtitle-text {
+  font-size: 24px;
+  color: white;
+  text-shadow: 2px 2px 0 #3f3f3f;
+  z-index: 1;
+}
+
+.mc-actionbar-text {
+  font-size: 18px;
+  color: white;
+  text-shadow: 2px 2px 0 #3f3f3f;
+  z-index: 1;
+}
+
+/* --- Game Screen Preview Container --- */
+.mc-game-preview {
+  background:
+    linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.2)),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64'%3E%3Crect fill='%234a7a3b' width='64' height='64'/%3E%3Crect fill='%2352853f' x='0' y='0' width='32' height='32'/%3E%3Crect fill='%2352853f' x='32' y='32' width='32' height='32'/%3E%3C/svg%3E");
+  background-size: cover, 64px 64px;
+  border-radius: 8px;
+  padding: 20px;
+  position: relative;
+  min-height: 300px;
+  display: flex;
+  flex-direction: column;
+}
+
+.mc-game-preview .preview-label {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(0,0,0,0.6);
+  color: #aaa;
+  padding: 4px 8px;
+  font-size: 0.7rem;
+  border-radius: 4px;
+  z-index: 10;
+}
+
+/* Chat area at bottom */
+.mc-game-preview .chat-area {
+  margin-top: auto;
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+/* Title area center */
+.mc-game-preview .title-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Action bar area */
+.mc-game-preview .actionbar-area {
+  text-align: center;
+  padding: 10px;
+  margin-top: auto;
+}
+
+/* --- Hover tooltip preview --- */
+.mc-hover-tooltip {
+  position: absolute;
+  background: #100010;
+  border: 2px solid #2d0a2d;
+  padding: 6px 10px;
+  font-family: 'Minecraft', 'Courier New', monospace;
+  font-size: 14px;
+  color: white;
+  text-shadow: 2px 2px 0 #3f3f3f;
+  z-index: 100;
+  pointer-events: none;
+  white-space: nowrap;
+  box-shadow:
+    inset 0 0 0 1px #2d0a2d,
+    inset 0 0 0 2px #100010,
+    2px 2px 4px rgba(0,0,0,0.5);
+}
+
+.mc-hover-tooltip::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: 10px;
+  border: 4px solid transparent;
+  border-bottom-color: #2d0a2d;
+}
+
+/* --- Click event indicator --- */
+.mc-clickable {
+  cursor: pointer;
+  position: relative;
+}
+
+.mc-clickable:hover {
+  filter: brightness(1.2);
+}
+
+.mc-clickable::after {
+  content: '[Click]';
+  position: absolute;
+  bottom: -18px;
+  left: 0;
+  font-size: 10px;
+  color: #aaa;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.mc-clickable:hover::after {
+  opacity: 1;
+}
+
+/* --- Preview section wrapper --- */
+.mc-preview-section {
+  margin-top: var(--mc-space-lg);
+  padding: var(--mc-space-md);
+  background: var(--mc-bg-surface);
+  border: 2px solid var(--mc-border-dark);
+  border-radius: 8px;
+}
+
+.mc-preview-section h3 {
+  margin: 0 0 var(--mc-space-md) 0;
+  font-size: 0.9rem;
+  color: var(--mc-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  display: flex;
+  align-items: center;
+  gap: var(--mc-space-sm);
+}
+
+.mc-preview-section h3::before {
+  content: '';
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  background: var(--mc-color-grass-main);
+  border-radius: 2px;
+}
+
+/* --- Responsive preview --- */
+@media (max-width: 768px) {
+  .mc-title-text {
+    font-size: 32px;
+  }
+  .mc-subtitle-text {
+    font-size: 18px;
+  }
+  .mc-chat-preview {
+    font-size: 14px;
+  }
+}

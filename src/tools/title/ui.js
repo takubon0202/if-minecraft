@@ -19,10 +19,39 @@ let subtitleEditor = null;
  */
 export function render(manifest) {
   return `
-    <div class="tool-panel" id="title-panel">
+    <div class="tool-panel title-tool" id="title-panel">
       <div class="tool-header">
         <img src="${getInviconUrl(manifest.iconItem || 'name_tag')}" class="tool-header-icon mc-wiki-image" width="32" height="32" alt="">
         <h2>${manifest.title}</h2>
+        <span class="version-badge">1.21.5+</span>
+      </div>
+
+      <!-- ゲーム画面風プレビュー -->
+      <div class="mc-title-screen-preview" id="title-game-preview">
+        <div class="mc-title-screen">
+          <div class="mc-title-content">
+            <div class="mc-main-title" id="title-preview-main">
+              <span class="mc-color-white">タイトル</span>
+            </div>
+            <div class="mc-subtitle" id="title-preview-sub">
+              <span class="mc-color-white">サブタイトル</span>
+            </div>
+          </div>
+          <div class="mc-actionbar-area">
+            <div class="mc-actionbar" id="title-preview-actionbar"></div>
+            <div class="mc-hotbar">
+              <div class="mc-hotbar-slot active"></div>
+              <div class="mc-hotbar-slot"></div>
+              <div class="mc-hotbar-slot"></div>
+              <div class="mc-hotbar-slot"></div>
+              <div class="mc-hotbar-slot"></div>
+              <div class="mc-hotbar-slot"></div>
+              <div class="mc-hotbar-slot"></div>
+              <div class="mc-hotbar-slot"></div>
+              <div class="mc-hotbar-slot"></div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <form class="tool-form" id="title-form">
@@ -163,6 +192,9 @@ function updateCommand() {
   const titleComponents = titleEditor?.getData() || [];
   const subtitleComponents = subtitleEditor?.getData() || [];
 
+  // ゲーム画面プレビューを更新
+  updateGamePreview(type, titleComponents, subtitleComponents);
+
   const commands = [];
 
   // タイミング設定
@@ -192,9 +224,135 @@ function updateCommand() {
   setOutput(command, 'title', { target, type, fadeIn, stay, fadeOut });
 }
 
+/**
+ * ゲーム画面プレビューを更新
+ */
+function updateGamePreview(type, titleComponents, subtitleComponents) {
+  const mainTitle = document.getElementById('title-preview-main');
+  const subtitle = document.getElementById('title-preview-sub');
+  const actionbar = document.getElementById('title-preview-actionbar');
+
+  if (!mainTitle || !subtitle || !actionbar) return;
+
+  // リセット
+  mainTitle.innerHTML = '';
+  subtitle.innerHTML = '';
+  actionbar.innerHTML = '';
+  mainTitle.style.display = 'none';
+  subtitle.style.display = 'none';
+  actionbar.style.display = 'none';
+
+  if (type === 'title' || type === 'both') {
+    mainTitle.style.display = 'block';
+    mainTitle.innerHTML = renderComponents(titleComponents, true);
+    startTitleObfuscatedAnimation('title-preview-main');
+  }
+
+  if (type === 'subtitle' || type === 'both') {
+    subtitle.style.display = 'block';
+    const subComps = subtitleComponents.length > 0 ? subtitleComponents : (type === 'both' ? [] : titleComponents);
+    subtitle.innerHTML = renderComponents(subComps, false);
+    startTitleObfuscatedAnimation('title-preview-sub');
+  }
+
+  if (type === 'actionbar') {
+    actionbar.style.display = 'block';
+    actionbar.innerHTML = renderComponents(titleComponents, false);
+    startTitleObfuscatedAnimation('title-preview-actionbar');
+  }
+}
+
+/**
+ * コンポーネントをHTMLにレンダリング
+ */
+function renderComponents(components, isMainTitle) {
+  if (!components || components.length === 0) {
+    const placeholder = isMainTitle ? 'タイトル' : 'サブタイトル';
+    return `<span class="mc-color-white mc-placeholder">${placeholder}</span>`;
+  }
+
+  return components.map((comp, index) => {
+    const classes = ['mc-text-segment'];
+
+    // 色クラス
+    if (comp.color) {
+      classes.push(`mc-color-${comp.color.replace('_', '-')}`);
+    } else {
+      classes.push('mc-color-white');
+    }
+
+    // スタイルクラス
+    if (comp.bold) classes.push('mc-bold');
+    if (comp.italic) classes.push('mc-italic');
+    if (comp.underlined) classes.push('mc-underlined');
+    if (comp.strikethrough) classes.push('mc-strikethrough');
+
+    // 難読化テキスト
+    if (comp.obfuscated) {
+      classes.push('mc-obfuscated');
+      return `<span class="${classes.join(' ')}" data-text="${escapeHtml(comp.text)}" data-index="${index}">${escapeHtml(comp.text)}</span>`;
+    }
+
+    return `<span class="${classes.join(' ')}">${escapeHtml(comp.text)}</span>`;
+  }).join('');
+}
+
+// 難読化アニメーション
+const titleObfuscatedIntervals = new Map();
+const OBFUSCATED_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()';
+
+function startTitleObfuscatedAnimation(elementId) {
+  // 既存のインターバルをクリア
+  const existingInterval = titleObfuscatedIntervals.get(elementId);
+  if (existingInterval) {
+    clearInterval(existingInterval);
+  }
+
+  const container = document.getElementById(elementId);
+  if (!container) return;
+
+  const obfuscatedElements = container.querySelectorAll('.mc-obfuscated');
+  if (obfuscatedElements.length === 0) return;
+
+  const intervalId = setInterval(() => {
+    obfuscatedElements.forEach(el => {
+      const originalText = el.dataset.text || '';
+      let newText = '';
+      for (let i = 0; i < originalText.length; i++) {
+        if (originalText[i] === ' ') {
+          newText += ' ';
+        } else {
+          newText += OBFUSCATED_CHARS[Math.floor(Math.random() * OBFUSCATED_CHARS.length)];
+        }
+      }
+      el.textContent = newText;
+    });
+  }, 50);
+
+  titleObfuscatedIntervals.set(elementId, intervalId);
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
 // スタイル追加
 const style = document.createElement('style');
 style.textContent = `
+  .title-tool .version-badge {
+    background: var(--mc-color-grass-main);
+    color: white;
+    padding: 2px 8px;
+    font-size: 0.7rem;
+    border-radius: 3px;
+    margin-left: auto;
+  }
+
   .type-options {
     display: flex;
     gap: var(--mc-space-md);
@@ -223,6 +381,135 @@ style.textContent = `
   .timing-item input {
     width: 100%;
   }
+
+  /* ゲーム画面風プレビュー */
+  .mc-title-screen-preview {
+    margin-bottom: var(--mc-space-lg);
+    border: 2px solid var(--mc-border-dark);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .mc-title-screen {
+    position: relative;
+    background: linear-gradient(180deg, #78A7FF 0%, #6B9AE8 50%, #5B8AD8 100%);
+    min-height: 280px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  /* タイトルコンテンツ（中央揃え） */
+  .mc-title-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    background: linear-gradient(180deg,
+      rgba(0,0,0,0.1) 0%,
+      rgba(0,0,0,0.3) 40%,
+      rgba(0,0,0,0.3) 60%,
+      rgba(0,0,0,0.1) 100%
+    );
+  }
+
+  .mc-main-title {
+    font-family: 'Minecraft', 'Courier New', monospace;
+    font-size: 48px;
+    line-height: 1.2;
+    text-align: center;
+    -webkit-font-smoothing: none;
+    margin-bottom: 8px;
+  }
+
+  .mc-main-title .mc-color-white { text-shadow: 4px 4px 0 #3f3f3f; }
+  .mc-main-title .mc-color-gold { text-shadow: 4px 4px 0 #2a2a00; }
+  .mc-main-title .mc-color-red { text-shadow: 4px 4px 0 #3f1515; }
+  .mc-main-title .mc-color-aqua { text-shadow: 4px 4px 0 #153f3f; }
+  .mc-main-title .mc-color-green { text-shadow: 4px 4px 0 #153f15; }
+  .mc-main-title .mc-color-yellow { text-shadow: 4px 4px 0 #3f3f15; }
+  .mc-main-title .mc-color-light-purple { text-shadow: 4px 4px 0 #3f153f; }
+  .mc-main-title .mc-color-blue { text-shadow: 4px 4px 0 #15153f; }
+
+  .mc-subtitle {
+    font-family: 'Minecraft', 'Courier New', monospace;
+    font-size: 24px;
+    line-height: 1.2;
+    text-align: center;
+    -webkit-font-smoothing: none;
+  }
+
+  .mc-subtitle .mc-color-white { text-shadow: 2px 2px 0 #3f3f3f; }
+
+  .mc-placeholder {
+    opacity: 0.5;
+  }
+
+  /* アクションバーエリア */
+  .mc-actionbar-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .mc-actionbar {
+    font-family: 'Minecraft', 'Courier New', monospace;
+    font-size: 16px;
+    text-align: center;
+    padding: 4px 12px;
+    margin-bottom: 4px;
+    -webkit-font-smoothing: none;
+    display: none;
+  }
+
+  /* ホットバー */
+  .mc-hotbar {
+    display: flex;
+    justify-content: center;
+    gap: 2px;
+    padding: 8px;
+    background: rgba(0, 0, 0, 0.3);
+  }
+
+  .mc-hotbar-slot {
+    width: 36px;
+    height: 36px;
+    background: rgba(139, 139, 139, 0.5);
+    border: 2px solid;
+    border-color: #373737 #ffffff #ffffff #373737;
+    box-sizing: border-box;
+  }
+
+  .mc-hotbar-slot.active {
+    border-color: #ffffff #373737 #373737 #ffffff;
+    background: rgba(200, 200, 200, 0.6);
+  }
+
+  /* Minecraft カラークラス */
+  .mc-color-black { color: #000000; text-shadow: 2px 2px 0 #000000; }
+  .mc-color-dark-blue { color: #0000AA; text-shadow: 2px 2px 0 #00002A; }
+  .mc-color-dark-green { color: #00AA00; text-shadow: 2px 2px 0 #002A00; }
+  .mc-color-dark-aqua { color: #00AAAA; text-shadow: 2px 2px 0 #002A2A; }
+  .mc-color-dark-red { color: #AA0000; text-shadow: 2px 2px 0 #2A0000; }
+  .mc-color-dark-purple { color: #AA00AA; text-shadow: 2px 2px 0 #2A002A; }
+  .mc-color-gold { color: #FFAA00; text-shadow: 2px 2px 0 #2A2A00; }
+  .mc-color-gray { color: #AAAAAA; text-shadow: 2px 2px 0 #2A2A2A; }
+  .mc-color-dark-gray { color: #555555; text-shadow: 2px 2px 0 #151515; }
+  .mc-color-blue { color: #5555FF; text-shadow: 2px 2px 0 #15153F; }
+  .mc-color-green { color: #55FF55; text-shadow: 2px 2px 0 #153F15; }
+  .mc-color-aqua { color: #55FFFF; text-shadow: 2px 2px 0 #153F3F; }
+  .mc-color-red { color: #FF5555; text-shadow: 2px 2px 0 #3F1515; }
+  .mc-color-light-purple { color: #FF55FF; text-shadow: 2px 2px 0 #3F153F; }
+  .mc-color-yellow { color: #FFFF55; text-shadow: 2px 2px 0 #3F3F15; }
+  .mc-color-white { color: #FFFFFF; text-shadow: 2px 2px 0 #3F3F3F; }
+
+  .mc-bold { font-weight: bold; }
+  .mc-italic { font-style: italic; }
+  .mc-underlined { text-decoration: underline; }
+  .mc-strikethrough { text-decoration: line-through; }
+  .mc-obfuscated { font-family: 'Minecraft', monospace; letter-spacing: 1px; }
 `;
 document.head.appendChild(style);
 
