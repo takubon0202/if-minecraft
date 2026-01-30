@@ -988,7 +988,7 @@ style.textContent = `
     font-weight: bold;
   }
 
-  /* プレビュー */
+  /* プレビュー - Minecraftチャット風 */
   .jt-preview-container {
     display: flex;
     flex-direction: column;
@@ -996,20 +996,52 @@ style.textContent = `
   }
 
   .jt-preview-box {
-    background: #1a1a1a;
+    /* Minecraftチャット風の半透明背景 */
+    background: linear-gradient(180deg,
+      rgba(0, 0, 0, 0.55) 0%,
+      rgba(0, 0, 0, 0.45) 100%
+    );
     color: #ffffff;
-    padding: 16px 20px;
-    min-height: 60px;
-    font-family: var(--mc-font-mono, 'Courier New', monospace);
-    font-size: 1.1rem;
-    line-height: 1.5;
-    border: 3px solid #333;
-    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.5);
+    padding: 12px 16px;
+    min-height: 80px;
+    /* Minecraftフォント風 */
+    font-family: 'Minecraft', 'Unifont', var(--mc-font-mono, 'Courier New', monospace);
+    font-size: 16px;
+    line-height: 1.4;
+    /* Minecraftのテキストシャドウ */
+    text-shadow: 2px 2px 0px rgba(0, 0, 0, 0.8);
+    /* チャットウィンドウ風のボーダー */
+    border: none;
+    border-radius: 0;
+    position: relative;
+    /* 背景画像でMinecraft風のテクスチャ感を出す */
+    background-image:
+      linear-gradient(180deg, rgba(0, 0, 0, 0.55) 0%, rgba(0, 0, 0, 0.45) 100%),
+      url("data:image/svg+xml,%3Csvg width='4' height='4' viewBox='0 0 4 4' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='4' height='4' fill='%23222'/%3E%3Crect x='0' y='0' width='2' height='2' fill='%23282828'/%3E%3Crect x='2' y='2' width='2' height='2' fill='%23282828'/%3E%3C/svg%3E");
+    box-shadow:
+      inset 0 0 0 1px rgba(255, 255, 255, 0.05),
+      0 4px 16px rgba(0, 0, 0, 0.4);
+  }
+
+  /* チャットメッセージのライン表示 */
+  .jt-preview-box span {
+    display: inline;
+    text-shadow: 2px 2px 0px rgba(0, 0, 0, 0.8);
   }
 
   .preview-placeholder {
-    color: rgba(255, 255, 255, 0.4);
+    color: rgba(255, 255, 255, 0.35);
     font-style: italic;
+    text-shadow: none;
+  }
+
+  /* プレイヤー名風のスタイル（オプション） */
+  .jt-preview-box .preview-playername {
+    color: #FFAA00;
+  }
+
+  .jt-preview-box .preview-operator {
+    color: #FF5555;
   }
 
   .preview-hint {

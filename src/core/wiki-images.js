@@ -475,11 +475,76 @@ export function wikiImgWithFallback(url, alt = '', size = 32, fallbackColor = '#
   </div>`;
 }
 
+/**
+ * 装飾済み防具（Trimmed Armor）のInvicon画像URLを取得
+ * Wiki形式: Invicon_[TrimMaterial]_Trim_[ArmorMaterial]_[ArmorType].png
+ * @param {string} armorMaterial - 防具素材 (例: diamond, netherite, iron)
+ * @param {string} armorType - 防具部位 (例: helmet, chestplate, leggings, boots)
+ * @param {string} trimMaterial - トリム素材 (例: quartz, gold, copper)
+ * @returns {string} 画像URL
+ */
+export function getTrimmedArmorUrl(armorMaterial, armorType, trimMaterial) {
+  if (!armorMaterial || !armorType || !trimMaterial) {
+    return getInviconUrl(`${armorMaterial}_${armorType}`);
+  }
+
+  // 素材名のマッピング（Wiki上の名前に変換）
+  const materialMap = {
+    // 防具素材
+    'leather': 'Leather',
+    'chainmail': 'Chainmail',
+    'iron': 'Iron',
+    'copper': 'Copper',
+    'golden': 'Golden',
+    'diamond': 'Diamond',
+    'netherite': 'Netherite',
+    // トリム素材
+    'amethyst': 'Amethyst',
+    'quartz': 'Quartz',
+    'gold': 'Gold',
+    'emerald': 'Emerald',
+    'lapis': 'Lapis_Lazuli',
+    'redstone': 'Redstone',
+    'resin': 'Resin',
+  };
+
+  // 防具部位のマッピング
+  const armorTypeMap = {
+    'helmet': 'Helmet',
+    'chestplate': 'Chestplate',
+    'leggings': 'Leggings',
+    'boots': 'Boots',
+  };
+
+  // 革防具の特殊な名前
+  const leatherArmorMap = {
+    'helmet': 'Cap',
+    'chestplate': 'Tunic',
+    'leggings': 'Pants',
+    'boots': 'Boots',
+  };
+
+  const trimMat = materialMap[trimMaterial] || toPascalCase(trimMaterial);
+  const armorMat = materialMap[armorMaterial] || toPascalCase(armorMaterial);
+
+  // 革防具は特殊な名前を使用
+  let armorTypeName;
+  if (armorMaterial === 'leather') {
+    armorTypeName = leatherArmorMap[armorType] || toPascalCase(armorType);
+  } else {
+    armorTypeName = armorTypeMap[armorType] || toPascalCase(armorType);
+  }
+
+  // Wiki形式: Invicon_[TrimMaterial]_Trim_[ArmorMaterial]_[ArmorType].png
+  return `${WIKI_BASE}/Invicon_${trimMat}_Trim_${armorMat}_${armorTypeName}.png`;
+}
+
 export default {
   getInviconUrl,
   getEffectIconUrl,
   getEntityImageUrl,
   getSpawnEggUrl,
+  getTrimmedArmorUrl,
   wikiImg,
   wikiImgWithFallback,
   ITEM_NAME_MAP,

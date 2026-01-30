@@ -7,7 +7,7 @@
 
 import { $, $$, debounce, delegate } from '../../core/dom.js';
 import { setOutput } from '../../app/sidepanel.js';
-import { getInviconUrl, wikiImg } from '../../core/wiki-images.js';
+import { getInviconUrl, getTrimmedArmorUrl, wikiImg } from '../../core/wiki-images.js';
 
 // ======================================
 // 画像URLヘルパー（共通モジュール使用）
@@ -273,7 +273,7 @@ function renderPatternButtons(filter = '') {
 
 /**
  * 防具プレビューをレンダリング
- * トリム適用後の防具に色付きオーバーレイを表示
+ * Minecraft Wiki上の実際の装飾済み防具アイコンを使用
  */
 function renderArmorPreview() {
   const armorMat = ARMOR_MATERIALS.find(m => m.id === state.armorMaterial);
@@ -300,22 +300,24 @@ function renderArmorPreview() {
     `;
   }
 
-  // トリムパターンごとのオーバーレイパターン（CSSで擬似的に表現）
-  const trimPatternCss = getTrimPatternStyle(state.pattern, trimColor);
-
   return `
     <div class="armor-display with-trim" style="--trim-color: ${trimColor}; --armor-color: ${armorColor};">
-      <!-- 防具フィギュア表示（トリム適用後） -->
+      <!-- 防具フィギュア表示（Wiki上の装飾済みアイコン使用） -->
       <div class="armor-figure trimmed">
         ${ARMOR_TYPES.map(type => {
           const isActive = state.fullSet || type.id === state.armorType;
+          // アクティブな防具は装飾済みアイコン、非アクティブは通常アイコン
+          const imgUrl = isActive
+            ? getTrimmedArmorUrl(state.armorMaterial, type.id, state.trimMaterial)
+            : getArmorImageUrl(state.armorMaterial, type.id);
+          const altText = isActive
+            ? `${trimMat?.en || ''} Trim ${armorMat?.en || ''} ${type.en}`
+            : `${armorMat?.en || ''} ${type.en}`;
           return `
-            <div class="armor-piece ${type.id} ${isActive ? 'active' : ''}"
-                 style="--piece-trim-color: ${isActive ? trimColor : 'transparent'}">
+            <div class="armor-piece ${type.id} ${isActive ? 'active' : ''}">
               <div class="armor-base">
-                ${wikiImg(getArmorImageUrl(state.armorMaterial, type.id), state.armorMaterial + ' ' + type.en, 64)}
+                ${wikiImg(imgUrl, altText, 64)}
               </div>
-              ${isActive ? `<div class="trim-overlay" style="${trimPatternCss}"></div>` : ''}
             </div>
           `;
         }).join('')}
@@ -334,36 +336,6 @@ function renderArmorPreview() {
       </div>
     </div>
   `;
-}
-
-/**
- * トリムパターンに基づくCSSスタイルを生成
- * 各パターンの特徴を簡略化したCSS表現
- */
-function getTrimPatternStyle(patternId, color) {
-  // パターンごとに異なるオーバーレイ効果
-  const patterns = {
-    coast: `background: linear-gradient(45deg, ${color}40 25%, transparent 25%, transparent 75%, ${color}40 75%);`,
-    dune: `background: repeating-linear-gradient(90deg, ${color}30 0px, ${color}30 2px, transparent 2px, transparent 6px);`,
-    eye: `background: radial-gradient(circle at center, ${color}50 20%, transparent 20%);`,
-    rib: `background: repeating-linear-gradient(0deg, ${color}40 0px, ${color}40 3px, transparent 3px, transparent 8px);`,
-    sentry: `background: linear-gradient(180deg, ${color}50 0%, transparent 30%, transparent 70%, ${color}50 100%);`,
-    silence: `background: radial-gradient(ellipse at center, ${color}40 30%, transparent 70%);`,
-    snout: `background: linear-gradient(135deg, ${color}40 40%, transparent 40%);`,
-    spire: `background: linear-gradient(0deg, transparent 60%, ${color}50 100%);`,
-    tide: `background: repeating-linear-gradient(45deg, ${color}30 0px, ${color}30 4px, transparent 4px, transparent 10px);`,
-    vex: `background: linear-gradient(90deg, ${color}40 0%, transparent 50%, ${color}40 100%);`,
-    ward: `background: repeating-linear-gradient(0deg, ${color}35 0px, transparent 2px, transparent 5px);`,
-    wayfinder: `background: linear-gradient(45deg, ${color}40 0%, transparent 100%);`,
-    wild: `background: repeating-linear-gradient(60deg, ${color}35 0px, ${color}35 3px, transparent 3px, transparent 7px);`,
-    bolt: `background: linear-gradient(135deg, ${color}50 0%, transparent 50%);`,
-    flow: `background: linear-gradient(180deg, ${color}30 0%, ${color}60 50%, ${color}30 100%);`,
-    host: `background: radial-gradient(circle at 50% 30%, ${color}50 15%, transparent 15%);`,
-    raiser: `background: linear-gradient(0deg, ${color}50 30%, transparent 30%);`,
-    shaper: `background: linear-gradient(90deg, transparent 30%, ${color}40 50%, transparent 70%);`,
-  };
-
-  return patterns[patternId] || `background: linear-gradient(45deg, ${color}40 0%, transparent 100%);`;
 }
 
 /**
@@ -978,28 +950,6 @@ style.textContent = `
   .armor-base {
     position: relative;
     z-index: 1;
-  }
-
-  .trim-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 2;
-    pointer-events: none;
-    mix-blend-mode: overlay;
-    opacity: 0.8;
-    border-radius: 4px;
-  }
-
-  .armor-piece.active .trim-overlay {
-    animation: trimShimmer 2s ease-in-out infinite;
-  }
-
-  @keyframes trimShimmer {
-    0%, 100% { opacity: 0.7; }
-    50% { opacity: 0.9; }
   }
 
   /* トリム情報パネル（プレビュー内） */
