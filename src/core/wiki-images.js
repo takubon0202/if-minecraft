@@ -488,24 +488,30 @@ export function getTrimmedArmorUrl(armorMaterial, armorType, trimMaterial) {
     return getInviconUrl(`${armorMaterial}_${armorType}`);
   }
 
-  // 素材名のマッピング（Wiki上の名前に変換）
-  const materialMap = {
-    // 防具素材
+  // 防具素材のマッピング（Wiki上の名前に変換）
+  const armorMaterialMap = {
     'leather': 'Leather',
     'chainmail': 'Chainmail',
     'iron': 'Iron',
     'copper': 'Copper',
-    'golden': 'Golden',
+    'golden': 'Golden',  // 金防具は "Golden"
     'diamond': 'Diamond',
     'netherite': 'Netherite',
-    // トリム素材
+  };
+
+  // トリム素材のマッピング（Wiki上の名前に変換）
+  const trimMaterialMap = {
     'amethyst': 'Amethyst',
-    'quartz': 'Quartz',
-    'gold': 'Gold',
+    'copper': 'Copper',
+    'diamond': 'Diamond',
     'emerald': 'Emerald',
-    'lapis': 'Lapis_Lazuli',
+    'gold': 'Gold',       // トリム素材は "Gold"（防具の "Golden" とは異なる）
+    'iron': 'Iron',
+    'lapis': 'Lapis_Lazuli',  // アンダースコア付き
+    'netherite': 'Netherite',
+    'quartz': 'Quartz',
     'redstone': 'Redstone',
-    'resin': 'Resin',
+    'resin': 'Resin_Brick',   // 樹脂は "Resin_Brick"
   };
 
   // 防具部位のマッピング
@@ -524,8 +530,8 @@ export function getTrimmedArmorUrl(armorMaterial, armorType, trimMaterial) {
     'boots': 'Boots',
   };
 
-  const trimMat = materialMap[trimMaterial] || toPascalCase(trimMaterial);
-  const armorMat = materialMap[armorMaterial] || toPascalCase(armorMaterial);
+  const trimMat = trimMaterialMap[trimMaterial] || toPascalCase(trimMaterial);
+  const armorMat = armorMaterialMap[armorMaterial] || toPascalCase(armorMaterial);
 
   // 革防具は特殊な名前を使用
   let armorTypeName;
