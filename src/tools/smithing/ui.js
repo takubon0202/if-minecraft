@@ -273,6 +273,7 @@ function renderPatternButtons(filter = '') {
 
 /**
  * 防具プレビューをレンダリング
+ * トリム適用後の防具に色付きオーバーレイを表示
  */
 function renderArmorPreview() {
   const armorMat = ARMOR_MATERIALS.find(m => m.id === state.armorMaterial);
@@ -299,27 +300,70 @@ function renderArmorPreview() {
     `;
   }
 
+  // トリムパターンごとのオーバーレイパターン（CSSで擬似的に表現）
+  const trimPatternCss = getTrimPatternStyle(state.pattern, trimColor);
+
   return `
-    <div class="armor-display">
-      <div class="armor-figure">
-        ${ARMOR_TYPES.map(type => `
-          <div class="armor-piece ${type.id} ${state.fullSet || type.id === state.armorType ? 'active' : ''}">
-            ${wikiImg(getArmorImageUrl(state.armorMaterial, type.id), state.armorMaterial + ' ' + type.en, 48)}
-          </div>
-        `).join('')}
+    <div class="armor-display with-trim" style="--trim-color: ${trimColor}; --armor-color: ${armorColor};">
+      <!-- 防具フィギュア表示（トリム適用後） -->
+      <div class="armor-figure trimmed">
+        ${ARMOR_TYPES.map(type => {
+          const isActive = state.fullSet || type.id === state.armorType;
+          return `
+            <div class="armor-piece ${type.id} ${isActive ? 'active' : ''}"
+                 style="--piece-trim-color: ${isActive ? trimColor : 'transparent'}">
+              <div class="armor-base">
+                ${wikiImg(getArmorImageUrl(state.armorMaterial, type.id), state.armorMaterial + ' ' + type.en, 64)}
+              </div>
+              ${isActive ? `<div class="trim-overlay" style="${trimPatternCss}"></div>` : ''}
+            </div>
+          `;
+        }).join('')}
       </div>
-      <div class="preview-trim-info">
-        <span class="trim-pattern-preview">
+
+      <!-- トリム情報パネル -->
+      <div class="preview-trim-info-panel">
+        <div class="trim-info-item">
           ${wikiImg(getTrimTemplateImageUrl(state.pattern), patternInfo?.en || '', 24)}
-          <span>${patternInfo?.name || ''}</span>
-        </span>
-        <span class="trim-material-preview" style="color: ${trimColor}">
+          <span class="trim-info-label">${patternInfo?.name || ''}</span>
+        </div>
+        <div class="trim-info-item" style="color: ${trimColor}">
           ${wikiImg(getMaterialImageUrl(trimMat?.item || ''), trimMat?.name || '', 24)}
-          <span>${trimMat?.name || ''}</span>
-        </span>
+          <span class="trim-info-label">${trimMat?.name || ''}</span>
+        </div>
       </div>
     </div>
   `;
+}
+
+/**
+ * トリムパターンに基づくCSSスタイルを生成
+ * 各パターンの特徴を簡略化したCSS表現
+ */
+function getTrimPatternStyle(patternId, color) {
+  // パターンごとに異なるオーバーレイ効果
+  const patterns = {
+    coast: `background: linear-gradient(45deg, ${color}40 25%, transparent 25%, transparent 75%, ${color}40 75%);`,
+    dune: `background: repeating-linear-gradient(90deg, ${color}30 0px, ${color}30 2px, transparent 2px, transparent 6px);`,
+    eye: `background: radial-gradient(circle at center, ${color}50 20%, transparent 20%);`,
+    rib: `background: repeating-linear-gradient(0deg, ${color}40 0px, ${color}40 3px, transparent 3px, transparent 8px);`,
+    sentry: `background: linear-gradient(180deg, ${color}50 0%, transparent 30%, transparent 70%, ${color}50 100%);`,
+    silence: `background: radial-gradient(ellipse at center, ${color}40 30%, transparent 70%);`,
+    snout: `background: linear-gradient(135deg, ${color}40 40%, transparent 40%);`,
+    spire: `background: linear-gradient(0deg, transparent 60%, ${color}50 100%);`,
+    tide: `background: repeating-linear-gradient(45deg, ${color}30 0px, ${color}30 4px, transparent 4px, transparent 10px);`,
+    vex: `background: linear-gradient(90deg, ${color}40 0%, transparent 50%, ${color}40 100%);`,
+    ward: `background: repeating-linear-gradient(0deg, ${color}35 0px, transparent 2px, transparent 5px);`,
+    wayfinder: `background: linear-gradient(45deg, ${color}40 0%, transparent 100%);`,
+    wild: `background: repeating-linear-gradient(60deg, ${color}35 0px, ${color}35 3px, transparent 3px, transparent 7px);`,
+    bolt: `background: linear-gradient(135deg, ${color}50 0%, transparent 50%);`,
+    flow: `background: linear-gradient(180deg, ${color}30 0%, ${color}60 50%, ${color}30 100%);`,
+    host: `background: radial-gradient(circle at 50% 30%, ${color}50 15%, transparent 15%);`,
+    raiser: `background: linear-gradient(0deg, ${color}50 30%, transparent 30%);`,
+    shaper: `background: linear-gradient(90deg, transparent 30%, ${color}40 50%, transparent 70%);`,
+  };
+
+  return patterns[patternId] || `background: linear-gradient(45deg, ${color}40 0%, transparent 100%);`;
 }
 
 /**
@@ -913,6 +957,79 @@ style.textContent = `
     display: block;
   }
 
+  /* トリム適用後の防具表示 */
+  .armor-display.with-trim {
+    width: 100%;
+  }
+
+  .armor-figure.trimmed {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    position: relative;
+  }
+
+  .armor-piece {
+    position: relative;
+    transition: all 0.2s;
+  }
+
+  .armor-base {
+    position: relative;
+    z-index: 1;
+  }
+
+  .trim-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 2;
+    pointer-events: none;
+    mix-blend-mode: overlay;
+    opacity: 0.8;
+    border-radius: 4px;
+  }
+
+  .armor-piece.active .trim-overlay {
+    animation: trimShimmer 2s ease-in-out infinite;
+  }
+
+  @keyframes trimShimmer {
+    0%, 100% { opacity: 0.7; }
+    50% { opacity: 0.9; }
+  }
+
+  /* トリム情報パネル（プレビュー内） */
+  .preview-trim-info-panel {
+    display: flex;
+    justify-content: center;
+    gap: var(--mc-space-md);
+    margin-top: var(--mc-space-md);
+    padding: var(--mc-space-sm);
+    background: rgba(0,0,0,0.3);
+    border-radius: 4px;
+  }
+
+  .trim-info-item {
+    display: flex;
+    align-items: center;
+    gap: var(--mc-space-xs);
+    font-size: 0.75rem;
+  }
+
+  .trim-info-item .mc-wiki-img {
+    width: 24px;
+    height: 24px;
+  }
+
+  .trim-info-label {
+    font-weight: 500;
+    color: var(--mc-text-primary);
+  }
+
   /* プレビュー下部のトリム情報 */
   .preview-trim-info {
     display: flex;
@@ -1153,6 +1270,14 @@ style.textContent = `
 
     .smithing-panel .no-results {
       color: #b0b0b0;
+    }
+
+    .smithing-panel .preview-trim-info-panel {
+      background: rgba(0, 0, 0, 0.5);
+    }
+
+    .smithing-panel .trim-info-label {
+      color: #e0e0e0;
     }
 
     .smithing-panel .mc-input {
