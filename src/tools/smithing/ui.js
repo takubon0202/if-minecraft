@@ -7,7 +7,7 @@
 
 import { $, $$, debounce, delegate } from '../../core/dom.js';
 import { setOutput } from '../../app/sidepanel.js';
-import { getInviconUrl, getTrimmedArmorUrl, wikiImg } from '../../core/wiki-images.js';
+import { getInviconUrl, getTrimmedArmorUrl, wikiImg, wikiImgWithFallback } from '../../core/wiki-images.js';
 
 // ======================================
 // 画像URLヘルパー（共通モジュール使用）
@@ -272,8 +272,32 @@ function renderPatternButtons(filter = '') {
 }
 
 /**
+ * 装飾済み防具の画像を生成（フォールバック付き）
+ * Wiki上のトリム済みアイコンを試み、失敗時は通常アイコン+カラーオーバーレイ
+ */
+function renderTrimmedArmorImg(armorMaterial, armorType, trimMaterial, trimColor, size = 64) {
+  const trimmedUrl = getTrimmedArmorUrl(armorMaterial, armorType, trimMaterial);
+  const fallbackUrl = getArmorImageUrl(armorMaterial, armorType);
+  const altText = `${trimMaterial} Trim ${armorMaterial} ${armorType}`;
+
+  // フォールバック付き画像: トリム済みアイコンが読み込めない場合は通常アイコン+オーバーレイ
+  return `
+    <div class="trimmed-armor-wrapper" style="--trim-overlay-color: ${trimColor}; width: ${size}px; height: ${size}px;">
+      <img src="${trimmedUrl}"
+           alt="${altText}"
+           width="${size}" height="${size}"
+           class="mc-wiki-img trimmed-armor-img"
+           style="image-rendering: pixelated;"
+           loading="lazy"
+           onerror="this.onerror=null; this.src='${fallbackUrl}'; this.parentElement.classList.add('fallback-mode');">
+      <div class="trim-color-overlay"></div>
+    </div>
+  `;
+}
+
+/**
  * 防具プレビューをレンダリング
- * Minecraft Wiki上の実際の装飾済み防具アイコンを使用
+ * Minecraft Wiki上の実際の装飾済み防具アイコンを使用（フォールバック付き）
  */
 function renderArmorPreview() {
   const armorMat = ARMOR_MATERIALS.find(m => m.id === state.armorMaterial);
@@ -302,24 +326,30 @@ function renderArmorPreview() {
 
   return `
     <div class="armor-display with-trim" style="--trim-color: ${trimColor}; --armor-color: ${armorColor};">
-      <!-- 防具フィギュア表示（Wiki上の装飾済みアイコン使用） -->
+      <!-- 防具フィギュア表示（装飾済みアイコン、フォールバック付き） -->
       <div class="armor-figure trimmed">
         ${ARMOR_TYPES.map(type => {
           const isActive = state.fullSet || type.id === state.armorType;
-          // アクティブな防具は装飾済みアイコン、非アクティブは通常アイコン
-          const imgUrl = isActive
-            ? getTrimmedArmorUrl(state.armorMaterial, type.id, state.trimMaterial)
-            : getArmorImageUrl(state.armorMaterial, type.id);
-          const altText = isActive
-            ? `${trimMat?.en || ''} Trim ${armorMat?.en || ''} ${type.en}`
-            : `${armorMat?.en || ''} ${type.en}`;
-          return `
-            <div class="armor-piece ${type.id} ${isActive ? 'active' : ''}">
-              <div class="armor-base">
-                ${wikiImg(imgUrl, altText, 64)}
+
+          if (isActive) {
+            // アクティブな防具は装飾済みアイコン（フォールバック付き）
+            return `
+              <div class="armor-piece ${type.id} active">
+                <div class="armor-base">
+                  ${renderTrimmedArmorImg(state.armorMaterial, type.id, state.trimMaterial, trimColor, 64)}
+                </div>
               </div>
-            </div>
-          `;
+            `;
+          } else {
+            // 非アクティブな防具は通常アイコン
+            return `
+              <div class="armor-piece ${type.id}">
+                <div class="armor-base">
+                  ${wikiImg(getArmorImageUrl(state.armorMaterial, type.id), `${armorMat?.en || ''} ${type.en}`, 64)}
+                </div>
+              </div>
+            `;
+          }
         }).join('')}
       </div>
 
@@ -927,6 +957,43 @@ style.textContent = `
 
   .armor-piece .mc-wiki-img {
     display: block;
+  }
+
+  /* 装飾済み防具画像ラッパー（フォールバック対応） */
+  .trimmed-armor-wrapper {
+    position: relative;
+    display: inline-block;
+  }
+
+  .trimmed-armor-wrapper .trimmed-armor-img {
+    display: block;
+    position: relative;
+    z-index: 1;
+  }
+
+  .trimmed-armor-wrapper .trim-color-overlay {
+    display: none;
+  }
+
+  /* フォールバックモード: Wikiアイコンが見つからない場合 */
+  .trimmed-armor-wrapper.fallback-mode .trim-color-overlay {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 2;
+    pointer-events: none;
+    background: linear-gradient(
+      135deg,
+      var(--trim-overlay-color, #888) 0%,
+      transparent 40%,
+      transparent 60%,
+      var(--trim-overlay-color, #888) 100%
+    );
+    opacity: 0.5;
+    mix-blend-mode: overlay;
   }
 
   /* トリム適用後の防具表示 */
