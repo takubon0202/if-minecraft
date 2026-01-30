@@ -7,7 +7,7 @@
 
 import { $, $$, debounce, delegate } from '../../core/dom.js';
 import { setOutput } from '../../app/sidepanel.js';
-import { getInviconUrl, getTrimmedArmorUrl, wikiImg, wikiImgWithFallback } from '../../core/wiki-images.js';
+import { getInviconUrl, getTrimmedArmorUrl, getArmorTrimSampleModelUrl, wikiImg, wikiImgWithFallback } from '../../core/wiki-images.js';
 
 // ======================================
 // 画像URLヘルパー（共通モジュール使用）
@@ -297,7 +297,7 @@ function renderTrimmedArmorImg(armorMaterial, armorType, trimMaterial, trimColor
 
 /**
  * 防具プレビューをレンダリング
- * Minecraft Wiki上の実際の装飾済み防具アイコンを使用（フォールバック付き）
+ * 3Dサンプルモデル + Inviconアイコンの2段構成
  */
 function renderArmorPreview() {
   const armorMat = ARMOR_MATERIALS.find(m => m.id === state.armorMaterial);
@@ -324,32 +324,44 @@ function renderArmorPreview() {
     `;
   }
 
+  // 3Dサンプルモデル画像URL
+  const sampleModelUrl = getArmorTrimSampleModelUrl(state.pattern);
+
+  // 3Dプレビューセクション（URLがある場合のみ）
+  const render3DPreview = sampleModelUrl ? `
+      <div class="armor-3d-preview">
+        <img src="${sampleModelUrl}"
+             alt="${patternInfo?.en || ''} Armor Trim Sample"
+             class="armor-stand-model"
+             loading="lazy"
+             onerror="this.style.display='none'; this.parentElement.classList.add('model-error');">
+        <div class="model-error-fallback">
+          <span>3Dプレビュー</span>
+          <span class="error-note">読み込みに失敗しました</span>
+        </div>
+      </div>
+  ` : '';
+
   return `
     <div class="armor-display with-trim" style="--trim-color: ${trimColor}; --armor-color: ${armorColor};">
-      <!-- 防具フィギュア表示（装飾済みアイコン、フォールバック付き） -->
-      <div class="armor-figure trimmed">
+      <!-- 3D防具立てサンプルモデル -->
+      ${render3DPreview}
+
+      <!-- パターン名表示 -->
+      <div class="pattern-label-banner" style="--pattern-color: ${trimColor}">
+        ${patternInfo?.name || ''} (${patternInfo?.en || ''})
+      </div>
+
+      <!-- 装飾済み防具アイコン一覧 -->
+      <div class="armor-icons-row">
         ${ARMOR_TYPES.map(type => {
           const isActive = state.fullSet || type.id === state.armorType;
-
-          if (isActive) {
-            // アクティブな防具は装飾済みアイコン（フォールバック付き）
-            return `
-              <div class="armor-piece ${type.id} active">
-                <div class="armor-base">
-                  ${renderTrimmedArmorImg(state.armorMaterial, type.id, state.trimMaterial, trimColor, 64)}
-                </div>
-              </div>
-            `;
-          } else {
-            // 非アクティブな防具は通常アイコン
-            return `
-              <div class="armor-piece ${type.id}">
-                <div class="armor-base">
-                  ${wikiImg(getArmorImageUrl(state.armorMaterial, type.id), `${armorMat?.en || ''} ${type.en}`, 64)}
-                </div>
-              </div>
-            `;
-          }
+          return `
+            <div class="armor-icon-item ${isActive ? 'active' : ''}">
+              ${renderTrimmedArmorImg(state.armorMaterial, type.id, state.trimMaterial, trimColor, 40)}
+              <span class="armor-icon-label">${type.name}</span>
+            </div>
+          `;
         }).join('')}
       </div>
 
@@ -363,6 +375,11 @@ function renderArmorPreview() {
           ${wikiImg(getMaterialImageUrl(trimMat?.item || ''), trimMat?.name || '', 24)}
           <span class="trim-info-label">${trimMat?.name || ''}</span>
         </div>
+      </div>
+
+      <!-- 注意書き -->
+      <div class="preview-note">
+        ※ 3Dモデルはサンプル表示です。実際の色は選択した素材により異なります。
       </div>
     </div>
   `;
@@ -1142,6 +1159,125 @@ style.textContent = `
     font-size: 0.75rem;
   }
 
+  /* 3D防具立てプレビュー */
+  .armor-3d-preview {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 180px;
+    margin-bottom: var(--mc-space-md);
+    background: linear-gradient(180deg, rgba(50,50,50,0.3) 0%, rgba(30,30,30,0.5) 100%);
+    border-radius: 8px;
+    padding: var(--mc-space-md);
+  }
+
+  .armor-stand-model {
+    max-width: 150px;
+    max-height: 180px;
+    object-fit: contain;
+    image-rendering: pixelated;
+    filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.5));
+    transition: transform 0.3s ease;
+  }
+
+  .armor-stand-model:hover {
+    transform: scale(1.05);
+  }
+
+  .model-error-fallback {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--mc-space-xs);
+    min-height: 150px;
+    color: var(--mc-text-muted);
+    font-size: 0.9rem;
+  }
+
+  .armor-3d-preview.model-error .model-error-fallback {
+    display: flex;
+  }
+
+  .armor-3d-preview.model-error .armor-stand-model {
+    display: none;
+  }
+
+  .error-note {
+    font-size: 0.75rem;
+    opacity: 0.7;
+  }
+
+  /* パターン名バナー */
+  .pattern-label-banner {
+    text-align: center;
+    font-size: 1.1rem;
+    font-weight: bold;
+    padding: var(--mc-space-sm) var(--mc-space-lg);
+    background: linear-gradient(90deg, transparent 0%, rgba(0,0,0,0.4) 20%, rgba(0,0,0,0.4) 80%, transparent 100%);
+    color: var(--pattern-color, var(--mc-text-primary));
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+    margin-bottom: var(--mc-space-md);
+    border-left: 3px solid var(--pattern-color, var(--mc-color-gold));
+    border-right: 3px solid var(--pattern-color, var(--mc-color-gold));
+  }
+
+  /* 装飾済み防具アイコン一覧（横並び） */
+  .armor-icons-row {
+    display: flex;
+    justify-content: center;
+    gap: var(--mc-space-md);
+    padding: var(--mc-space-md);
+    background: rgba(0,0,0,0.3);
+    border-radius: 8px;
+    flex-wrap: wrap;
+  }
+
+  .armor-icon-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--mc-space-xs);
+    opacity: 0.4;
+    filter: grayscale(0.5);
+    transition: all 0.2s ease;
+  }
+
+  .armor-icon-item.active {
+    opacity: 1;
+    filter: none;
+    transform: scale(1.1);
+  }
+
+  .armor-icon-item:hover {
+    opacity: 0.8;
+    filter: none;
+  }
+
+  .armor-icon-label {
+    font-size: 0.65rem;
+    color: var(--mc-text-muted);
+    text-align: center;
+  }
+
+  .armor-icon-item.active .armor-icon-label {
+    color: var(--mc-text-primary);
+    font-weight: bold;
+  }
+
+  /* プレビュー注意書き */
+  .preview-note {
+    text-align: center;
+    font-size: 0.7rem;
+    color: var(--mc-text-muted);
+    margin-top: var(--mc-space-md);
+    padding: var(--mc-space-xs) var(--mc-space-sm);
+    background: rgba(0,0,0,0.2);
+    border-radius: 4px;
+  }
+
   /* ダークモードでのコントラスト改善（オレンジ/銅テーマ） */
   @media (prefers-color-scheme: dark) {
     .smithing-panel .preset-btn {
@@ -1295,6 +1431,36 @@ style.textContent = `
 
     .smithing-panel .trim-info-label {
       color: #e0e0e0;
+    }
+
+    /* 3Dプレビュー ダークモード */
+    .smithing-panel .armor-3d-preview {
+      background: linear-gradient(180deg, rgba(20,20,20,0.5) 0%, rgba(10,10,10,0.7) 100%);
+    }
+
+    .smithing-panel .pattern-label-banner {
+      background: linear-gradient(90deg, transparent 0%, rgba(0,0,0,0.6) 20%, rgba(0,0,0,0.6) 80%, transparent 100%);
+    }
+
+    .smithing-panel .armor-icons-row {
+      background: rgba(0, 0, 0, 0.4);
+    }
+
+    .smithing-panel .armor-icon-label {
+      color: #888;
+    }
+
+    .smithing-panel .armor-icon-item.active .armor-icon-label {
+      color: #e0e0e0;
+    }
+
+    .smithing-panel .preview-note {
+      background: rgba(0, 0, 0, 0.3);
+      color: #888;
+    }
+
+    .smithing-panel .model-error-fallback {
+      color: #888;
     }
 
     .smithing-panel .mc-input {

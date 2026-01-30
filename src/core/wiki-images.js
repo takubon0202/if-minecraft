@@ -546,12 +546,52 @@ export function getTrimmedArmorUrl(armorMaterial, armorType, trimMaterial) {
   return `${WIKI_BASE}/Invicon_${trimMat}_Trim_${armorMat}_${armorTypeName}.png`;
 }
 
+/**
+ * 防具トリムパターンの3Dサンプルモデル画像URLを取得
+ * Wiki形式: Armor_Trim_[Pattern]_(sample_model).png
+ * @param {string} patternId - パターンID (例: coast, dune, spire)
+ * @returns {string} 画像URL
+ */
+export function getArmorTrimSampleModelUrl(patternId) {
+  if (!patternId || patternId === 'netherite_upgrade') {
+    return null; // ネザライト強化はサンプルモデルなし
+  }
+
+  // パターン名のマッピング（Wiki上の名前に変換）
+  const patternNameMap = {
+    'bolt': 'Bolt',
+    'coast': 'Coast',
+    'dune': 'Dune',
+    'eye': 'Eye',
+    'flow': 'Flow',
+    'host': 'Host',
+    'raiser': 'Raiser',
+    'rib': 'Rib',
+    'sentry': 'Sentry',
+    'shaper': 'Shaper',
+    'silence': 'Silence',
+    'snout': 'Snout',
+    'spire': 'Spire',
+    'tide': 'Tide',
+    'vex': 'Vex',
+    'ward': 'Ward',
+    'wayfinder': 'Wayfinder',
+    'wild': 'Wild',
+  };
+
+  const patternName = patternNameMap[patternId] || toPascalCase(patternId);
+
+  // Wiki形式: Armor_Trim_[Pattern]_(sample_model).png
+  return `${WIKI_BASE}/Armor_Trim_${patternName}_(sample_model).png`;
+}
+
 export default {
   getInviconUrl,
   getEffectIconUrl,
   getEntityImageUrl,
   getSpawnEggUrl,
   getTrimmedArmorUrl,
+  getArmorTrimSampleModelUrl,
   wikiImg,
   wikiImgWithFallback,
   ITEM_NAME_MAP,
