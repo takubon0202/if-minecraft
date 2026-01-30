@@ -65,7 +65,7 @@ const ITEM_NAME_MAP = {
   'dragon_head': 'Dragon_Head',
 
   // === 特殊アイテム ===
-  'redstone': 'Redstone_Dust',
+  'redstone': 'Redstone',  // "Redstone"（Redstone_Dustではない）
   'glowstone_dust': 'Glowstone_Dust',
   'blaze_powder': 'Blaze_Powder',
   'fire_charge': 'Fire_Charge',

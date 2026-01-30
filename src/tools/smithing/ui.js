@@ -1193,10 +1193,10 @@ style.textContent = `
     justify-content: center;
     min-height: 280px;
     margin-bottom: var(--mc-space-md);
-    background: linear-gradient(180deg, rgba(45,45,45,0.4) 0%, rgba(25,25,25,0.6) 100%);
+    background: linear-gradient(180deg, rgba(60,60,60,0.5) 0%, rgba(45,45,45,0.7) 100%);
     border-radius: 12px;
     padding: var(--mc-space-lg);
-    border: 1px solid rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
   }
 
   .armor-stand-model {
@@ -1281,9 +1281,10 @@ style.textContent = `
     flex-direction: column;
     gap: var(--mc-space-sm);
     padding: var(--mc-space-md);
-    background: rgba(40, 40, 40, 0.6);
+    background: rgba(55, 55, 55, 0.7);
     border-radius: 8px;
     margin-bottom: var(--mc-space-md);
+    border: 1px solid rgba(255,255,255,0.08);
   }
 
   .armor-icons-row {
@@ -1297,27 +1298,29 @@ style.textContent = `
     flex-direction: column;
     align-items: center;
     gap: var(--mc-space-xs);
-    padding: var(--mc-space-xs);
-    border-radius: 4px;
-    opacity: 0.5;
-    filter: grayscale(0.3) brightness(0.8);
+    padding: var(--mc-space-sm);
+    border-radius: 6px;
+    opacity: 0.7;
+    filter: grayscale(0.15) brightness(0.95);
     transition: all 0.2s ease;
     cursor: pointer;
-    min-width: 60px;
+    min-width: 70px;
+    background: rgba(255,255,255,0.03);
   }
 
   .armor-icon-item:hover {
-    opacity: 0.8;
-    filter: grayscale(0.1) brightness(0.9);
-    background: rgba(255,255,255,0.05);
+    opacity: 0.9;
+    filter: grayscale(0) brightness(1);
+    background: rgba(255,255,255,0.08);
   }
 
   .armor-icon-item.active {
     opacity: 1;
     filter: none;
-    transform: scale(1.05);
-    background: rgba(var(--trim-color-rgb, 100, 200, 200), 0.15);
-    box-shadow: 0 0 8px rgba(var(--trim-color-rgb, 100, 200, 200), 0.3);
+    transform: scale(1.08);
+    background: rgba(var(--trim-color-rgb, 100, 200, 200), 0.2);
+    box-shadow: 0 0 12px rgba(var(--trim-color-rgb, 100, 200, 200), 0.4);
+    border: 1px solid rgba(var(--trim-color-rgb, 100, 200, 200), 0.3);
   }
 
   .armor-icon-item .trimmed-armor-wrapper {
@@ -1508,12 +1511,13 @@ style.textContent = `
 
     /* 3Dプレビュー ダークモード */
     .smithing-panel .armor-3d-preview {
-      background: linear-gradient(180deg, rgba(30,30,30,0.6) 0%, rgba(15,15,15,0.8) 100%);
-      border-color: rgba(255,255,255,0.08);
+      background: linear-gradient(180deg, rgba(50,50,50,0.6) 0%, rgba(35,35,35,0.8) 100%);
+      border-color: rgba(255,255,255,0.1);
     }
 
     .smithing-panel .armor-icons-grid {
-      background: rgba(25, 25, 25, 0.7);
+      background: rgba(45, 45, 45, 0.8);
+      border-color: rgba(255,255,255,0.1);
     }
 
     .smithing-panel .armor-icons-row {
@@ -1521,24 +1525,27 @@ style.textContent = `
     }
 
     .smithing-panel .armor-icon-item {
-      background: transparent;
+      background: rgba(255,255,255,0.03);
+      opacity: 0.75;
     }
 
     .smithing-panel .armor-icon-item:hover {
-      background: rgba(255,255,255,0.05);
+      background: rgba(255,255,255,0.08);
+      opacity: 0.9;
     }
 
     .smithing-panel .armor-icon-item.active {
-      background: rgba(100, 200, 200, 0.1);
-      box-shadow: 0 0 10px rgba(100, 200, 200, 0.2);
+      background: rgba(100, 200, 200, 0.15);
+      box-shadow: 0 0 12px rgba(100, 200, 200, 0.3);
+      opacity: 1;
     }
 
     .smithing-panel .armor-icon-label {
-      color: #777;
+      color: #999;
     }
 
     .smithing-panel .armor-icon-item.active .armor-icon-label {
-      color: #e0e0e0;
+      color: #f0f0f0;
     }
 
     .smithing-panel .preview-note {
