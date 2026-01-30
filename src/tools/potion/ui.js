@@ -70,17 +70,33 @@ function renderEffectIcon(effectId, color, size = 18) {
   return `<img src="${iconUrl}" alt="" class="effect-icon-img" width="${size}" height="${size}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='inline-block'"><span class="effect-icon-fallback" style="display:none;background-color:${color}"></span>`;
 }
 
-// プリセット
+// プリセットカテゴリ
+const PRESET_CATEGORIES = {
+  combat: { name: '戦闘', icon: 'netherite_sword', color: '#c80000' },
+  utility: { name: 'ユーティリティ', icon: 'compass', color: '#4decf2' },
+  exploration: { name: '探検', icon: 'spyglass', color: '#5cb746' },
+  extreme: { name: '極限', icon: 'nether_star', color: '#ff55ff' },
+};
+
+// プリセット（カテゴリ付き）
 const PRESETS = [
-  { id: 'healing2', name: '回復II', effects: [{ id: 'instant_health', duration: 1, amplifier: 1 }] },
-  { id: 'strength2', name: '力II', effects: [{ id: 'strength', duration: 1800, amplifier: 1 }] },
-  { id: 'speed2', name: '俊敏II', effects: [{ id: 'speed', duration: 1800, amplifier: 1 }] },
-  { id: 'regen2', name: '再生II', effects: [{ id: 'regeneration', duration: 450, amplifier: 1 }] },
-  { id: 'invis', name: '透明化', effects: [{ id: 'invisibility', duration: 3600, amplifier: 0 }] },
-  { id: 'night', name: '暗視', effects: [{ id: 'night_vision', duration: 3600, amplifier: 0 }] },
-  { id: 'water', name: '水中呼吸', effects: [{ id: 'water_breathing', duration: 3600, amplifier: 0 }] },
-  { id: 'fire', name: '耐火', effects: [{ id: 'fire_resistance', duration: 3600, amplifier: 0 }] },
-  { id: 'god', name: '全能', effects: [
+  // 戦闘
+  { id: 'healing2', name: '回復II', category: 'combat', desc: '即時回復 効果レベル2', effects: [{ id: 'instant_health', duration: 1, amplifier: 1 }] },
+  { id: 'strength2', name: '力II', category: 'combat', desc: '攻撃力上昇 1:30', effects: [{ id: 'strength', duration: 1800, amplifier: 1 }] },
+  { id: 'regen2', name: '再生II', category: 'combat', desc: '再生能力 0:22', effects: [{ id: 'regeneration', duration: 450, amplifier: 1 }] },
+  { id: 'resistance', name: '耐性', category: 'combat', desc: 'ダメージ軽減 5:00', effects: [{ id: 'resistance', duration: 6000, amplifier: 0 }] },
+  // ユーティリティ
+  { id: 'speed2', name: '俊敏II', category: 'utility', desc: '移動速度上昇 1:30', effects: [{ id: 'speed', duration: 1800, amplifier: 1 }] },
+  { id: 'jump', name: '跳躍II', category: 'utility', desc: 'ジャンプ力増加 3:00', effects: [{ id: 'jump_boost', duration: 3600, amplifier: 1 }] },
+  { id: 'invis', name: '透明化', category: 'utility', desc: '姿を消す 3:00', effects: [{ id: 'invisibility', duration: 3600, amplifier: 0 }] },
+  { id: 'slow_fall', name: '低速落下', category: 'utility', desc: '落下速度減少 3:00', effects: [{ id: 'slow_falling', duration: 3600, amplifier: 0 }] },
+  // 探検
+  { id: 'night', name: '暗視', category: 'exploration', desc: '暗所でも視界良好 3:00', effects: [{ id: 'night_vision', duration: 3600, amplifier: 0 }] },
+  { id: 'water', name: '水中呼吸', category: 'exploration', desc: '水中での呼吸 3:00', effects: [{ id: 'water_breathing', duration: 3600, amplifier: 0 }] },
+  { id: 'fire', name: '耐火', category: 'exploration', desc: '火炎ダメージ無効 3:00', effects: [{ id: 'fire_resistance', duration: 3600, amplifier: 0 }] },
+  { id: 'conduit', name: 'コンジット', category: 'exploration', desc: '水中能力向上 5:00', effects: [{ id: 'conduit_power', duration: 6000, amplifier: 0 }] },
+  // 極限
+  { id: 'god', name: '全能ポーション', category: 'extreme', desc: '全有益効果無限', effects: [
     { id: 'strength', duration: -1, amplifier: 4 },
     { id: 'speed', duration: -1, amplifier: 4 },
     { id: 'regeneration', duration: -1, amplifier: 4 },
@@ -90,6 +106,17 @@ const PRESETS = [
     { id: 'water_breathing', duration: -1, amplifier: 0 },
     { id: 'jump_boost', duration: -1, amplifier: 2 },
     { id: 'haste', duration: -1, amplifier: 2 },
+  ]},
+  { id: 'death', name: '即死ポーション', category: 'extreme', desc: '即時ダメージ最大', effects: [
+    { id: 'instant_damage', duration: 1, amplifier: 255 },
+  ]},
+  { id: 'chaos', name: '混沌ポーション', category: 'extreme', desc: '有害効果の嵐', effects: [
+    { id: 'poison', duration: -1, amplifier: 5 },
+    { id: 'wither', duration: -1, amplifier: 2 },
+    { id: 'slowness', duration: -1, amplifier: 5 },
+    { id: 'weakness', duration: -1, amplifier: 5 },
+    { id: 'blindness', duration: -1, amplifier: 0 },
+    { id: 'nausea', duration: -1, amplifier: 0 },
   ]},
 ];
 
@@ -182,17 +209,29 @@ export function render(manifest) {
           </div>
         </div>
 
-        <!-- プリセット -->
+        <!-- プリセット（カテゴリ別） -->
         <div class="form-group">
           <label>プリセット</label>
-          <div class="preset-grid">
-            ${PRESETS.map(p => `
-              <button type="button" class="preset-btn" data-preset="${p.id}" title="${p.effects.map(e => EFFECTS.find(ef => ef.id === e.id)?.name).join(', ')}">
-                ${p.name}
-              </button>
+          <div class="preset-categories">
+            ${Object.entries(PRESET_CATEGORIES).map(([catId, cat]) => `
+              <div class="preset-category" data-category="${catId}">
+                <div class="preset-category-header" style="border-left-color: ${cat.color};">
+                  <img src="${getInviconUrl(cat.icon)}" class="preset-category-icon mc-wiki-image" width="16" height="16" alt="">
+                  <span>${cat.name}</span>
+                </div>
+                <div class="preset-category-buttons">
+                  ${PRESETS.filter(p => p.category === catId).map(p => `
+                    <button type="button" class="preset-btn" data-preset="${p.id}" title="${p.desc || p.effects.map(e => EFFECTS.find(ef => ef.id === e.id)?.name).join(', ')}">
+                      <span>${p.name}</span>
+                    </button>
+                  `).join('')}
+                </div>
+              </div>
             `).join('')}
-            <button type="button" class="preset-btn preset-clear" data-preset="clear">クリア</button>
           </div>
+          <button type="button" class="preset-btn preset-clear" data-preset="clear" style="margin-top: 8px;">
+            クリア
+          </button>
         </div>
       </form>
 

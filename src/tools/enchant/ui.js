@@ -292,12 +292,43 @@ const ATTRIBUTES = [
   { id: 'generic.luck', name: '幸運', iconItem: 'rabbit_foot', default: 0 },
 ];
 
-// プリセット
+// Minecraft 標準16色（JSON Text Component用）
+const TEXT_COLORS = [
+  { id: 'white', name: '白', hex: '#FFFFFF' },
+  { id: 'yellow', name: '黄', hex: '#FFFF55' },
+  { id: 'gold', name: '金', hex: '#FFAA00' },
+  { id: 'aqua', name: '水色', hex: '#55FFFF' },
+  { id: 'green', name: '黄緑', hex: '#55FF55' },
+  { id: 'blue', name: '青', hex: '#5555FF' },
+  { id: 'light_purple', name: 'ピンク', hex: '#FF55FF' },
+  { id: 'red', name: '赤', hex: '#FF5555' },
+  { id: 'gray', name: '灰', hex: '#AAAAAA' },
+  { id: 'dark_gray', name: '暗灰', hex: '#555555' },
+  { id: 'dark_aqua', name: '青緑', hex: '#00AAAA' },
+  { id: 'dark_green', name: '緑', hex: '#00AA00' },
+  { id: 'dark_blue', name: '紺', hex: '#0000AA' },
+  { id: 'dark_purple', name: '紫', hex: '#AA00AA' },
+  { id: 'dark_red', name: '暗赤', hex: '#AA0000' },
+  { id: 'black', name: '黒', hex: '#000000' },
+];
+
+// プリセットカテゴリ
+const PRESET_CATEGORIES = {
+  attack: { name: '攻撃', icon: 'netherite_sword', color: '#c80000' },
+  mining: { name: '採掘', icon: 'netherite_pickaxe', color: '#4decf2' },
+  defense: { name: '防御', icon: 'netherite_chestplate', color: '#5cb746' },
+  ranged: { name: '遠距離', icon: 'bow', color: '#f2c13d' },
+  extreme: { name: '極限', icon: 'nether_star', color: '#ff55ff' },
+};
+
+// プリセット（カテゴリ付き）
 const PRESETS = [
   {
     id: 'max-sword',
     name: '最強剣',
+    category: 'attack',
     item: 'netherite_sword',
+    desc: 'ダメージ増加255、火属性、ノックバック、ドロップ増加',
     enchants: [
       { id: 'sharpness', level: 255 },
       { id: 'fire_aspect', level: 2 },
@@ -309,9 +340,24 @@ const PRESETS = [
     ]
   },
   {
+    id: 'pvp-sword',
+    name: 'PvP剣',
+    category: 'attack',
+    item: 'diamond_sword',
+    desc: 'PvP向け：ダメージ5、火属性2、ノックバック2',
+    enchants: [
+      { id: 'sharpness', level: 5 },
+      { id: 'fire_aspect', level: 2 },
+      { id: 'knockback', level: 2 },
+      { id: 'unbreaking', level: 3 },
+    ]
+  },
+  {
     id: 'max-pickaxe',
     name: '最強ツルハシ',
+    category: 'mining',
     item: 'netherite_pickaxe',
+    desc: '効率255、幸運3、修繕付き',
     enchants: [
       { id: 'efficiency', level: 255 },
       { id: 'fortune', level: 3 },
@@ -321,8 +367,10 @@ const PRESETS = [
   },
   {
     id: 'silk-pickaxe',
-    name: 'シルクツルハシ',
+    name: 'シルクタッチ',
+    category: 'mining',
     item: 'netherite_pickaxe',
+    desc: 'ブロック回収用：シルクタッチ、効率5',
     enchants: [
       { id: 'efficiency', level: 5 },
       { id: 'silk_touch', level: 1 },
@@ -332,8 +380,10 @@ const PRESETS = [
   },
   {
     id: 'max-armor',
-    name: '最強防具セット',
+    name: '最強防具',
+    category: 'defense',
     item: 'netherite_chestplate',
+    desc: 'ダメージ軽減4、トゲ3、修繕付き',
     enchants: [
       { id: 'protection', level: 4 },
       { id: 'unbreaking', level: 3 },
@@ -342,9 +392,23 @@ const PRESETS = [
     ]
   },
   {
+    id: 'fire-armor',
+    name: '耐火防具',
+    category: 'defense',
+    item: 'netherite_chestplate',
+    desc: 'ネザー探検用：火炎耐性4',
+    enchants: [
+      { id: 'fire_protection', level: 4 },
+      { id: 'unbreaking', level: 3 },
+      { id: 'mending', level: 1 },
+    ]
+  },
+  {
     id: 'max-bow',
     name: '最強弓',
+    category: 'ranged',
     item: 'bow',
+    desc: '射撃ダメージ255、無限、フレイム',
     enchants: [
       { id: 'power', level: 255 },
       { id: 'punch', level: 2 },
@@ -354,15 +418,40 @@ const PRESETS = [
     ]
   },
   {
+    id: 'max-crossbow',
+    name: '最強クロスボウ',
+    category: 'ranged',
+    item: 'crossbow',
+    desc: '貫通4、高速装填3、修繕付き',
+    enchants: [
+      { id: 'piercing', level: 4 },
+      { id: 'quick_charge', level: 3 },
+      { id: 'unbreaking', level: 3 },
+      { id: 'mending', level: 1 },
+    ]
+  },
+  {
     id: 'god-sword',
     name: 'ゴッド剣',
+    category: 'extreme',
     item: 'netherite_sword',
+    desc: '超強化：ダメージ1000、ノックバック100',
     enchants: [
       { id: 'sharpness', level: 1000 },
       { id: 'fire_aspect', level: 10 },
       { id: 'knockback', level: 100 },
       { id: 'looting', level: 10 },
       { id: 'unbreaking', level: 10 },
+    ]
+  },
+  {
+    id: 'one-hit',
+    name: 'ワンパン剣',
+    category: 'extreme',
+    item: 'netherite_sword',
+    desc: '最大攻撃力：ダメージ増加32767',
+    enchants: [
+      { id: 'sharpness', level: 32767 },
     ]
   },
 ];
@@ -501,9 +590,9 @@ export function render(manifest) {
           </label>
         </div>
 
-        <!-- カスタム名・説明 -->
+        <!-- カスタム名・色・個数 -->
         <div class="form-row">
-          <div class="form-group">
+          <div class="form-group" style="flex: 2;">
             <label for="custom-name">カスタム名</label>
             <input type="text" id="custom-name" class="mc-input" placeholder="最強の剣">
           </div>
@@ -513,17 +602,48 @@ export function render(manifest) {
           </div>
         </div>
 
-        <!-- プリセット -->
+        <!-- 名前の色選択 -->
         <div class="form-group">
-          <label>プリセット</label>
-          <div class="preset-grid">
-            ${PRESETS.map(p => `
-              <button type="button" class="preset-btn" data-preset="${p.id}" title="${p.enchants.map(e => findEnchantInfo(e.id)?.name).join(', ')}">
-                ${p.name}
+          <label>名前の色</label>
+          <div class="color-selector-grid">
+            ${TEXT_COLORS.map(c => `
+              <button type="button" class="color-btn ${c.id === 'white' ? 'selected' : ''}"
+                data-color="${c.id}"
+                title="${c.name}"
+                style="background-color: ${c.hex}; ${c.id === 'white' || c.id === 'yellow' || c.id === 'gold' || c.id === 'aqua' || c.id === 'green' ? 'color: #000;' : 'color: #fff;'}">
               </button>
             `).join('')}
-            <button type="button" class="preset-btn preset-clear" data-preset="clear">クリア</button>
           </div>
+          <div class="color-preview" id="color-preview">
+            <span class="color-preview-label">プレビュー:</span>
+            <span class="color-preview-text" id="color-preview-text" style="color: #FFFFFF;">カスタム名</span>
+          </div>
+        </div>
+
+        <!-- プリセット（カテゴリ別） -->
+        <div class="form-group">
+          <label>プリセット</label>
+          <div class="preset-categories">
+            ${Object.entries(PRESET_CATEGORIES).map(([catId, cat]) => `
+              <div class="preset-category" data-category="${catId}">
+                <div class="preset-category-header" style="border-left-color: ${cat.color};">
+                  <img src="${getInviconUrl(cat.icon)}" class="preset-category-icon mc-wiki-image" width="16" height="16" alt="">
+                  <span>${cat.name}</span>
+                </div>
+                <div class="preset-category-buttons">
+                  ${PRESETS.filter(p => p.category === catId).map(p => `
+                    <button type="button" class="preset-btn" data-preset="${p.id}" title="${p.desc || p.enchants.map(e => findEnchantInfo(e.id)?.name).join(', ')}">
+                      <img src="${getInviconUrl(p.item)}" class="preset-btn-icon mc-wiki-image" width="16" height="16" alt="">
+                      <span>${p.name}</span>
+                    </button>
+                  `).join('')}
+                </div>
+              </div>
+            `).join('')}
+          </div>
+          <button type="button" class="preset-btn preset-clear" data-preset="clear" style="margin-top: 8px;">
+            クリア
+          </button>
         </div>
       </form>
 
@@ -735,6 +855,36 @@ export function init(container) {
     updateCommand(container);
   }, 150));
 
+  // 色選択ボタン
+  delegate(container, 'click', '.color-btn', (e, target) => {
+    // 以前の選択を解除
+    $$('.color-btn.selected', container).forEach(btn => btn.classList.remove('selected'));
+    // 新しい選択を適用
+    target.classList.add('selected');
+
+    // プレビューの色を更新
+    const colorId = target.dataset.color;
+    const colorInfo = TEXT_COLORS.find(c => c.id === colorId);
+    const previewText = $('#color-preview-text', container);
+    if (previewText && colorInfo) {
+      previewText.style.color = colorInfo.hex;
+    }
+
+    // プレビューのツールチップも更新
+    updatePreview(container);
+    updateCommand(container);
+  });
+
+  // カスタム名入力時にプレビューテキストも更新
+  $('#custom-name', container)?.addEventListener('input', debounce((e) => {
+    const previewText = $('#color-preview-text', container);
+    if (previewText) {
+      previewText.textContent = e.target.value || 'カスタム名';
+    }
+    updatePreview(container);
+    updateCommand(container);
+  }, 150));
+
   // バージョン変更時にコマンド再生成
   window.addEventListener('mc-version-change', () => {
     updateVersionDisplay(container);
@@ -872,12 +1022,16 @@ function updatePreview(container) {
   const itemId = $('#item-select', container)?.value;
   const count = parseInt($('#item-count', container)?.value) || 1;
 
+  // カスタム名と色を取得
+  const customName = $('#custom-name', container)?.value;
+  const selectedColorId = $('.color-btn.selected', container)?.dataset?.color || 'white';
+  const colorInfo = TEXT_COLORS.find(c => c.id === selectedColorId);
+
   // アイテム名とアイコン
   let itemName = 'アイテム';
   if (useCustom && customId) {
     const customItemId = customId.split(':').pop() || customId;
     itemName = customItemId;
-    if (itemNameEl) itemNameEl.textContent = customItemId;
     if (itemIdEl) itemIdEl.textContent = customId.startsWith('minecraft:') ? customId : `minecraft:${customId}`;
     // カスタムアイテムもInvicon画像を試行
     if (itemIconImg) {
@@ -890,7 +1044,6 @@ function updatePreview(container) {
     const cat = ITEM_CATEGORIES[catId];
     const item = cat?.items.find(i => i.id === itemId);
     itemName = item?.name || 'アイテム';
-    if (itemNameEl) itemNameEl.textContent = itemName;
     if (itemIdEl) itemIdEl.textContent = `minecraft:${itemId}`;
 
     // Wiki Invicon画像を設定
@@ -899,6 +1052,18 @@ function updatePreview(container) {
       itemIconImg.alt = item?.name || itemId;
       itemIconImg.style.opacity = '1';
       itemIconImg.onerror = () => { itemIconImg.style.opacity = '0.3'; };
+    }
+  }
+
+  // ツールチップにカスタム名または通常名を表示（色付き）
+  if (itemNameEl) {
+    const displayName = customName || itemName;
+    itemNameEl.textContent = displayName;
+    // カスタム名がある場合は選択した色を適用
+    if (customName && colorInfo) {
+      itemNameEl.style.color = colorInfo.hex;
+    } else {
+      itemNameEl.style.color = ''; // デフォルト色にリセット
     }
   }
 
@@ -1008,6 +1173,7 @@ function updateCommand(container) {
   const item = useCustom && customId ? customId : `minecraft:${itemId}`;
 
   const customName = $('#custom-name', container)?.value;
+  const nameColor = $('.color-btn.selected', container)?.dataset?.color || 'white';
   const count = parseInt($('#item-count', container)?.value) || 1;
   const unbreakable = $('#opt-unbreakable', container)?.checked;
   const hideEnchants = $('#opt-hide-enchants', container)?.checked;
@@ -1018,13 +1184,13 @@ function updateCommand(container) {
 
   if (group === 'latest' || group === 'component') {
     // 1.20.5+: コンポーネント形式
-    command = generateComponentCommand(item, count, customName, unbreakable, hideEnchants, hideUnbreakable, useAttributes, container);
+    command = generateComponentCommand(item, count, customName, nameColor, unbreakable, hideEnchants, hideUnbreakable, useAttributes, container);
   } else if (group === 'nbt-modern' || group === 'nbt-legacy') {
     // 1.13-1.20.4: NBT形式
-    command = generateNBTCommand(item, count, customName, unbreakable, useAttributes, container);
+    command = generateNBTCommand(item, count, customName, nameColor, unbreakable, useAttributes, container);
   } else {
     // 1.12: レガシー形式
-    command = generateLegacyCommand(item, count, customName, unbreakable, container);
+    command = generateLegacyCommand(item, count, customName, nameColor, unbreakable, container);
   }
 
   setOutput(command, 'enchant', {
@@ -1040,11 +1206,19 @@ function updateCommand(container) {
 /**
  * コンポーネント形式（1.20.5+）
  */
-function generateComponentCommand(item, count, customName, unbreakable, hideEnchants, hideUnbreakable, useAttributes, container) {
+function generateComponentCommand(item, count, customName, nameColor, unbreakable, hideEnchants, hideUnbreakable, useAttributes, container) {
   const components = [];
 
   if (customName) {
-    components.push(`custom_name='"${customName}"'`);
+    // カスタム名にJSON Text Componentを使用（色、italic:false）
+    const textComponent = {
+      text: customName,
+      italic: false
+    };
+    if (nameColor && nameColor !== 'white') {
+      textComponent.color = nameColor;
+    }
+    components.push(`custom_name='${JSON.stringify(JSON.stringify(textComponent))}'`);
   }
 
   if (selectedEnchants.length > 0) {
@@ -1081,11 +1255,19 @@ function generateComponentCommand(item, count, customName, unbreakable, hideEnch
 /**
  * NBT形式（1.13-1.20.4）
  */
-function generateNBTCommand(item, count, customName, unbreakable, useAttributes, container) {
+function generateNBTCommand(item, count, customName, nameColor, unbreakable, useAttributes, container) {
   const nbtParts = [];
 
   if (customName) {
-    const displayParts = [`Name:'{"text":"${escapeJsonString(customName)}","italic":false}'`];
+    // JSON Text Componentで色を含める
+    const textComponent = {
+      text: escapeJsonString(customName),
+      italic: false
+    };
+    if (nameColor && nameColor !== 'white') {
+      textComponent.color = nameColor;
+    }
+    const displayParts = [`Name:'${JSON.stringify(textComponent)}'`];
     nbtParts.push(`display:{${displayParts.join(',')}}`);
   }
 
@@ -1114,11 +1296,13 @@ function generateNBTCommand(item, count, customName, unbreakable, useAttributes,
 
 /**
  * レガシー形式（1.12.2以前）
+ * ※1.12以前はJSON Text Componentをサポートしないため、色は無視されます
  */
-function generateLegacyCommand(item, count, customName, unbreakable, container) {
+function generateLegacyCommand(item, count, customName, nameColor, unbreakable, container) {
   const nbtParts = [];
 
   if (customName) {
+    // 1.12以前は単純な文字列のみ（色は無視）
     nbtParts.push(`display:{Name:"${escapeJsonString(customName)}"}`);
   }
 

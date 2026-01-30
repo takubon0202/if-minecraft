@@ -398,6 +398,110 @@ body {
   border-color: #c80000;
 }
 
+/* --- Preset Categories (カテゴリ別プリセット) --- */
+.preset-categories {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mc-space-md);
+}
+
+.preset-category {
+  background: rgba(0,0,0,0.15);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.preset-category-header {
+  display: flex;
+  align-items: center;
+  gap: var(--mc-space-sm);
+  padding: 8px 12px;
+  background: rgba(0,0,0,0.2);
+  border-left: 3px solid var(--mc-color-grass-main);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--mc-text-secondary);
+}
+
+.preset-category-icon {
+  width: 16px;
+  height: 16px;
+  image-rendering: pixelated;
+}
+
+.preset-category-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--mc-space-sm);
+  padding: 8px 12px;
+}
+
+.preset-btn-icon {
+  width: 16px;
+  height: 16px;
+  image-rendering: pixelated;
+  vertical-align: middle;
+  margin-right: 4px;
+}
+
+.preset-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* --- Color Selector (名前の色選択) --- */
+.color-selector-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 4px;
+  margin-bottom: var(--mc-space-sm);
+}
+
+.color-btn {
+  width: 100%;
+  aspect-ratio: 1;
+  min-width: 24px;
+  min-height: 24px;
+  border: 2px solid transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,0.3);
+}
+
+.color-btn:hover {
+  transform: scale(1.15);
+  z-index: 1;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+
+.color-btn.selected {
+  border-color: var(--mc-text-primary);
+  box-shadow: 0 0 0 2px var(--mc-color-gold), inset 0 0 0 1px rgba(0,0,0,0.3);
+  transform: scale(1.1);
+}
+
+.color-preview {
+  display: flex;
+  align-items: center;
+  gap: var(--mc-space-sm);
+  padding: 8px 12px;
+  background: rgba(0,0,0,0.3);
+  border-radius: 4px;
+  font-family: var(--mc-font-mono);
+}
+
+.color-preview-label {
+  font-size: 0.8rem;
+  color: var(--mc-text-muted);
+}
+
+.color-preview-text {
+  font-weight: 600;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+}
+
 /* --- Options Grid --- */
 .options-grid {
   display: grid;
