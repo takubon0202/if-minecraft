@@ -23,20 +23,20 @@ export function generateGiveCommand(state) {
   // アイテムID（minecraft:プレフィックスを正規化）
   const itemId = item.includes(':') ? item : `minecraft:${item}`;
 
-  // コンポーネントを構築
+  // コンポーネントを構築（1.21.5+ Data Components形式）
   const components = [];
 
-  // カスタム名
+  // カスタム名（JSONテキスト形式）
   if (customName) {
     const escapedName = escapeJsonString(customName);
-    components.push(`custom_name='"${escapedName}"'`);
+    components.push(`custom_name='{"text":"${escapedName}","italic":false}'`);
   }
 
-  // 説明文（Lore）
+  // 説明文（Lore）- JSONテキストのリスト形式
   if (lore) {
     const loreLines = lore.split('\n').filter(l => l.trim());
     if (loreLines.length > 0) {
-      const loreJson = loreLines.map(line => `'"${escapeJsonString(line)}"'`).join(',');
+      const loreJson = loreLines.map(line => `'{"text":"${escapeJsonString(line)}"}'`).join(',');
       components.push(`lore=[${loreJson}]`);
     }
   }

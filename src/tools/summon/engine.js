@@ -24,25 +24,25 @@ export function generateSummonCommand(state) {
   // エンティティID
   const entityId = entity.includes(':') ? entity : `minecraft:${entity}`;
 
-  // NBTタグを構築
+  // NBTタグを構築（1.21.5+ スネークケース形式）
   const nbtParts = [];
 
   // カスタム名
   if (customName) {
     const escapedName = escapeJsonString(customName);
-    nbtParts.push(`CustomName:'{"text":"${escapedName}"}'`);
+    nbtParts.push(`custom_name:'{"text":"${escapedName}"}'`);
   }
 
-  // オプション
-  if (noAI) nbtParts.push('NoAI:1b');
-  if (silent) nbtParts.push('Silent:1b');
-  if (invulnerable) nbtParts.push('Invulnerable:1b');
-  if (persistenceRequired) nbtParts.push('PersistenceRequired:1b');
+  // オプション（1.21.5+ はスネークケース）
+  if (noAI) nbtParts.push('no_ai:true');
+  if (silent) nbtParts.push('silent:true');
+  if (invulnerable) nbtParts.push('invulnerable:true');
+  if (persistenceRequired) nbtParts.push('persistence_required:true');
 
   // エフェクト
   if (effects.length > 0) {
     const effectsNBT = effects.map(e => {
-      return `{id:"minecraft:${e.id}",amplifier:${e.amplifier}b,duration:${e.duration}}`;
+      return `{id:"minecraft:${e.id}",amplifier:${e.amplifier},duration:${e.duration}}`;
     }).join(',');
     nbtParts.push(`active_effects:[${effectsNBT}]`);
   }

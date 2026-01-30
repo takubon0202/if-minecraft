@@ -860,20 +860,20 @@ function generateSummonZombieCommand(s) {
   const entityId = `minecraft:${s.zombieType}`;
   const nbtParts = [];
 
-  // カスタム名
+  // カスタム名（1.21.5+ スネークケース形式）
   if (s.customName) {
     const escapedName = s.customName.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
-    nbtParts.push(`CustomName:'"${escapedName}"'`);
+    nbtParts.push(`custom_name:'{"text":"${escapedName}"}'`);
   }
 
-  // オプション
-  if (s.noAI) nbtParts.push('NoAI:1b');
-  if (s.silent) nbtParts.push('Silent:1b');
-  if (s.invulnerable) nbtParts.push('Invulnerable:1b');
-  if (s.persistenceRequired) nbtParts.push('PersistenceRequired:1b');
-  if (s.glowing) nbtParts.push('Glowing:1b');
-  if (s.isBaby) nbtParts.push('IsBaby:1b');
-  if (s.canBreakDoors) nbtParts.push('CanBreakDoors:1b');
+  // オプション（1.21.5+ スネークケース形式）
+  if (s.noAI) nbtParts.push('no_ai:true');
+  if (s.silent) nbtParts.push('silent:true');
+  if (s.invulnerable) nbtParts.push('invulnerable:true');
+  if (s.persistenceRequired) nbtParts.push('persistence_required:true');
+  if (s.glowing) nbtParts.push('glowing:true');
+  if (s.isBaby) nbtParts.push('is_baby:true');
+  if (s.canBreakDoors) nbtParts.push('can_break_doors:true');
 
   // 装備
   const equipmentItems = buildEquipmentNBT(s.equipment);
@@ -906,18 +906,13 @@ function generateSummonZombieCommand(s) {
 }
 
 /**
- * 装備NBTを生成
+ * 装備NBTを生成（1.21.5+ スネークケース形式）
  */
 function buildEquipmentNBT(equipment) {
-  const slots = [];
-
-  // 1.21.5形式: body_armor_item, helmet, chestplate, leggings, boots はそれぞれ別フィールド
-  // HandItemsとArmorItemsを使用（レガシー互換）
-
   const armorItems = [];
   const handItems = [];
 
-  // 足から頭の順（ArmorItemsの順序）
+  // 足から頭の順（armor_itemsの順序）
   ['feet', 'legs', 'chest', 'head'].forEach(slot => {
     const eq = equipment[slot];
     if (eq?.item) {
@@ -939,16 +934,16 @@ function buildEquipmentNBT(equipment) {
 
   const parts = [];
 
-  // 装備があれば追加
+  // 装備があれば追加（1.21.5+ スネークケース）
   const hasArmor = armorItems.some(i => i !== '{}');
   const hasHands = handItems.some(i => i !== '{}');
 
   if (hasArmor) {
-    parts.push(`ArmorItems:[${armorItems.join(',')}]`);
+    parts.push(`armor_items:[${armorItems.join(',')}]`);
   }
 
   if (hasHands) {
-    parts.push(`HandItems:[${handItems.join(',')}]`);
+    parts.push(`hand_items:[${handItems.join(',')}]`);
   }
 
   return parts.length > 0 ? parts.join(',') : null;
@@ -974,11 +969,11 @@ function buildItemNBT(itemId, enchants) {
 }
 
 /**
- * ドロップ確率NBTを生成
+ * ドロップ確率NBTを生成（1.21.5+ スネークケース形式）
  */
 function buildDropChancesNBT(equipment) {
-  // ArmorDropChances: [feet, legs, chest, head]
-  // HandDropChances: [mainhand, offhand]
+  // armor_drop_chances: [feet, legs, chest, head]
+  // hand_drop_chances: [mainhand, offhand]
 
   const armorDrops = ['feet', 'legs', 'chest', 'head'].map(slot => {
     return `${equipment[slot]?.dropChance || 0.085}f`;
@@ -989,14 +984,14 @@ function buildDropChancesNBT(equipment) {
   });
 
   const parts = [];
-  parts.push(`ArmorDropChances:[${armorDrops.join(',')}]`);
-  parts.push(`HandDropChances:[${handDrops.join(',')}]`);
+  parts.push(`armor_drop_chances:[${armorDrops.join(',')}]`);
+  parts.push(`hand_drop_chances:[${handDrops.join(',')}]`);
 
   return parts.join(',');
 }
 
 /**
- * 属性NBTを生成
+ * 属性NBTを生成（1.21.5+ スネークケース形式）
  */
 function buildAttributesNBT(attributes) {
   const attrList = [];
@@ -1005,23 +1000,24 @@ function buildAttributesNBT(attributes) {
     const attrInfo = ATTRIBUTES.find(a => a.id === id);
     if (!attrInfo) return;
 
-    // 属性名のマッピング（1.21.5形式）
-    const attrName = id === 'max_health' ? 'generic.max_health' :
-                     id === 'attack_damage' ? 'generic.attack_damage' :
-                     id === 'movement_speed' ? 'generic.movement_speed' :
-                     id === 'knockback_resistance' ? 'generic.knockback_resistance' :
-                     id === 'armor' ? 'generic.armor' :
-                     id === 'armor_toughness' ? 'generic.armor_toughness' :
-                     id === 'follow_range' ? 'generic.follow_range' :
-                     id === 'spawn_reinforcements' ? 'zombie.spawn_reinforcements' :
-                     `generic.${id}`;
+    // 属性IDのマッピング（1.21.5+ 形式: minecraft:プレフィックス）
+    const attrId = id === 'max_health' ? 'minecraft:max_health' :
+                   id === 'attack_damage' ? 'minecraft:attack_damage' :
+                   id === 'movement_speed' ? 'minecraft:movement_speed' :
+                   id === 'knockback_resistance' ? 'minecraft:knockback_resistance' :
+                   id === 'armor' ? 'minecraft:armor' :
+                   id === 'armor_toughness' ? 'minecraft:armor_toughness' :
+                   id === 'follow_range' ? 'minecraft:follow_range' :
+                   id === 'spawn_reinforcements' ? 'minecraft:spawn_reinforcements' :
+                   `minecraft:${id}`;
 
-    attrList.push(`{Name:"${attrName}",Base:${value}d}`);
+    // 1.21.5+: Name → id
+    attrList.push(`{id:"${attrId}",base:${value}d}`);
   });
 
   if (attrList.length === 0) return null;
 
-  return `Attributes:[${attrList.join(',')}]`;
+  return `attributes:[${attrList.join(',')}]`;
 }
 
 // スタイル追加

@@ -1,6 +1,7 @@
 # Minecraft コマンド仕様調査スキル
 
 Minecraftの最新コマンド仕様をリリースノートやWikiから調査し、正確な情報を提供します。
+**Gemini CLI**を使用してWebリサーチを行います。
 
 ## 使用方法
 
@@ -10,20 +11,34 @@ Minecraftの最新コマンド仕様をリリースノートやWikiから調査�
 
 ## 調査手順
 
-### 1. 情報源の優先順位
+### 1. Gemini CLIでWebリサーチを実行
 
-1. **公式リリースノート** (minecraft.net)
-   - https://www.minecraft.net/en-us/article/minecraft-java-edition-1-21-1
-   - 各バージョンのChangelog
+**必ずGemini CLIを使用してWeb検索を行います：**
 
-2. **Minecraft Wiki** (minecraft.wiki)
+```bash
+# 基本的な調査
+gemini "Minecraft Java Edition $ARGUMENTS コマンド構文 変更履歴 最新バージョン"
+
+# 特定バージョンの調査
+gemini "Minecraft 1.21.5 $ARGUMENTS 仕様変更"
+
+# Wikiページの直接参照
+gemini "https://minecraft.wiki/w/Commands/$ARGUMENTS の内容を詳しく教えて"
+```
+
+### 2. 情報源の優先順位
+
+1. **Minecraft Wiki** (minecraft.wiki)
    - https://minecraft.wiki/w/Commands
-   - https://minecraft.wiki/w/Raw_JSON_text_format
+   - https://minecraft.wiki/w/Text_component_format
+
+2. **公式リリースノート** (minecraft.net)
+   - 各バージョンのChangelog
 
 3. **PrismarineJS minecraft-data**
    - https://github.com/PrismarineJS/minecraft-data
 
-### 2. 調査対象
+### 3. 調査対象
 
 $ARGUMENTS が指定された場合、以下を調査：
 
@@ -31,10 +46,10 @@ $ARGUMENTS が指定された場合、以下を調査：
 - 必須/オプション引数
 - 対応バージョン
 - 変更履歴（いつ追加/変更されたか）
-- JSON形式の詳細（該当する場合）
-- NBT/SNBT仕様（該当する場合）
+- JSON/SNBT形式の詳細（該当する場合）
+- 1.21.5以降の新形式への対応
 
-### 3. 出力形式
+### 4. 出力形式
 
 ```markdown
 ## [コマンド名] - Minecraft [バージョン]
@@ -48,6 +63,7 @@ $ARGUMENTS が指定された場合、以下を調査：
 | ... | ... | ... |
 
 ### バージョン履歴
+- 1.21.5: [SNBT形式への移行等]
 - 1.21: [変更内容]
 - 1.20: [変更内容]
 
@@ -58,8 +74,10 @@ $ARGUMENTS が指定された場合、以下を調査：
 - ...
 ```
 
-## 実行
+## 実行方法
 
-WebSearchとWebFetchを使用して最新情報を取得し、上記形式でレポートを作成してください。
+1. **Gemini CLIでWebリサーチ**を実行
+2. 取得した情報を上記形式でレポート作成
+3. 必要に応じてClaudeが補足・修正
 
 **調査対象**: $ARGUMENTS

@@ -1,6 +1,6 @@
 # Gemini CLI連携スキル
 
-Google Gemini CLIを使用してコード生成・エラー解決を行います。
+Google Gemini CLIを使用してコード生成・エラー解決・**Webリサーチ**を行います。
 **Gemini AI Pro サブスクリプション**に含まれており、追加費用なしで利用できます。
 
 ## 使用方法
@@ -28,6 +28,34 @@ gemini -m gemini-3-pro "$ARGUMENTS"
 
 > **重要**: Gemini 3系のみ使用します。2.5系へのフォールバックは行いません。
 
+## Webリサーチ機能（重要）
+
+**このプロジェクトでは、Web検索は必ずGemini CLIを使用してください。**
+
+Gemini CLIはGoogle Search（グラウンディング）機能を内蔵しており、最新のWeb情報にアクセスできます。
+
+### Webリサーチの実行方法
+
+```bash
+# Webリサーチ（Google Search グラウンディング使用）
+gemini "Minecraft 1.21.5 tellraw click_event 変更点を調べて"
+
+# URL指定でのフェッチ
+gemini "https://minecraft.wiki/w/Commands/tellraw の内容を要約して"
+
+# 複合リサーチ
+gemini "Minecraft Java Edition 1.20-1.21の間のコマンド構文変更を調査して"
+```
+
+### ClaudeからGeminiへのWeb検索委譲
+
+Claudeは**WebSearchツールを使用せず**、代わりにBashでGemini CLIを呼び出します：
+
+```bash
+# Claudeでの実行方法
+gemini "検索クエリ"
+```
+
 ## コマンド例
 
 ```bash
@@ -48,6 +76,7 @@ gemini
 
 ## このプロジェクトでの主な用途
 
+- **Webリサーチ・情報収集**（Google Search グラウンディング）
 - Minecraftコマンドの詳細解説
 - コマンド構文の検証・デバッグ
 - UI/UXデザインの提案
