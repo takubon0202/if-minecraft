@@ -76,7 +76,10 @@ function generateGiveComponent(state, version) {
   // エンチャント
   if (enchantments.length > 0) {
     const enchantLevels = enchantments.map(e => `"minecraft:${e.id}":${e.level}`).join(',');
-    components.push(`enchantments={levels:{${enchantLevels}}}`);
+    // エンチャントの本は stored_enchantments を使用
+    const isEnchantedBook = itemId.includes('enchanted_book');
+    const componentName = isEnchantedBook ? 'stored_enchantments' : 'enchantments';
+    components.push(`${componentName}={levels:{${enchantLevels}}}`);
   }
 
   // Raw Components
@@ -149,7 +152,10 @@ function generateGiveNBT(state, version) {
     const enchantList = enchantments.map(e =>
       `{id:"minecraft:${e.id}",lvl:${e.level}s}`
     ).join(',');
-    nbtParts.push(`Enchantments:[${enchantList}]`);
+    // エンチャントの本は StoredEnchantments を使用
+    const isEnchantedBook = itemId.includes('enchanted_book');
+    const tagName = isEnchantedBook ? 'StoredEnchantments' : 'Enchantments';
+    nbtParts.push(`${tagName}:[${enchantList}]`);
   }
 
   // Raw NBT

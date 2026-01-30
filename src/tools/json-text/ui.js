@@ -7,6 +7,7 @@
 import { $, $$, createElement, debounce, delegate } from '../../core/dom.js';
 import { setOutput } from '../../app/sidepanel.js';
 import { getInviconUrl } from '../../core/wiki-images.js';
+import { workspaceStore } from '../../core/store.js';
 import {
   MC_COLORS,
   CLICK_ACTIONS,
@@ -297,12 +298,14 @@ function updatePreview(container) {
  * コマンドを更新
  */
 function updateCommand(container) {
+  const version = workspaceStore.get('version') || '1.21';
   const command = generateCommand(
     formState.segments,
     formState.outputFormat,
-    formState.selector
+    formState.selector,
+    version
   );
-  setOutput(command, 'json-text', formState);
+  setOutput(command, 'json-text', { ...formState, version });
   updatePreview(container);
 }
 

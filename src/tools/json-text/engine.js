@@ -1,7 +1,9 @@
 /**
  * JSON Text Generator - Engine
- * JSONテキストコンポーネント生成ロジック
+ * JSONテキストコンポーネント生成ロジック（マルチバージョン対応）
  */
+
+import { getVersionGroup, compareVersions } from '../../core/version-compat.js';
 
 // Minecraft 16色カラー
 export const MC_COLORS = [
@@ -80,10 +82,13 @@ export function createDefaultSegment() {
 }
 
 /**
- * セグメントをJSON Text Componentに変換
+ * セグメントをJSON Text Componentに変換（バージョン対応）
+ * @param {Object} segment - テキストセグメント
+ * @param {string} version - Minecraftバージョン（デフォルト: 1.21）
  */
-export function segmentToComponent(segment) {
+export function segmentToComponent(segment, version = '1.21') {
   const component = {};
+  const useSnakeCase = compareVersions(version, '1.21') >= 0;
 
   // テキストまたはセレクター
   if (segment.type === 'selector') {
@@ -104,23 +109,53 @@ export function segmentToComponent(segment) {
   if (segment.strikethrough) component.strikethrough = true;
   if (segment.obfuscated) component.obfuscated = true;
 
-  // クリックイベント
+  // クリックイベント（1.21+: snake_case, それ以前: camelCase）
   if (segment.clickAction && segment.clickValue) {
-    component.clickEvent = {
-      action: segment.clickAction,
-      value: segment.clickValue,
-    };
+    const eventKey = useSnakeCase ? 'click_event' : 'clickEvent';
+
+    if (useSnakeCase) {
+      // 1.21+ の新形式
+      const event = { action: segment.clickAction };
+      switch (segment.clickAction) {
+        case 'open_url':
+          event.url = segment.clickValue;
+          break;
+        case 'run_command':
+          // 1.21+ではスラッシュを除去
+          event.command = segment.clickValue.startsWith('/')
+            ? segment.clickValue.slice(1)
+            : segment.clickValue;
+          break;
+        case 'suggest_command':
+          event.command = segment.clickValue;
+          break;
+        case 'copy_to_clipboard':
+          event.contents = segment.clickValue;
+          break;
+        default:
+          event.value = segment.clickValue;
+      }
+      component[eventKey] = event;
+    } else {
+      // 旧形式
+      component[eventKey] = {
+        action: segment.clickAction,
+        value: segment.clickValue,
+      };
+    }
   }
 
-  // ホバーイベント
+  // ホバーイベント（1.21+: snake_case, それ以前: camelCase）
   if (segment.hoverAction && segment.hoverValue) {
+    const eventKey = useSnakeCase ? 'hover_event' : 'hoverEvent';
+
     if (segment.hoverAction === 'show_text') {
-      component.hoverEvent = {
+      component[eventKey] = {
         action: 'show_text',
         contents: segment.hoverValue,
       };
     } else if (segment.hoverAction === 'show_item') {
-      component.hoverEvent = {
+      component[eventKey] = {
         action: 'show_item',
         contents: {
           id: segment.hoverValue,
@@ -133,9 +168,11 @@ export function segmentToComponent(segment) {
 }
 
 /**
- * 複数セグメントをJSON Text配列に変換
+ * 複数セグメントをJSON Text配列に変換（バージョン対応）
+ * @param {Array} segments - テキストセグメント配列
+ * @param {string} version - Minecraftバージョン（デフォルト: 1.21）
  */
-export function segmentsToJson(segments) {
+export function segmentsToJson(segments, version = '1.21') {
   const validSegments = segments.filter(s =>
     (s.type === 'text' && s.text) || s.type === 'selector'
   );
@@ -144,13 +181,16 @@ export function segmentsToJson(segments) {
     return '""';
   }
 
-  const components = validSegments.map(segmentToComponent);
+  const components = validSegments.map(s => segmentToComponent(s, version));
+  const useSnakeCase = compareVersions(version, '1.21') >= 0;
 
   // 単一コンポーネントでシンプルな場合
   if (components.length === 1) {
     const c = components[0];
+    const clickKey = useSnakeCase ? 'click_event' : 'clickEvent';
+    const hoverKey = useSnakeCase ? 'hover_event' : 'hoverEvent';
     const hasExtras = c.color || c.bold || c.italic || c.underlined ||
-                      c.strikethrough || c.obfuscated || c.clickEvent || c.hoverEvent;
+                      c.strikethrough || c.obfuscated || c[clickKey] || c[hoverKey];
 
     // プレーンテキストのみ
     if (!hasExtras && c.text !== undefined) {
@@ -165,10 +205,14 @@ export function segmentsToJson(segments) {
 }
 
 /**
- * コマンドを生成
+ * コマンドを生成（バージョン対応）
+ * @param {Array} segments - テキストセグメント配列
+ * @param {string} format - 出力形式（tellraw, title等）
+ * @param {string} selector - ターゲットセレクター
+ * @param {string} version - Minecraftバージョン（デフォルト: 1.21）
  */
-export function generateCommand(segments, format, selector) {
-  const json = segmentsToJson(segments);
+export function generateCommand(segments, format, selector, version = '1.21') {
+  const json = segmentsToJson(segments, version);
   const formatInfo = OUTPUT_FORMATS.find(f => f.id === format) || OUTPUT_FORMATS[0];
 
   return formatInfo.template
