@@ -170,19 +170,21 @@ function updateCommand() {
     commands.push(`/title ${target} times ${fadeIn} ${stay} ${fadeOut}`);
   }
 
-  // コマンド生成
+  // コマンド生成（1.21.5+形式）
+  const jsonOptions = { version: '1.21.5+' };
+
   if (type === 'title' || type === 'both') {
-    const json = componentsToJson(titleComponents);
+    const json = componentsToJson(titleComponents, jsonOptions);
     commands.push(`/title ${target} title ${json}`);
   }
 
   if (type === 'subtitle' || type === 'both') {
-    const json = componentsToJson(subtitleComponents.length > 0 ? subtitleComponents : titleComponents);
+    const json = componentsToJson(subtitleComponents.length > 0 ? subtitleComponents : titleComponents, jsonOptions);
     commands.push(`/title ${target} subtitle ${json}`);
   }
 
   if (type === 'actionbar') {
-    const json = componentsToJson(titleComponents);
+    const json = componentsToJson(titleComponents, jsonOptions);
     commands.push(`/title ${target} actionbar ${json}`);
   }
 

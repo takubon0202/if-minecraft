@@ -331,9 +331,15 @@ export function updatePreview(editorId, components) {
 }
 
 /**
- * JSON Text ComponentをJSON文字列に変換
+ * JSON Text ComponentをJSON/SNBT文字列に変換
+ * @param {Array} components - コンポーネント配列
+ * @param {Object} options - オプション
+ * @param {string} options.version - 出力バージョン ('1.21.5+', '1.20+', '1.16+', '1.13+')
+ * @param {boolean} options.arrayFormat - 配列形式で出力
  */
 export function componentsToJson(components, options = {}) {
+  const { version = '1.21.5+', arrayFormat = false } = options;
+
   if (!components || components.length === 0) {
     return '""';
   }
@@ -342,6 +348,9 @@ export function componentsToJson(components, options = {}) {
   if (components.length === 1 && !components[0].color && !hasStyles(components[0])) {
     return JSON.stringify(components[0].text);
   }
+
+  // 1.21.5+では新形式（SNBT、click_event/hover_event）
+  const isNewFormat = version === '1.21.5+';
 
   // 複数セグメントまたはスタイル付きの場合
   const result = components.map(comp => {
@@ -352,13 +361,30 @@ export function componentsToJson(components, options = {}) {
     if (comp.underlined) obj.underlined = true;
     if (comp.strikethrough) obj.strikethrough = true;
     if (comp.obfuscated) obj.obfuscated = true;
-    if (comp.clickEvent) obj.clickEvent = comp.clickEvent;
-    if (comp.hoverEvent) obj.hoverEvent = comp.hoverEvent;
+
+    // クリックイベント
+    if (comp.clickEvent) {
+      if (isNewFormat) {
+        obj.click_event = convertClickEventToNewFormat(comp.clickEvent);
+      } else {
+        obj.clickEvent = comp.clickEvent;
+      }
+    }
+
+    // ホバーイベント
+    if (comp.hoverEvent) {
+      if (isNewFormat) {
+        obj.hover_event = convertHoverEventToNewFormat(comp.hoverEvent);
+      } else {
+        obj.hoverEvent = comp.hoverEvent;
+      }
+    }
+
     return obj;
   });
 
   // 配列形式（最初の要素が空文字列でextraとして追加するパターン）
-  if (options.arrayFormat) {
+  if (arrayFormat) {
     return JSON.stringify(['', ...result]);
   }
 
@@ -368,6 +394,76 @@ export function componentsToJson(components, options = {}) {
   }
 
   return JSON.stringify(result);
+}
+
+/**
+ * clickEventを1.21.5+の新形式に変換
+ * 旧: { action: "run_command", value: "/say hello" }
+ * 新: { action: "run_command", command: "say hello" }
+ */
+function convertClickEventToNewFormat(clickEvent) {
+  const { action, value } = clickEvent;
+  const newEvent = { action };
+
+  switch (action) {
+    case 'open_url':
+      newEvent.url = value;
+      break;
+    case 'run_command':
+      // 1.21.5+ではスラッシュ不要
+      newEvent.command = value.startsWith('/') ? value.slice(1) : value;
+      break;
+    case 'suggest_command':
+      newEvent.command = value;
+      break;
+    case 'copy_to_clipboard':
+      newEvent.contents = value;
+      break;
+    case 'change_page':
+      newEvent.page = parseInt(value) || 1;
+      break;
+    default:
+      newEvent.value = value;
+  }
+
+  return newEvent;
+}
+
+/**
+ * hoverEventを1.21.5+の新形式に変換
+ * 旧: { action: "show_text", contents: { text: "Hello" } }
+ * 新: { action: "show_text", value: { text: "Hello" } }
+ */
+function convertHoverEventToNewFormat(hoverEvent) {
+  const { action, contents } = hoverEvent;
+  const newEvent = { action };
+
+  switch (action) {
+    case 'show_text':
+      // 1.21.5+では value フィールドを使用
+      newEvent.value = contents;
+      break;
+    case 'show_item':
+      // アイテム情報をインライン化
+      if (typeof contents === 'object') {
+        Object.assign(newEvent, contents);
+      } else {
+        newEvent.id = contents;
+      }
+      break;
+    case 'show_entity':
+      // エンティティ情報をインライン化、フィールド名変更
+      if (typeof contents === 'object') {
+        newEvent.id = contents.type || contents.id;
+        newEvent.uuid = contents.id || contents.uuid;
+        if (contents.name) newEvent.name = contents.name;
+      }
+      break;
+    default:
+      newEvent.contents = contents;
+  }
+
+  return newEvent;
 }
 
 function hasStyles(comp) {

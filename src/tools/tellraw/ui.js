@@ -50,8 +50,12 @@ export function render(manifest) {
           <label>出力バージョン</label>
           <div class="version-options">
             <label class="option-label">
-              <input type="radio" name="tellraw-version" value="1.20+" checked>
-              1.20.3+ (最新)
+              <input type="radio" name="tellraw-version" value="1.21.5+" checked>
+              1.21.5+ (最新 - SNBT形式)
+            </label>
+            <label class="option-label">
+              <input type="radio" name="tellraw-version" value="1.20+">
+              1.20.3 - 1.21.4
             </label>
             <label class="option-label">
               <input type="radio" name="tellraw-version" value="1.16+">
@@ -62,6 +66,7 @@ export function render(manifest) {
               1.13 - 1.15
             </label>
           </div>
+          <p class="version-note" id="version-note"></p>
         </div>
       </form>
 
@@ -97,22 +102,37 @@ export function init(container) {
 }
 
 /**
+ * バージョンノートを更新
+ */
+function updateVersionNote(version) {
+  const note = document.getElementById('version-note');
+  if (!note) return;
+
+  const notes = {
+    '1.21.5+': 'click_event/hover_event形式、run_commandはスラッシュ不要',
+    '1.20+': 'clickEvent/hoverEvent形式（JSON）',
+    '1.16+': 'clickEvent/hoverEvent形式（JSON）',
+    '1.13+': 'clickEvent/hoverEvent形式（JSON）',
+  };
+
+  note.textContent = notes[version] || '';
+}
+
+/**
  * コマンドを更新
  */
 function updateCommand() {
   const target = $('#tellraw-target')?.value || '@a';
-  const version = document.querySelector('input[name="tellraw-version"]:checked')?.value || '1.20+';
+  const version = document.querySelector('input[name="tellraw-version"]:checked')?.value || '1.21.5+';
   const components = editorInstance?.getData() || [];
 
-  const jsonText = componentsToJson(components);
+  // バージョンノートを更新
+  updateVersionNote(version);
 
-  let command;
-  if (version === '1.20+') {
-    // 1.20.3+ では $ プレフィックスでマクロ対応
-    command = `/tellraw ${target} ${jsonText}`;
-  } else {
-    command = `/tellraw ${target} ${jsonText}`;
-  }
+  // バージョンに応じたJSON生成
+  const jsonText = componentsToJson(components, { version });
+
+  const command = `/tellraw ${target} ${jsonText}`;
 
   setOutput(command, 'tellraw', { target, version, components });
 }
@@ -124,6 +144,13 @@ style.textContent = `
     display: flex;
     gap: var(--mc-space-md);
     flex-wrap: wrap;
+  }
+
+  .version-note {
+    margin-top: var(--mc-space-sm);
+    font-size: 0.75rem;
+    color: var(--mc-color-diamond);
+    font-style: italic;
   }
 
   .tool-info {
