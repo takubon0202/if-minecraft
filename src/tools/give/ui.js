@@ -25,10 +25,11 @@ let formState = {
  */
 export function render(manifest) {
   return `
-    <div class="tool-panel" id="give-panel">
+    <div class="tool-panel give-tool" id="give-panel">
       <div class="tool-header">
         <img src="${getInviconUrl(manifest.iconItem || 'chest')}" class="tool-header-icon mc-wiki-image" width="32" height="32" alt="">
         <h2>${manifest.title}</h2>
+        <span class="version-badge">1.21.5+</span>
       </div>
 
       <form class="tool-form" id="give-form">
@@ -78,10 +79,13 @@ export function render(manifest) {
 
         <!-- オプション -->
         <div class="form-group">
-          <label>
-            <input type="checkbox" id="give-unbreakable">
-            耐久無限 (Unbreakable)
-          </label>
+          <label>オプション</label>
+          <div class="options-grid">
+            <label class="option-label">
+              <input type="checkbox" id="give-unbreakable">
+              耐久無限 (Unbreakable)
+            </label>
+          </div>
         </div>
 
         <!-- エンチャント -->

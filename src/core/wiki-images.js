@@ -22,10 +22,9 @@ const ITEM_FILE_MAP = {
   'written_book': 'Written_Book.gif',
   'compass': 'Compass.gif',
   'clock': 'Clock.gif',
-  // === ポーション系（GIF形式） ===
-  'potion': 'Potion.gif',
-  'splash_potion': 'Splash_Potion.gif',
-  'lingering_potion': 'Lingering_Potion.gif',
+  // === ポーション系 - ITEM_NAME_MAPで個別に定義（GIF形式は使用しない） ===
+  // 注意: Wikiではポーションは効果ごとに異なる画像があるため、
+  // 基本アイテム（Water_Bottle等）はITEM_NAME_MAPで定義
 };
 
 /**

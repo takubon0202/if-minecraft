@@ -103,7 +103,7 @@ export function render(manifest) {
       <div class="tool-header">
         <img src="${getInviconUrl(manifest.iconItem || 'potion')}" class="tool-header-icon mc-wiki-image" width="32" height="32" alt="">
         <h2>${manifest.title}</h2>
-        <span class="version-badge">1.21.11</span>
+        <span class="version-badge">1.21.5+</span>
       </div>
 
       <form class="tool-form" id="potion-form">
@@ -597,173 +597,39 @@ function formatDuration(ticks) {
   return `0:${secs.toString().padStart(2, '0')}`;
 }
 
-// スタイル追加
+// スタイル追加（ポーション固有スタイルのみ - 共通スタイルはtheme.cssに定義）
 const style = document.createElement('style');
 style.textContent = `
-  .potion-tool .version-badge {
-    background: var(--mc-color-grass-main);
-    color: white;
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-size: 0.7rem;
-    margin-left: auto;
-  }
-
-  /* ポーションタイプタブ */
+  /* ポーションタイプタブ（4列グリッド） */
   .potion-type-tabs {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: var(--mc-space-xs);
   }
 
-  .type-tab {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-    padding: var(--mc-space-sm);
-    background: var(--mc-bg-panel);
-    border: 2px solid var(--mc-border-dark);
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .type-tab:hover {
-    background: var(--mc-color-stone-300);
-  }
-
-  .type-tab.active {
-    background: var(--mc-color-grass-main);
-    color: white;
-    border-color: var(--mc-color-grass-dark);
-  }
-
-  .type-tab .tab-icon-img {
-    width: 32px;
-    height: 32px;
-    image-rendering: pixelated;
-  }
-
-  .type-tab .tab-name {
-    font-size: 0.7rem;
-    text-align: center;
-  }
-
-  /* カラーピッカー */
-  .color-picker-row {
-    display: flex;
-    align-items: center;
-    gap: var(--mc-space-sm);
-    margin-top: var(--mc-space-sm);
-  }
-
-  .color-preview {
-    width: 32px;
-    height: 32px;
-    border: 2px solid var(--mc-border-dark);
-    background: #3F76E4;
-  }
-
-  /* エフェクト検索 */
-  .effect-search {
-    margin-bottom: var(--mc-space-sm);
-  }
-
-  /* エフェクトタブ */
-  .effect-tabs {
-    display: flex;
-    gap: var(--mc-space-xs);
-    margin-bottom: var(--mc-space-sm);
-    flex-wrap: wrap;
-  }
-
-  .effect-tab {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: var(--mc-space-xs) var(--mc-space-md);
-    background: var(--mc-bg-panel);
-    border: 1px solid var(--mc-border-dark);
-    cursor: pointer;
-    font-size: 0.8rem;
-    transition: all 0.15s;
-  }
-
-  .effect-tab:hover {
-    background: var(--mc-color-stone-300);
-  }
-
-  .effect-tab.active {
-    background: var(--mc-color-grass-main);
-    color: white;
-  }
-
+  /* エフェクトタイプ色分け */
   .tab-dot {
     width: 8px;
     height: 8px;
     border-radius: 50%;
   }
-
   .tab-dot.beneficial { background: #5CB746; }
   .tab-dot.harmful { background: #E74C3C; }
   .tab-dot.neutral { background: #95A5A6; }
 
-  /* エフェクトグリッド */
-  .effect-grid-container {
-    max-height: 280px;
-    overflow-y: auto;
-    border: 1px solid var(--mc-border-dark);
-    background: var(--mc-bg-panel);
-  }
-
-  .effect-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    gap: 4px;
-    padding: var(--mc-space-sm);
-  }
-
-  .effect-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px;
-    background: var(--mc-bg-surface);
-    border: 2px solid transparent;
-    border-left: 4px solid var(--effect-color);
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-
-  .effect-item:hover {
-    background: var(--mc-color-stone-300);
-    transform: translateY(-1px);
-  }
-
-  .effect-item.selected {
-    background: rgba(92, 183, 70, 0.2);
-    border-color: var(--mc-color-grass-main);
-    box-shadow: 0 0 8px rgba(92, 183, 70, 0.3);
-  }
-
-  .effect-item .effect-icon {
+  /* エフェクトアイコン */
+  .effect-item .effect-icon,
+  .effect-header .effect-icon {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 18px;
-    height: 18px;
     flex-shrink: 0;
   }
+  .effect-item .effect-icon { width: 18px; height: 18px; }
+  .effect-header .effect-icon { width: 20px; height: 20px; }
 
-  .effect-item .effect-icon-img,
-  .selected-effect .effect-icon-img,
-  .preview-effect-item .effect-icon-img {
-    image-rendering: pixelated;
-    vertical-align: middle;
-  }
-
-  .effect-icon-fallback,
-  .effect-icon-circle {
+  .effect-icon-img { image-rendering: pixelated; vertical-align: middle; }
+  .effect-icon-fallback {
     display: inline-block;
     width: 14px;
     height: 14px;
@@ -771,52 +637,8 @@ style.textContent = `
     vertical-align: middle;
   }
 
-  .effect-item .effect-name {
-    font-size: 0.75rem;
-    flex: 1;
-  }
-
-  /* 選択されたエフェクト */
-  .selected-effects {
-    display: flex;
-    flex-direction: column;
-    gap: var(--mc-space-sm);
-    padding: var(--mc-space-sm);
-    background: var(--mc-bg-panel);
-    border: 1px solid var(--mc-border-dark);
-    min-height: 80px;
-    max-height: 300px;
-    overflow-y: auto;
-  }
-
-  .selected-effect {
-    background: var(--mc-bg-surface);
-    border-left: 4px solid var(--effect-color);
-    padding: var(--mc-space-sm);
-  }
-
-  .effect-header {
-    display: flex;
-    align-items: center;
-    gap: var(--mc-space-sm);
-    margin-bottom: var(--mc-space-xs);
-  }
-
-  .effect-header .effect-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 20px;
-    height: 20px;
-    flex-shrink: 0;
-  }
-
-  .effect-header .effect-label {
-    flex: 1;
-    font-weight: bold;
-    font-size: 0.85rem;
-  }
-
+  .effect-item .effect-name { font-size: 0.75rem; flex: 1; }
+  .effect-header .effect-label { flex: 1; font-weight: bold; font-size: 0.85rem; }
   .effect-header .effect-remove {
     width: 24px;
     height: 24px;
@@ -826,98 +648,62 @@ style.textContent = `
     cursor: pointer;
     font-size: 1.2rem;
     opacity: 0.7;
+    transition: opacity 0.15s;
   }
+  .effect-header .effect-remove:hover { opacity: 1; }
 
-  .effect-header .effect-remove:hover {
-    opacity: 1;
-  }
-
-  .effect-controls {
-    display: flex;
-    gap: var(--mc-space-md);
-    flex-wrap: wrap;
-  }
-
+  /* エフェクトコントロール */
+  .effect-controls { display: flex; gap: var(--mc-space-md); flex-wrap: wrap; }
   .control-group {
     display: flex;
     align-items: center;
     gap: 4px;
     font-size: 0.75rem;
+    color: var(--mc-text-secondary);
   }
+  .control-group input { width: 70px; padding: 4px 6px; font-size: 0.8rem; }
+  .infinite-check { margin-left: auto; }
+  .infinite-check input { margin-right: 4px; }
 
-  .control-group input[type="number"],
-  .control-group input[type="text"] {
-    width: 70px;
-    padding: 4px 6px;
-    font-size: 0.8rem;
-  }
-
-  .infinite-check {
-    margin-left: auto;
-  }
-
-  .infinite-check input {
-    margin-right: 4px;
-  }
-
-  /* プリセット */
-  .preset-grid {
+  /* カラーピッカー */
+  .color-picker-row {
     display: flex;
-    flex-wrap: wrap;
-    gap: var(--mc-space-xs);
+    align-items: center;
+    gap: var(--mc-space-sm);
+    margin-top: var(--mc-space-sm);
+  }
+  .color-preview {
+    width: 32px;
+    height: 32px;
+    border: 2px solid var(--mc-border-dark);
+    border-radius: 4px;
   }
 
-  .preset-btn {
-    padding: var(--mc-space-xs) var(--mc-space-sm);
-    background: var(--mc-bg-surface);
-    border: 1px solid var(--mc-border-dark);
-    cursor: pointer;
-    font-size: 0.75rem;
-    transition: all 0.15s;
-  }
-
-  .preset-btn:hover {
-    background: var(--mc-color-grass-light);
-    border-color: var(--mc-color-grass-main);
-  }
-
-  .preset-btn.preset-clear {
-    background: var(--mc-color-redstone);
-    color: white;
-    border-color: #8B0000;
-  }
-
-  /* プレビューセクション */
+  /* ポーションプレビュー */
   .potion-preview-section {
     margin-top: var(--mc-space-lg);
     padding: var(--mc-space-md);
     background: var(--mc-bg-surface);
-    border: 1px solid var(--mc-border-dark);
+    border: 2px solid var(--mc-border-dark);
+    border-radius: 6px;
+    box-shadow: var(--mc-shadow-inset);
   }
-
   .potion-preview-section h3 {
     margin: 0 0 var(--mc-space-md) 0;
     font-size: 0.9rem;
     color: var(--mc-text-muted);
+    text-transform: uppercase;
   }
+  .potion-preview { display: flex; gap: var(--mc-space-xl); align-items: flex-start; }
+  .preview-bottle-area { text-align: center; }
 
-  .potion-preview {
-    display: flex;
-    gap: var(--mc-space-xl);
-    align-items: flex-start;
-  }
-
-  .preview-bottle-area {
-    text-align: center;
-  }
-
+  /* ボトル描画 */
   .preview-bottle {
     width: 64px;
     height: 80px;
     position: relative;
     margin: 0 auto var(--mc-space-sm);
   }
-
   .preview-bottle::before {
     content: '';
     position: absolute;
@@ -929,7 +715,6 @@ style.textContent = `
     background: linear-gradient(to bottom, #666, #444);
     border-radius: 4px 4px 0 0;
   }
-
   .preview-bottle::after {
     content: '';
     position: absolute;
@@ -937,11 +722,10 @@ style.textContent = `
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(to right, rgba(255,255,255,0.1), transparent, rgba(0,0,0,0.1));
+    background: linear-gradient(to right, rgba(255,255,255,0.15), transparent, rgba(0,0,0,0.1));
     border: 3px solid #555;
     border-radius: 0 0 16px 16px;
   }
-
   .bottle-liquid {
     position: absolute;
     bottom: 8px;
@@ -952,34 +736,28 @@ style.textContent = `
     border-radius: 0 0 12px 12px;
     transition: background-color 0.3s;
     z-index: 1;
+    box-shadow: inset 0 -4px 8px rgba(0,0,0,0.2);
   }
 
-  /* ポーションタイプ別スタイル */
-  .preview-bottle.splash_potion {
-    transform: rotate(-15deg);
-  }
-
+  /* ポーションタイプ別アニメーション */
+  .preview-bottle.splash_potion { transform: rotate(-15deg); }
   .preview-bottle.lingering_potion .bottle-liquid {
-    animation: pulse 2s ease-in-out infinite;
+    animation: potionPulse 2s ease-in-out infinite;
+  }
+  @keyframes potionPulse {
+    0%, 100% { opacity: 1; box-shadow: inset 0 -4px 8px rgba(0,0,0,0.2); }
+    50% { opacity: 0.8; box-shadow: inset 0 -4px 12px rgba(0,0,0,0.3), 0 0 8px currentColor; }
   }
 
-  .preview-bottle.tipped_arrow {
-    width: 48px;
-    height: 100px;
-    background: none;
-  }
-
-  .preview-bottle.tipped_arrow::before {
-    display: none;
-  }
-
+  /* 効果付きの矢 */
+  .preview-bottle.tipped_arrow { width: 48px; height: 100px; }
+  .preview-bottle.tipped_arrow::before { display: none; }
   .preview-bottle.tipped_arrow::after {
     border-radius: 0;
     border: none;
     background: linear-gradient(to bottom, transparent 0%, #8B4513 10%, #8B4513 90%, transparent 100%);
     clip-path: polygon(50% 0%, 60% 5%, 60% 85%, 70% 85%, 50% 100%, 30% 85%, 40% 85%, 40% 5%);
   }
-
   .preview-bottle.tipped_arrow .bottle-liquid {
     bottom: auto;
     top: 0;
@@ -989,184 +767,23 @@ style.textContent = `
     right: 35%;
   }
 
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.7; }
-  }
-
-  .preview-type {
-    font-size: 0.75rem;
-    color: var(--mc-text-muted);
-  }
-
-  .preview-info {
-    flex: 1;
-  }
-
+  /* プレビュー情報 */
+  .preview-type { font-size: 0.75rem; color: var(--mc-text-muted); }
+  .preview-info { flex: 1; }
   .preview-name {
     font-size: 1.1rem;
     font-weight: bold;
     margin-bottom: var(--mc-space-sm);
     color: var(--mc-color-diamond);
+    text-shadow: 0 0 8px rgba(77, 236, 242, 0.3);
   }
+  .preview-effect-item { display: flex; align-items: center; gap: 6px; padding: 2px 0; }
+  .preview-effect-item .time { opacity: 0.7; font-size: 0.8em; }
 
-  .preview-effects {
-    font-size: 0.85rem;
-  }
-
-  .preview-effect-item {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 2px 0;
-  }
-
-  .preview-effect-item .time {
-    opacity: 0.7;
-    font-size: 0.8em;
-  }
-
-  .text-muted {
-    color: var(--mc-text-muted);
-  }
-
+  /* レスポンシブ */
   @media (max-width: 600px) {
-    .potion-type-tabs {
-      grid-template-columns: repeat(2, 1fr);
-    }
-
-    .effect-grid {
-      grid-template-columns: 1fr;
-    }
-
-    .effect-controls {
-      flex-direction: column;
-      gap: var(--mc-space-xs);
-    }
-  }
-
-  /* ダークモードでのコントラスト改善（ピンク/赤紫テーマ） */
-  @media (prefers-color-scheme: dark) {
-    .potion-tool .type-tab {
-      background: #2a252a;
-      color: #e0e0e0;
-      border-color: #555;
-    }
-
-    .potion-tool .type-tab:hover {
-      background: rgba(205, 92, 171, 0.25);
-    }
-
-    .potion-tool .type-tab.active {
-      background: #cd5cab;
-      color: white;
-      border-color: #a04988;
-    }
-
-    .potion-tool .type-tab .tab-name {
-      color: inherit;
-    }
-
-    .potion-tool .effect-tab {
-      background: #2a252a;
-      color: #e0e0e0;
-      border-color: #555;
-    }
-
-    .potion-tool .effect-tab:hover {
-      background: rgba(205, 92, 171, 0.2);
-    }
-
-    .potion-tool .effect-tab.active {
-      background: #cd5cab;
-      color: white;
-    }
-
-    .potion-tool .effect-grid-container {
-      background: #1a1a1a;
-      border-color: #555;
-    }
-
-    .potion-tool .effect-item {
-      background: #2a252a;
-      color: #e0e0e0;
-    }
-
-    .potion-tool .effect-item:hover {
-      background: rgba(205, 92, 171, 0.2);
-    }
-
-    .potion-tool .effect-item .effect-name {
-      color: #e8e8e8;
-    }
-
-    .potion-tool .selected-effects {
-      background: #1a1a1a;
-      border-color: #555;
-    }
-
-    .potion-tool .selected-effect {
-      background: #2a252a;
-    }
-
-    .potion-tool .effect-header .effect-label {
-      color: #e8e8e8;
-    }
-
-    .potion-tool .control-group span {
-      color: #b0b0b0;
-    }
-
-    .potion-tool .control-group input[type="number"],
-    .potion-tool .control-group input[type="text"] {
-      background: #1a1a1a;
-      color: #e8e8e8;
-      border-color: #555;
-    }
-
-    .potion-tool .preset-btn {
-      background: #3a3a3a;
-      color: #e0e0e0;
-      border-color: #555;
-    }
-
-    .potion-tool .preset-btn:hover {
-      background: #cd5cab;
-      color: white;
-      border-color: #a04988;
-    }
-
-    .potion-tool .potion-preview-section {
-      background: #2a252a;
-      border-color: #555;
-    }
-
-    .potion-tool .potion-preview-section h3 {
-      color: #b0b0b0;
-    }
-
-    .potion-tool .preview-type {
-      color: #b0b0b0;
-    }
-
-    .potion-tool .preview-name {
-      color: #ff88cc;
-    }
-
-    .potion-tool .mc-input {
-      background: #2a2a2a;
-      color: #e8e8e8;
-      border-color: #555;
-    }
-
-    .potion-tool .mc-input:focus {
-      border-color: #cd5cab;
-      box-shadow: 0 0 0 2px rgba(205, 92, 171, 0.3);
-    }
-
-    .potion-tool label {
-      color: #d0d0d0;
-    }
+    .potion-type-tabs { grid-template-columns: repeat(2, 1fr); }
+    .effect-controls { flex-direction: column; gap: var(--mc-space-xs); }
   }
 `;
 document.head.appendChild(style);
