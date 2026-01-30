@@ -5,9 +5,11 @@
  */
 
 import { $, $$, debounce, delegate } from '../../core/dom.js';
+import { workspaceStore } from '../../core/store.js';
 import { setOutput } from '../../app/sidepanel.js';
 import { getInviconUrl } from '../../core/wiki-images.js';
 import { applyTooltip } from '../../core/mc-tooltip.js';
+import { getVersionGroup, getVersionNote, ENCHANT_ID_MAP } from '../../core/version-compat.js';
 
 // 最大レベル定数
 const ABSOLUTE_MAX_LEVEL = 255;  // ゲーム内で設定可能な絶対最大値
@@ -378,8 +380,9 @@ export function render(manifest) {
       <div class="tool-header">
         <img src="${getInviconUrl(manifest.iconItem || 'enchanted_book')}" class="tool-header-icon mc-wiki-image" width="32" height="32" alt="">
         <h2>${manifest.title}</h2>
-        <span class="version-badge">1.21.5+</span>
+        <span class="version-badge" id="enchant-version-badge">1.21+</span>
       </div>
+      <p class="version-note" id="enchant-version-note"></p>
 
       <form class="tool-form" id="enchant-form">
         <!-- アイテム選択 -->
@@ -668,8 +671,31 @@ export function init(container) {
     $(sel, container)?.addEventListener('input', debounce(() => updateCommand(container), 150));
   });
 
+  // バージョン変更時にコマンド再生成
+  window.addEventListener('mc-version-change', () => {
+    updateVersionDisplay(container);
+    updateCommand(container);
+  });
+
+  updateVersionDisplay(container);
   updatePreview(container);
   updateCommand(container);
+}
+
+/**
+ * バージョン表示を更新
+ */
+function updateVersionDisplay(container) {
+  const version = workspaceStore.get('version') || '1.21';
+  const badge = $('#enchant-version-badge', container);
+  const note = $('#enchant-version-note', container);
+
+  if (badge) {
+    badge.textContent = version + '+';
+  }
+  if (note) {
+    note.textContent = getVersionNote(version);
+  }
 }
 
 /**
@@ -858,6 +884,9 @@ function applyPreset(presetId, container) {
  * コマンドを更新
  */
 function updateCommand(container) {
+  const version = workspaceStore.get('version') || '1.21';
+  const group = getVersionGroup(version);
+
   const useCustom = $('#use-custom-item', container)?.checked;
   const customId = $('#custom-item-id', container)?.value;
   const itemId = $('#item-select', container)?.value;
@@ -870,18 +899,41 @@ function updateCommand(container) {
   const hideUnbreakable = $('#opt-hide-unbreakable', container)?.checked;
   const useAttributes = $('#use-attributes', container)?.checked;
 
+  let command;
+
+  if (group === 'latest' || group === 'component') {
+    // 1.20.5+: コンポーネント形式
+    command = generateComponentCommand(item, count, customName, unbreakable, hideEnchants, hideUnbreakable, useAttributes, container);
+  } else if (group === 'nbt-modern' || group === 'nbt-legacy') {
+    // 1.13-1.20.4: NBT形式
+    command = generateNBTCommand(item, count, customName, unbreakable, useAttributes, container);
+  } else {
+    // 1.12: レガシー形式
+    command = generateLegacyCommand(item, count, customName, unbreakable, container);
+  }
+
+  setOutput(command, 'enchant', {
+    item,
+    enchants: selectedEnchants,
+    unbreakable,
+    customName,
+    count,
+    version
+  });
+}
+
+/**
+ * コンポーネント形式（1.20.5+）
+ */
+function generateComponentCommand(item, count, customName, unbreakable, hideEnchants, hideUnbreakable, useAttributes, container) {
   const components = [];
 
-  // カスタム名
   if (customName) {
     components.push(`custom_name='"${customName}"'`);
   }
 
-  // エンチャント
   if (selectedEnchants.length > 0) {
-    const levels = selectedEnchants.map(e =>
-      `"minecraft:${e.id}":${e.level}`
-    ).join(',');
+    const levels = selectedEnchants.map(e => `"minecraft:${e.id}":${e.level}`).join(',');
     if (hideEnchants) {
       components.push(`enchantments={levels:{${levels}},show_in_tooltip:false}`);
     } else {
@@ -889,7 +941,6 @@ function updateCommand(container) {
     }
   }
 
-  // 属性
   if (useAttributes) {
     const attrs = [];
     $$('.attr-check:checked', container).forEach(check => {
@@ -902,30 +953,80 @@ function updateCommand(container) {
     }
   }
 
-  // 耐久無限
   if (unbreakable) {
-    if (hideUnbreakable) {
-      components.push('unbreakable={show_in_tooltip:false}');
-    } else {
-      components.push('unbreakable={}');
-    }
+    components.push(hideUnbreakable ? 'unbreakable={show_in_tooltip:false}' : 'unbreakable={}');
   }
 
   let command = `/give @p ${item}`;
-  if (components.length > 0) {
-    command += `[${components.join(',')}]`;
-  }
-  if (count > 1) {
-    command += ` ${count}`;
+  if (components.length > 0) command += `[${components.join(',')}]`;
+  if (count > 1) command += ` ${count}`;
+  return command;
+}
+
+/**
+ * NBT形式（1.13-1.20.4）
+ */
+function generateNBTCommand(item, count, customName, unbreakable, useAttributes, container) {
+  const nbtParts = [];
+
+  if (customName) {
+    const displayParts = [`Name:'{"text":"${escapeJsonString(customName)}","italic":false}'`];
+    nbtParts.push(`display:{${displayParts.join(',')}}`);
   }
 
-  setOutput(command, 'enchant', {
-    item,
-    enchants: selectedEnchants,
-    unbreakable,
-    customName,
-    count
-  });
+  if (selectedEnchants.length > 0) {
+    const enchantList = selectedEnchants.map(e => `{id:"minecraft:${e.id}",lvl:${e.level}s}`).join(',');
+    nbtParts.push(`Enchantments:[${enchantList}]`);
+  }
+
+  if (useAttributes) {
+    const attrs = [];
+    $$('.attr-check:checked', container).forEach(check => {
+      const attrId = check.dataset.attr;
+      const value = parseFloat($(`.attr-value[data-attr="${attrId}"]`, container)?.value) || 0;
+      attrs.push(`{AttributeName:"${attrId}",Name:"${attrId.replace('.','_')}",Amount:${value},Operation:0,UUID:[I;0,0,0,0]}`);
+    });
+    if (attrs.length > 0) nbtParts.push(`AttributeModifiers:[${attrs.join(',')}]`);
+  }
+
+  if (unbreakable) nbtParts.push('Unbreakable:1b');
+
+  let command = `/give @p ${item}`;
+  if (nbtParts.length > 0) command += `{${nbtParts.join(',')}}`;
+  if (count > 1) command += ` ${count}`;
+  return command;
+}
+
+/**
+ * レガシー形式（1.12.2以前）
+ */
+function generateLegacyCommand(item, count, customName, unbreakable, container) {
+  const nbtParts = [];
+
+  if (customName) {
+    nbtParts.push(`display:{Name:"${escapeJsonString(customName)}"}`);
+  }
+
+  if (selectedEnchants.length > 0) {
+    const enchantList = selectedEnchants.map(e => {
+      // 文字列IDを数値IDに変換
+      const numericId = Object.entries(ENCHANT_ID_MAP).find(([, name]) => name === e.id)?.[0] || 0;
+      return `{id:${numericId}s,lvl:${e.level}s}`;
+    }).join(',');
+    nbtParts.push(`ench:[${enchantList}]`);
+  }
+
+  if (unbreakable) nbtParts.push('Unbreakable:1b');
+
+  // 1.12形式: アイテムIDからminecraft:を削除
+  const legacyItem = item.replace('minecraft:', '');
+  let command = `/give @p ${legacyItem} ${count} 0`;
+  if (nbtParts.length > 0) command += ` {${nbtParts.join(',')}}`;
+  return command;
+}
+
+function escapeJsonString(str) {
+  return str.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n');
 }
 
 function toRoman(num) {
