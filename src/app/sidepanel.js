@@ -1,5 +1,6 @@
 /**
  * Side Panel Manager - サイドパネル管理
+ * 履歴のピン留め、フィルタリング機能付き
  */
 
 import { $, $$, delegate, empty, createElement } from '../core/dom.js';
@@ -11,6 +12,7 @@ import { copyShareUrl } from '../core/share.js';
 let currentCommand = '';
 let currentToolId = '';
 let currentState = null;
+let historyFilter = ''; // 検索フィルター
 
 /**
  * サイドパネルを初期化
@@ -34,11 +36,31 @@ export function initSidePanel() {
   // 履歴クリアボタン
   $('#clear-history-btn')?.addEventListener('click', clearHistory);
 
-  // 履歴アイテムクリック
-  delegate($('#history-list'), 'click', '.history-item', (e, target) => {
-    const command = target.querySelector('.command').textContent;
+  // 履歴アイテムクリック（コマンド部分のみ）
+  delegate($('#history-list'), 'click', '.history-command', (e, target) => {
+    const command = target.textContent;
     setOutput(command);
     copyToClipboard(command);
+  });
+
+  // ピン留めボタン
+  delegate($('#history-list'), 'click', '.history-pin-btn', (e, target) => {
+    e.stopPropagation();
+    const index = parseInt(target.dataset.index);
+    togglePin(index);
+  });
+
+  // 削除ボタン
+  delegate($('#history-list'), 'click', '.history-delete-btn', (e, target) => {
+    e.stopPropagation();
+    const index = parseInt(target.dataset.index);
+    deleteHistoryItem(index);
+  });
+
+  // 検索フィルター
+  $('#history-search')?.addEventListener('input', (e) => {
+    historyFilter = e.target.value.toLowerCase();
+    renderHistory(historyStore.get('commands'));
   });
 
   // 履歴を読み込み
@@ -124,12 +146,17 @@ function handleSave() {
     command: currentCommand,
     toolId: currentToolId,
     timestamp: Date.now(),
+    pinned: false,
   };
 
   // 重複チェック
   const exists = commands.some(c => c.command === currentCommand);
   if (!exists) {
-    const newCommands = [newEntry, ...commands].slice(0, maxItems);
+    // ピン留めされたアイテムは保護
+    const pinnedItems = commands.filter(c => c.pinned);
+    const unpinnedItems = commands.filter(c => !c.pinned);
+    const newUnpinned = [newEntry, ...unpinnedItems].slice(0, maxItems - pinnedItems.length);
+    const newCommands = [...pinnedItems, ...newUnpinned];
     historyStore.set('commands', newCommands);
     saveHistory();
   }
@@ -138,11 +165,40 @@ function handleSave() {
 }
 
 /**
- * 履歴をクリア
+ * 履歴をクリア（ピン留めは保持）
  */
 function clearHistory() {
-  historyStore.set('commands', []);
+  const commands = historyStore.get('commands');
+  const pinnedItems = commands.filter(c => c.pinned);
+  historyStore.set('commands', pinnedItems);
   saveHistory();
+}
+
+/**
+ * ピン留めをトグル
+ */
+function togglePin(index) {
+  const commands = historyStore.get('commands');
+  if (index >= 0 && index < commands.length) {
+    commands[index].pinned = !commands[index].pinned;
+    // ピン留めアイテムを先頭に移動
+    const pinnedItems = commands.filter(c => c.pinned);
+    const unpinnedItems = commands.filter(c => !c.pinned);
+    historyStore.set('commands', [...pinnedItems, ...unpinnedItems]);
+    saveHistory();
+  }
+}
+
+/**
+ * 履歴アイテムを削除
+ */
+function deleteHistoryItem(index) {
+  const commands = historyStore.get('commands');
+  if (index >= 0 && index < commands.length) {
+    commands.splice(index, 1);
+    historyStore.set('commands', [...commands]);
+    saveHistory();
+  }
 }
 
 /**
@@ -169,12 +225,26 @@ function renderHistory(commands) {
 
   empty(list);
 
-  if (commands.length === 0) {
-    list.innerHTML = '<p class="empty-message">履歴はありません</p>';
+  // フィルタリング
+  let filteredCommands = commands;
+  if (historyFilter) {
+    filteredCommands = commands.filter(c =>
+      c.command.toLowerCase().includes(historyFilter) ||
+      (c.toolId && c.toolId.toLowerCase().includes(historyFilter))
+    );
+  }
+
+  if (filteredCommands.length === 0) {
+    list.innerHTML = historyFilter
+      ? '<p class="empty-message">検索結果がありません</p>'
+      : '<p class="empty-message">履歴はありません</p>';
     return;
   }
 
-  commands.forEach(entry => {
+  filteredCommands.forEach((entry, index) => {
+    // 元の配列でのインデックスを取得
+    const originalIndex = commands.indexOf(entry);
+
     const time = new Date(entry.timestamp).toLocaleString('ja-JP', {
       month: 'short',
       day: 'numeric',
@@ -182,10 +252,27 @@ function renderHistory(commands) {
       minute: '2-digit',
     });
 
-    const item = createElement('div', { className: 'history-item' }, [
-      createElement('div', { className: 'command' }, entry.command),
-      createElement('div', { className: 'time' }, time),
-    ]);
+    const isPinned = entry.pinned;
+
+    const item = createElement('div', {
+      className: `history-item ${isPinned ? 'pinned' : ''}`
+    }, [
+      createElement('div', { className: 'history-item-header' }, [
+        createElement('button', {
+          className: `history-pin-btn ${isPinned ? 'active' : ''}`,
+          dataset: { index: originalIndex },
+          title: isPinned ? 'ピン解除' : 'ピン留め'
+        }, isPinned ? '📌' : '📍'),
+        createElement('span', { className: 'history-time' }, time),
+        createElement('button', {
+          className: 'history-delete-btn',
+          dataset: { index: originalIndex },
+          title: '削除'
+        }, '×'),
+      ]),
+      createElement('div', { className: 'history-command' }, entry.command),
+      entry.toolId ? createElement('div', { className: 'history-tool' }, entry.toolId) : null,
+    ].filter(Boolean));
 
     list.appendChild(item);
   });

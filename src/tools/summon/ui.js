@@ -236,6 +236,7 @@ export function render(manifest) {
           </div>
         </div>
         <span class="version-badge" id="summon-version-badge">1.21+</span>
+        <button type="button" class="reset-btn" id="summon-reset-btn" title="設定をリセット">リセット</button>
       </div>
       <p class="version-note" id="summon-version-note"></p>
 
@@ -657,9 +658,117 @@ export function init(container) {
     updateCommand(container);
   });
 
+  // リセットボタン
+  $('#summon-reset-btn', container)?.addEventListener('click', () => {
+    resetForm(container);
+  });
+
   // 初期状態
   $('#summon-persistence', container).checked = true;
   updateVersionDisplay(container);
+  updateCommand(container);
+}
+
+/**
+ * フォームをリセット
+ */
+function resetForm(container) {
+  // フォーム状態をリセット
+  formState = {
+    entity: 'zombie',
+    pos: '~ ~ ~',
+    customName: '',
+    nameColor: 'white',
+    nameBold: false,
+    nameItalic: false,
+    noAI: false,
+    silent: false,
+    invulnerable: false,
+    persistenceRequired: true,
+    glowing: false,
+    effects: [],
+    rawNBT: '',
+  };
+  selectedCategory = 'hostile';
+
+  // カテゴリタブを敵対的Mobに戻す
+  $$('.category-tab', container).forEach(t => {
+    t.classList.toggle('active', t.dataset.category === 'hostile');
+  });
+
+  // エンティティグリッドをリセット
+  const entityGrid = $('#entity-grid', container);
+  if (entityGrid) {
+    entityGrid.innerHTML = renderEntityGrid('hostile');
+  }
+
+  // 選択中のエンティティ表示をリセット
+  const selectedIcon = $('#selected-icon', container);
+  if (selectedIcon) selectedIcon.src = getSpawnEggUrl('zombie');
+  const selectedName = $('#selected-name', container);
+  if (selectedName) selectedName.textContent = 'ゾンビ';
+  const selectedId = $('#selected-id', container);
+  if (selectedId) selectedId.textContent = 'minecraft:zombie';
+
+  // 座標をリセット
+  const posInput = $('#summon-pos', container);
+  if (posInput) posInput.value = '~ ~ ~';
+  $$('.coord-preset', container).forEach(b => {
+    b.classList.toggle('active', b.dataset.pos === '~ ~ ~');
+  });
+
+  // 名前をリセット
+  const nameInput = $('#summon-name', container);
+  if (nameInput) nameInput.value = '';
+
+  // 色をリセット
+  $$('.color-btn', container).forEach(b => {
+    b.classList.toggle('active', b.dataset.color === 'white');
+  });
+
+  // スタイルボタンをリセット
+  $$('.style-btn', container).forEach(b => b.classList.remove('active'));
+
+  // 名前プレビューをリセット
+  const previewText = $('#preview-text', container);
+  if (previewText) {
+    previewText.textContent = '名前を入力...';
+    previewText.style.cssText = 'color: #FFFFFF;';
+  }
+
+  // オプションをリセット
+  const noaiCheck = $('#summon-noai', container);
+  if (noaiCheck) noaiCheck.checked = false;
+  const silentCheck = $('#summon-silent', container);
+  if (silentCheck) silentCheck.checked = false;
+  const invulnerableCheck = $('#summon-invulnerable', container);
+  if (invulnerableCheck) invulnerableCheck.checked = false;
+  const persistenceCheck = $('#summon-persistence', container);
+  if (persistenceCheck) persistenceCheck.checked = true;
+  const glowingCheck = $('#summon-glowing', container);
+  if (glowingCheck) glowingCheck.checked = false;
+
+  // エフェクトリストをクリア
+  renderEffectList(container);
+
+  // エフェクト追加セレクトをリセット
+  const effectSelect = $('#effect-add-select', container);
+  if (effectSelect) effectSelect.value = '';
+
+  // Raw NBTをリセット
+  const rawInput = $('#summon-raw', container);
+  if (rawInput) rawInput.value = '';
+
+  // 折りたたみセクションを閉じる
+  $$('.collapsible', container).forEach(section => {
+    section.dataset.collapsed = 'true';
+    const content = section.querySelector('.section-content');
+    if (content) content.style.display = 'none';
+    const icon = section.querySelector('.collapse-icon');
+    if (icon) icon.textContent = '▶';
+  });
+
+  // コマンドを更新
   updateCommand(container);
 }
 

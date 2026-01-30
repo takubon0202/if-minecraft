@@ -9,6 +9,7 @@ import {
   renderJsonTextEditor,
   initJsonTextEditor,
   componentsToJson,
+  setEditorData,
 } from '../../components/json-text-editor.js';
 import { getInviconUrl } from '../../core/wiki-images.js';
 import { compareVersions, getVersionNote } from '../../core/version-compat.js';
@@ -26,6 +27,7 @@ export function render(manifest) {
         <img src="${getInviconUrl(manifest.iconItem || 'name_tag')}" class="tool-header-icon mc-wiki-image" width="32" height="32" alt="">
         <h2>${manifest.title}</h2>
         <span class="version-badge" id="title-version-badge">1.21+</span>
+        <button type="button" class="reset-btn" id="title-reset-btn" title="設定をリセット">リセット</button>
       </div>
       <p class="version-note" id="title-version-note"></p>
 
@@ -199,8 +201,52 @@ export function init(container) {
     updateCommand();
   });
 
+  // リセットボタン
+  $('#title-reset-btn', container)?.addEventListener('click', () => {
+    resetForm(container);
+  });
+
   // 初期表示
   updateVersionDisplay(container);
+  updateCommand();
+}
+
+/**
+ * フォームをリセット
+ */
+function resetForm(container) {
+  // ターゲットをデフォルトに
+  const targetSelect = $('#title-target', container);
+  if (targetSelect) targetSelect.value = '@a';
+
+  // 表示タイプをデフォルトに
+  const titleRadio = document.querySelector('input[name="title-type"][value="title"]');
+  if (titleRadio) {
+    titleRadio.checked = true;
+    // 表示状態も更新
+    const titleGroup = $('#title-text-group', container);
+    const subtitleGroup = $('#subtitle-text-group', container);
+    if (titleGroup) titleGroup.style.display = 'block';
+    if (subtitleGroup) subtitleGroup.style.display = 'none';
+  }
+
+  // タイミング設定をデフォルトに
+  const fadeInInput = $('#title-fadein', container);
+  const stayInput = $('#title-stay', container);
+  const fadeOutInput = $('#title-fadeout', container);
+  if (fadeInInput) fadeInInput.value = '10';
+  if (stayInput) stayInput.value = '70';
+  if (fadeOutInput) fadeOutInput.value = '20';
+
+  // タイミングを含めるチェックボックス
+  const includeTimesCheckbox = $('#title-include-times', container);
+  if (includeTimesCheckbox) includeTimesCheckbox.checked = true;
+
+  // エディタをリセット
+  setEditorData('title-editor', []);
+  setEditorData('subtitle-editor', []);
+
+  // コマンド更新
   updateCommand();
 }
 

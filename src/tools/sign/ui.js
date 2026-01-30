@@ -48,6 +48,7 @@ export function render(manifest) {
       <div class="tool-header">
         <img src="${getInviconUrl(manifest.iconItem || 'oak_sign')}" class="tool-header-icon mc-wiki-image" width="32" height="32" alt="">
         <h2>${manifest.title}</h2>
+        <button type="button" class="reset-btn" id="sign-reset-btn" title="設定をリセット">リセット</button>
       </div>
 
       <form class="tool-form" id="sign-form">
@@ -159,6 +160,54 @@ export function init(container) {
     el.addEventListener('change', updateCommand);
   });
 
+  // リセットボタン
+  $('#sign-reset-btn', container)?.addEventListener('click', () => {
+    resetForm(container);
+  });
+
+  updateCommand();
+}
+
+/**
+ * フォームをリセット
+ */
+function resetForm(container) {
+  // 看板の種類をデフォルトに
+  const signType = $('#sign-type', container);
+  if (signType) signType.value = 'oak_sign';
+
+  // 向きをデフォルトに
+  const facing = $('#sign-facing', container);
+  if (facing) facing.value = 'north';
+
+  // 座標をデフォルトに
+  const pos = $('#sign-pos', container);
+  if (pos) pos.value = '~ ~ ~';
+
+  // 各行をリセット
+  for (let i = 1; i <= 4; i++) {
+    const lineInput = $(`#sign-line${i}`, container);
+    const colorSelect = $(`#sign-color${i}`, container);
+    const boldCheck = $(`#sign-bold${i}`, container);
+    const italicCheck = $(`#sign-italic${i}`, container);
+
+    if (lineInput) lineInput.value = '';
+    if (colorSelect) colorSelect.value = '';
+    if (boldCheck) boldCheck.checked = false;
+    if (italicCheck) italicCheck.checked = false;
+  }
+
+  // オプションをリセット
+  const glowing = $('#sign-glowing', container);
+  const waxed = $('#sign-waxed', container);
+  if (glowing) glowing.checked = false;
+  if (waxed) waxed.checked = false;
+
+  // 出力形式をデフォルトに
+  const setblockRadio = container.querySelector('input[name="sign-output"][value="setblock"]');
+  if (setblockRadio) setblockRadio.checked = true;
+
+  // コマンド更新
   updateCommand();
 }
 

@@ -313,6 +313,32 @@ body {
   margin-left: auto;
 }
 
+/* --- Reset Button --- */
+.reset-btn {
+  padding: 4px 12px;
+  font-size: 0.75rem;
+  font-family: var(--mc-font-mono);
+  background: linear-gradient(180deg, #888 0%, #666 100%);
+  color: white;
+  border: 2px solid #555;
+  border-radius: 4px;
+  cursor: pointer;
+  text-shadow: 1px 1px 0 rgba(0,0,0,0.3);
+  box-shadow: 0 2px 0 rgba(0,0,0,0.2);
+  transition: all 0.15s ease;
+}
+
+.reset-btn:hover {
+  background: linear-gradient(180deg, #999 0%, #777 100%);
+  border-color: #666;
+}
+
+.reset-btn:active {
+  background: linear-gradient(180deg, #666 0%, #555 100%);
+  box-shadow: none;
+  transform: translateY(1px);
+}
+
 /* --- Version Note --- */
 .version-note {
   margin: var(--mc-space-xs) 0 var(--mc-space-md) 0;

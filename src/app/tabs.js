@@ -1,5 +1,6 @@
 /**
  * Tabs Manager - タブ管理
+ * タブ最大数制限、スクロール対応
  */
 
 import { $, empty, createElement, delegate } from '../core/dom.js';
@@ -9,6 +10,7 @@ import router from '../core/router.js';
 import { closeTool } from './shell.js';
 
 let tabIdCounter = 0;
+const MAX_TABS = 12; // タブの最大数
 
 /**
  * タブシステムを初期化
@@ -54,7 +56,19 @@ export function initTabs() {
  * @param {string} title - タブタイトル
  */
 export function addTab(toolId, title) {
-  const tabs = workspaceStore.get('tabs');
+  let tabs = workspaceStore.get('tabs');
+
+  // 最大タブ数チェック - 古いタブを自動で閉じる
+  if (tabs.length >= MAX_TABS) {
+    // 最も古いタブを閉じる（アクティブでないもの優先）
+    const activeTabId = workspaceStore.get('activeTabId');
+    const oldestInactiveTab = tabs.find(t => t.id !== activeTabId);
+    if (oldestInactiveTab) {
+      closeTab(oldestInactiveTab.id);
+      tabs = workspaceStore.get('tabs'); // 更新後のタブを取得
+    }
+  }
+
   const tabId = `tab-${++tabIdCounter}`;
 
   const newTab = {

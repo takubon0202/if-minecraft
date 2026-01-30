@@ -41,6 +41,7 @@ export function render(manifest) {
           </div>
         </div>
         <span class="version-badge">1.21.5+</span>
+        <button type="button" class="reset-btn" id="json-text-reset-btn" title="設定をリセット">リセット</button>
       </div>
 
       <form class="tool-form jt-form" id="json-text-form">
@@ -495,7 +496,50 @@ export function init(container) {
     }
   }, 100));
 
+  // リセットボタン
+  $('#json-text-reset-btn', container)?.addEventListener('click', () => {
+    resetForm(container, segmentsContainer);
+  });
+
   // 初期コマンド生成
+  updateCommand(container);
+}
+
+/**
+ * フォームをリセット
+ */
+function resetForm(container, segmentsContainer) {
+  // 状態をデフォルトに戻す
+  formState = {
+    segments: [createDefaultSegment()],
+    outputFormat: 'tellraw',
+    selector: '@a',
+  };
+
+  // 出力形式タブをリセット
+  $$('.format-tab', container).forEach(t => t.classList.remove('active'));
+  const defaultFormatTab = $(`.format-tab[data-format="tellraw"]`, container);
+  if (defaultFormatTab) {
+    defaultFormatTab.classList.add('active');
+  }
+
+  // セレクターボタンをリセット
+  $$('.selector-btn', container).forEach(b => b.classList.remove('active'));
+  const defaultSelectorBtn = $(`.selector-btn[data-selector="@a"]`, container);
+  if (defaultSelectorBtn) {
+    defaultSelectorBtn.classList.add('active');
+  }
+
+  // セレクター行を表示
+  const selectorRow = $('.selector-row', container);
+  if (selectorRow) {
+    selectorRow.style.display = 'flex';
+  }
+
+  // セグメントを再レンダリング
+  renderAllSegments(segmentsContainer);
+
+  // コマンドを更新
   updateCommand(container);
 }
 

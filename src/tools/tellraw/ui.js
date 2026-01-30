@@ -9,6 +9,7 @@ import {
   renderJsonTextEditor,
   initJsonTextEditor,
   componentsToJson,
+  setEditorData,
   MC_COLORS,
 } from '../../components/json-text-editor.js';
 import { getInviconUrl } from '../../core/wiki-images.js';
@@ -26,6 +27,7 @@ export function render(manifest) {
         <img src="${getInviconUrl(manifest.iconItem || 'paper')}" class="tool-header-icon mc-wiki-image" width="32" height="32" alt="">
         <h2>${manifest.title}</h2>
         <span class="version-badge">1.21.5+</span>
+        <button type="button" class="reset-btn" id="tellraw-reset-btn" title="設定をリセット">リセット</button>
       </div>
 
       <!-- ゲーム画面風プレビュー -->
@@ -105,8 +107,46 @@ export function init(container) {
     updateCommand();
   });
 
+  // リセットボタン
+  $('#tellraw-reset-btn', container)?.addEventListener('click', () => {
+    resetForm(container);
+  });
+
   // 初期表示
   updateVersionDisplay();
+  updateCommand();
+}
+
+/**
+ * フォームをリセット
+ */
+function resetForm(container) {
+  // ターゲットをデフォルトに
+  const targetSelect = $('#tellraw-target', container);
+  if (targetSelect) targetSelect.value = '@a';
+
+  // クリックイベントをリセット
+  const clickAction = container.querySelector('.jte-click-action');
+  const clickValue = container.querySelector('.jte-click-value');
+  if (clickAction) clickAction.value = '';
+  if (clickValue) {
+    clickValue.value = '';
+    clickValue.style.display = 'none';
+  }
+
+  // ホバーイベントをリセット
+  const hoverAction = container.querySelector('.jte-hover-action');
+  const hoverValue = container.querySelector('.jte-hover-value');
+  if (hoverAction) hoverAction.value = '';
+  if (hoverValue) {
+    hoverValue.value = '';
+    hoverValue.style.display = 'none';
+  }
+
+  // エディタをリセット
+  setEditorData('tellraw-editor', []);
+
+  // コマンド更新
   updateCommand();
 }
 

@@ -16,6 +16,7 @@ export function render(manifest) {
       <div class="tool-header">
         <img src="${getInviconUrl(manifest.iconItem || 'filled_map')}" class="tool-header-icon mc-wiki-image" width="32" height="32" alt="">
         <h2>${manifest.title}</h2>
+        <button type="button" class="reset-btn" id="coordinate-reset-btn" title="設定をリセット">リセット</button>
       </div>
 
       <!-- ネザー⇔オーバーワールド変換 -->
@@ -307,7 +308,55 @@ export function init(container) {
     updateTpCommand(container);
   });
 
+  // リセットボタン
+  $('#coordinate-reset-btn', container)?.addEventListener('click', () => {
+    resetForm(container);
+  });
+
   // 初期計算
+  updateDistance(container);
+  updateChunk(container);
+  updateTpCommand(container);
+}
+
+/**
+ * フォームをリセット
+ */
+function resetForm(container) {
+  // オーバーワールド座標をリセット
+  $('#ow-x', container).value = 0;
+  $('#ow-y', container).value = 64;
+  $('#ow-z', container).value = 0;
+
+  // ネザー座標をリセット
+  $('#nether-x', container).value = 0;
+  $('#nether-y', container).value = 64;
+  $('#nether-z', container).value = 0;
+
+  // 距離計算座標をリセット
+  $('#dist-a-x', container).value = 0;
+  $('#dist-a-y', container).value = 64;
+  $('#dist-a-z', container).value = 0;
+  $('#dist-b-x', container).value = 100;
+  $('#dist-b-y', container).value = 64;
+  $('#dist-b-z', container).value = 100;
+
+  // チャンク計算座標をリセット
+  $('#block-x', container).value = 0;
+  $('#block-z', container).value = 0;
+
+  // テレポート設定をリセット
+  $('#tp-target', container).value = '@s';
+  $('#tp-x', container).value = '~';
+  $('#tp-y', container).value = '~';
+  $('#tp-z', container).value = '~';
+  $('#tp-facing', container).checked = false;
+  $('#tp-facing-options', container).style.display = 'none';
+  $('#tp-face-x', container).value = '~';
+  $('#tp-face-y', container).value = '~';
+  $('#tp-face-z', container).value = '~';
+
+  // 計算結果を更新
   updateDistance(container);
   updateChunk(container);
   updateTpCommand(container);

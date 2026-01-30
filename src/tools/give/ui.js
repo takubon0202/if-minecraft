@@ -31,6 +31,7 @@ export function render(manifest) {
         <img src="${getInviconUrl(manifest.iconItem || 'chest')}" class="tool-header-icon mc-wiki-image" width="32" height="32" alt="">
         <h2>${manifest.title}</h2>
         <span class="version-badge" id="give-version-badge">1.21+</span>
+        <button type="button" class="reset-btn" id="give-reset-btn" title="設定をリセット">リセット</button>
       </div>
       <p class="version-note" id="give-version-note"></p>
 
@@ -188,8 +189,79 @@ export function init(container) {
     updateCommand(container);
   });
 
+  // リセットボタン
+  $('#give-reset-btn', container)?.addEventListener('click', () => {
+    resetForm(container);
+  });
+
   // 初期表示
   updateVersionDisplay(container);
+  updateCommand(container);
+}
+
+/**
+ * フォームをリセット
+ */
+function resetForm(container) {
+  // フォーム状態をリセット
+  formState = {
+    target: '@p',
+    item: 'minecraft:diamond_sword',
+    count: 1,
+    customName: '',
+    lore: '',
+    unbreakable: false,
+    enchantments: [],
+    rawComponents: '',
+  };
+
+  // ターゲット選択をリセット
+  const targetSelect = $('#give-target', container);
+  if (targetSelect) targetSelect.value = '@p';
+
+  // 個数をリセット
+  const countInput = $('#give-count', container);
+  if (countInput) countInput.value = '1';
+
+  // アイテムIDをリセット
+  const itemInput = $('#give-item', container);
+  if (itemInput) itemInput.value = 'minecraft:diamond_sword';
+
+  // カスタム名をリセット
+  const nameInput = $('#give-name', container);
+  if (nameInput) nameInput.value = '';
+
+  // 説明文をリセット
+  const loreInput = $('#give-lore', container);
+  if (loreInput) loreInput.value = '';
+
+  // 耐久無限をリセット
+  const unbreakable = $('#give-unbreakable', container);
+  if (unbreakable) unbreakable.checked = false;
+
+  // エンチャントリストをリセット（最初の1行だけ残す）
+  const enchantList = $('#enchant-list', container);
+  if (enchantList) {
+    const items = $$('.enchant-item', enchantList);
+    items.forEach((item, index) => {
+      if (index === 0) {
+        // 最初の行はリセット
+        const select = item.querySelector('.enchant-select');
+        if (select) select.value = '';
+        const level = item.querySelector('.enchant-level');
+        if (level) level.value = '1';
+      } else {
+        // 追加された行は削除
+        item.remove();
+      }
+    });
+  }
+
+  // Raw Componentsをリセット
+  const rawInput = $('#give-raw', container);
+  if (rawInput) rawInput.value = '';
+
+  // プレビューとコマンドを更新
   updateCommand(container);
 }
 

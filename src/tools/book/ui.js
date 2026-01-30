@@ -2,13 +2,14 @@
  * Book Generator - UI
  */
 
-import { $, $$, createElement, debounce, delegate } from '../../core/dom.js';
+import { $, createElement, debounce } from '../../core/dom.js';
 import { setOutput } from '../../app/sidepanel.js';
 import {
   renderJsonTextEditor,
   initJsonTextEditor,
   addSegment,
   getEditorData,
+  setEditorData,
   componentsToJson,
 } from '../../components/json-text-editor.js';
 import { getInviconUrl } from '../../core/wiki-images.js';
@@ -25,6 +26,7 @@ export function render(manifest) {
       <div class="tool-header">
         <img src="${getInviconUrl(manifest.iconItem || 'written_book')}" class="tool-header-icon mc-wiki-image" width="32" height="32" alt="">
         <h2>${manifest.title}</h2>
+        <button type="button" class="reset-btn" id="book-reset-btn" title="設定をリセット">リセット</button>
       </div>
 
       <form class="tool-form" id="book-form">
@@ -147,7 +149,45 @@ export function init(container) {
   $('#book-title', container)?.addEventListener('input', updatePreview);
   $('#book-author', container)?.addEventListener('input', updatePreview);
 
+  // リセットボタン
+  $('#book-reset-btn', container)?.addEventListener('click', () => {
+    resetForm(container);
+  });
+
   updateNavButtons();
+  updateCommand();
+}
+
+/**
+ * フォームをリセット
+ */
+function resetForm(container) {
+  // 本のタイトルをデフォルトに
+  const titleInput = $('#book-title', container);
+  if (titleInput) titleInput.value = '冒険の書';
+
+  // 著者名をデフォルトに
+  const authorInput = $('#book-author', container);
+  if (authorInput) authorInput.value = 'Steve';
+
+  // 個数をデフォルトに
+  const countInput = $('#book-count', container);
+  if (countInput) countInput.value = '1';
+
+  // ページをリセット（1ページだけに）
+  pages = [[]];
+  currentPage = 0;
+
+  // エディタをリセット
+  setEditorData('book-editor', []);
+
+  // ナビゲーション更新
+  updateNavButtons();
+
+  // プレビュー更新
+  updatePreview();
+
+  // コマンド更新
   updateCommand();
 }
 

@@ -133,6 +133,7 @@ export function render(manifest) {
         <img src="${getInviconUrl(manifest.iconItem || 'potion')}" class="tool-header-icon mc-wiki-image" width="32" height="32" alt="">
         <h2>${manifest.title}</h2>
         <span class="version-badge" id="potion-version-badge">1.21+</span>
+        <button type="button" class="reset-btn" id="potion-reset-btn" title="設定をリセット">リセット</button>
       </div>
       <p class="version-note" id="potion-version-note"></p>
 
@@ -431,8 +432,65 @@ export function init(container) {
     updateCommand(container);
   });
 
+  // リセットボタン
+  $('#potion-reset-btn', container)?.addEventListener('click', () => {
+    resetForm(container);
+  });
+
   // 初期表示
   updateVersionDisplay(container);
+  updatePreview(container);
+  updateCommand(container);
+}
+
+/**
+ * フォームをリセット
+ */
+function resetForm(container) {
+  // エフェクトをクリア
+  selectedEffects = [];
+  searchQuery = '';
+
+  // 検索フィールドをクリア
+  const searchInput = $('#effect-search', container);
+  if (searchInput) searchInput.value = '';
+
+  // ポーションタイプを通常に戻す
+  $$('.type-tab', container).forEach((t, i) => {
+    t.classList.toggle('active', i === 0);
+  });
+
+  // 個数とカスタム名をリセット
+  const countInput = $('#potion-count', container);
+  if (countInput) countInput.value = '1';
+  const nameInput = $('#potion-name', container);
+  if (nameInput) nameInput.value = '';
+
+  // カスタム色をオフに
+  const useColor = $('#potion-use-color', container);
+  if (useColor) useColor.checked = false;
+  const colorRow = $('#color-picker-row', container);
+  if (colorRow) colorRow.style.display = 'none';
+  const colorInput = $('#potion-color', container);
+  if (colorInput) colorInput.value = '#3F76E4';
+  const colorHex = $('#potion-color-hex', container);
+  if (colorHex) colorHex.value = '#3F76E4';
+  const colorPreview = $('#color-preview', container);
+  if (colorPreview) colorPreview.style.backgroundColor = '#3F76E4';
+
+  // エフェクトタブを有益に戻す
+  $$('.effect-tab', container).forEach((t, i) => {
+    t.classList.toggle('active', i === 0);
+  });
+
+  // エフェクトグリッドをリセット
+  $$('.effect-item.selected', container).forEach(el => el.classList.remove('selected'));
+  renderEffectGrid(container, 'beneficial');
+
+  // 選択されたエフェクトの表示を更新
+  renderSelectedEffects(container);
+
+  // プレビューとコマンドを更新
   updatePreview(container);
   updateCommand(container);
 }

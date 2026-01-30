@@ -57,6 +57,7 @@ export function render(manifest) {
       <div class="tool-header">
         <img src="${getInviconUrl(manifest.iconItem || 'compass')}" class="tool-header-icon mc-wiki-image" width="32" height="32" alt="">
         <h2>${manifest.title}</h2>
+        <button type="button" class="reset-btn" id="target-selector-reset-btn" title="設定をリセット">リセット</button>
       </div>
 
       <form class="tool-form" id="selector-form">
@@ -180,6 +181,38 @@ export function init(container) {
     setTimeout(() => target.classList.remove('copied'), 1000);
   });
 
+  // リセットボタン
+  $('#target-selector-reset-btn', container)?.addEventListener('click', () => {
+    resetForm(container);
+  });
+
+  updateOutput();
+}
+
+/**
+ * フォームをリセット
+ */
+function resetForm(container) {
+  // 基本セレクターをデフォルト(@a)に戻す
+  const baseSelector = $('#base-selector', container);
+  if (baseSelector) {
+    baseSelector.value = '@a';
+    $('#selector-desc', container).textContent = 'すべてのプレイヤーを選択';
+  }
+
+  // アクティブな引数をクリア
+  activeArgs = {};
+
+  // 引数ボタンのactiveクラスをすべて削除
+  $$('.arg-btn', container).forEach(btn => btn.classList.remove('active'));
+
+  // アクティブな引数エリアを空のメッセージに戻す
+  const list = $('#active-args', container);
+  if (list) {
+    list.innerHTML = '<p class="empty-message">引数ボタンをクリックして追加</p>';
+  }
+
+  // 出力を更新
   updateOutput();
 }
 

@@ -364,6 +364,7 @@ export function render(manifest) {
         <img src="${getInviconUrl(manifest.iconItem || 'zombie_head')}" class="tool-header-icon mc-wiki-image" width="32" height="32" alt="">
         <h2>${manifest.title}</h2>
         <span class="version-badge">1.21.5+</span>
+        <button type="button" class="reset-btn" id="summon-zombie-reset-btn" title="設定をリセット">リセット</button>
       </div>
 
       <form class="tool-form" id="summon-zombie-form">
@@ -648,7 +649,50 @@ export function init(container) {
   $('.modal-overlay', container)?.addEventListener('click', () => closeEnchantModal(container));
   $('#modal-apply', container)?.addEventListener('click', () => applyEnchantments(container));
 
+  // リセットボタン
+  $('#summon-zombie-reset-btn', container)?.addEventListener('click', () => {
+    resetForm(container);
+  });
+
   // 初期コマンド生成
+  updateCommand();
+}
+
+/**
+ * フォームをリセット
+ */
+function resetForm(container) {
+  // 状態をデフォルトに戻す
+  state = {
+    zombieType: 'zombie',
+    pos: '~ ~ ~',
+    equipment: {
+      head: { item: '', enchants: [], dropChance: 0.085 },
+      chest: { item: '', enchants: [], dropChance: 0.085 },
+      legs: { item: '', enchants: [], dropChance: 0.085 },
+      feet: { item: '', enchants: [], dropChance: 0.085 },
+      mainhand: { item: '', enchants: [], dropChance: 0.085 },
+      offhand: { item: '', enchants: [], dropChance: 0.085 },
+    },
+    attributes: {},
+    customName: '',
+    glowing: false,
+    noAI: false,
+    silent: false,
+    invulnerable: false,
+    persistenceRequired: true,
+    canBreakDoors: false,
+    isBaby: false,
+  };
+
+  // 属性セクションを非表示
+  $('#use-attributes', container).checked = false;
+  $('#attributes-section', container).style.display = 'none';
+
+  // UIを状態から同期
+  syncUIFromState(container);
+
+  // コマンドを更新
   updateCommand();
 }
 

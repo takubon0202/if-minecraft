@@ -470,6 +470,7 @@ export function render(manifest) {
         <img src="${getInviconUrl(manifest.iconItem || 'enchanted_book')}" class="tool-header-icon mc-wiki-image" width="32" height="32" alt="">
         <h2>${manifest.title}</h2>
         <span class="version-badge" id="enchant-version-badge">1.21+</span>
+        <button type="button" class="reset-btn" id="enchant-reset-btn" title="設定をリセット">リセット</button>
       </div>
       <p class="version-note" id="enchant-version-note"></p>
 
@@ -891,7 +892,102 @@ export function init(container) {
     updateCommand(container);
   });
 
+  // リセットボタン
+  $('#enchant-reset-btn', container)?.addEventListener('click', () => {
+    resetForm(container);
+  });
+
   updateVersionDisplay(container);
+  updatePreview(container);
+  updateCommand(container);
+}
+
+/**
+ * フォームをリセット
+ */
+function resetForm(container) {
+  // エンチャントと属性をクリア
+  selectedEnchants = [];
+  selectedAttributes = [];
+  searchQuery = '';
+
+  // 検索フィールドをクリア
+  const searchInput = $('#enchant-search', container);
+  if (searchInput) searchInput.value = '';
+
+  // アイテムカテゴリを剣にリセット
+  const catSelect = $('#item-category', container);
+  if (catSelect) {
+    catSelect.value = 'sword';
+    catSelect.disabled = false;
+    // アイテムリストを更新
+    const itemSelect = $('#item-select', container);
+    if (itemSelect) {
+      itemSelect.innerHTML = ITEM_CATEGORIES.sword.items.map(item =>
+        `<option value="${item.id}">${item.name}</option>`
+      ).join('');
+      itemSelect.disabled = false;
+    }
+  }
+
+  // カスタムアイテムをオフに
+  const useCustom = $('#use-custom-item', container);
+  if (useCustom) useCustom.checked = false;
+  const customInput = $('#custom-item-id', container);
+  if (customInput) {
+    customInput.disabled = true;
+    customInput.value = '';
+  }
+
+  // エンチャントの選択状態をクリア
+  $$('.enchant-item.selected', container).forEach(el => el.classList.remove('selected'));
+  filterEnchants(container);
+
+  // 属性セクションを閉じる
+  const useAttrs = $('#use-attributes', container);
+  if (useAttrs) useAttrs.checked = false;
+  const attrsSection = $('#attributes-section', container);
+  if (attrsSection) attrsSection.style.display = 'none';
+
+  // 属性チェックをリセット
+  $$('.attr-check', container).forEach(el => {
+    el.checked = false;
+  });
+  $$('.attr-value', container).forEach(el => {
+    el.disabled = true;
+    const attrId = el.dataset.attr;
+    const attr = ATTRIBUTES.find(a => a.id === attrId);
+    if (attr) el.value = attr.default;
+  });
+
+  // オプションをリセット
+  const optUnbreakable = $('#opt-unbreakable', container);
+  if (optUnbreakable) optUnbreakable.checked = false;
+  const optHideEnchants = $('#opt-hide-enchants', container);
+  if (optHideEnchants) optHideEnchants.checked = false;
+  const optHideUnbreakable = $('#opt-hide-unbreakable', container);
+  if (optHideUnbreakable) optHideUnbreakable.checked = false;
+
+  // カスタム名と個数をリセット
+  const customName = $('#custom-name', container);
+  if (customName) customName.value = '';
+  const itemCount = $('#item-count', container);
+  if (itemCount) itemCount.value = '1';
+
+  // 色選択をリセット
+  $$('.color-btn.selected', container).forEach(btn => btn.classList.remove('selected'));
+  const whiteBtn = $('.color-btn[data-color="white"]', container);
+  if (whiteBtn) whiteBtn.classList.add('selected');
+  const previewText = $('#color-preview-text', container);
+  if (previewText) {
+    previewText.style.color = '#FFFFFF';
+    previewText.textContent = 'カスタム名';
+  }
+
+  // 選択されたエンチャントの表示を更新
+  renderSelectedEnchants(container);
+
+  // プレビューとコマンドを更新
   updatePreview(container);
   updateCommand(container);
 }

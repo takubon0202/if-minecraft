@@ -24,6 +24,8 @@ const ITEM_FILE_MAP = {
   'clock': 'Clock.gif',
   // === 経験値の瓶（GIF形式） ===
   'experience_bottle': 'Bottle_o%27_Enchanting.gif',
+  // === ネザースター（GIF形式 - アニメーション対応） ===
+  'nether_star': 'Nether_Star.gif',
   // === ポーション系 - ITEM_NAME_MAPで個別に定義（GIF形式は使用しない） ===
   // 注意: Wikiではポーションは効果ごとに異なる画像があるため、
   // 基本アイテム（Water_Bottle等）はITEM_NAME_MAPで定義
@@ -63,7 +65,6 @@ const ITEM_NAME_MAP = {
   'dragon_head': 'Dragon_Head',
 
   // === 特殊アイテム ===
-  'nether_star': 'Nether_Star',
   'redstone': 'Redstone_Dust',
   'glowstone_dust': 'Glowstone_Dust',
   'blaze_powder': 'Blaze_Powder',

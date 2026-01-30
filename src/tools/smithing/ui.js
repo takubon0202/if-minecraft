@@ -144,6 +144,7 @@ export function render(manifest) {
       <div class="tool-header">
         <img src="${getInviconUrl(manifest.iconItem || 'smithing_table')}" class="tool-header-icon mc-wiki-image" width="32" height="32" alt="">
         <h2>${manifest.title}</h2>
+        <button type="button" class="reset-btn" id="smithing-reset-btn" title="設定をリセット">リセット</button>
       </div>
 
       <form class="tool-form" id="smithing-form">
@@ -422,7 +423,44 @@ export function init(container) {
     });
   }
 
+  // リセットボタン
+  $('#smithing-reset-btn', container)?.addEventListener('click', () => {
+    resetForm(container);
+  });
+
   // 初期コマンド生成
+  updateCommand();
+}
+
+/**
+ * フォームをリセット
+ */
+function resetForm(container) {
+  // 状態をデフォルトに戻す
+  state = {
+    armorMaterial: 'diamond',
+    armorType: 'chestplate',
+    pattern: 'coast',
+    trimMaterial: 'quartz',
+    fullSet: false,
+    searchQuery: '',
+  };
+
+  // 検索フィールドをクリア
+  const searchInput = $('#smithing-search', container);
+  if (searchInput) {
+    searchInput.value = '';
+  }
+
+  // フルセットチェックボックスをリセット
+  const fullSetCheckbox = $('#generate-full-set', container);
+  if (fullSetCheckbox) {
+    fullSetCheckbox.checked = false;
+  }
+
+  // UIを更新
+  updateAllUI(container);
+  updatePatternGrid(container);
   updateCommand();
 }
 
