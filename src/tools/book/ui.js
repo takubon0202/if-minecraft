@@ -263,9 +263,9 @@ function updateCommand() {
     return componentsToJson(pageComponents);
   });
 
-  // コンポーネント形式（1.20.5+）
+  // コンポーネント形式（1.20.5+）- 名前空間付き
   const components = [
-    `written_book_content={pages:[${pagesJson.join(',')}],title:"${escapeString(title)}",author:"${escapeString(author)}"}`,
+    `minecraft:written_book_content={pages:[${pagesJson.join(',')}],title:"${escapeString(title)}",author:"${escapeString(author)}"}`,
   ];
 
   const command = `/give @p minecraft:written_book[${components.join(',')}]${count > 1 ? ` ${count}` : ''}`;

@@ -820,9 +820,10 @@ function updateCommand(container) {
 function generateComponentCommand(container, potionType, count, customName, useColor, color) {
   const components = [];
 
-  // カスタム名
+  // カスタム名（名前空間付き、JSON Text Component形式）
   if (customName) {
-    components.push(`custom_name='"${customName}"'`);
+    const textComponent = { text: customName, italic: false };
+    components.push(`minecraft:custom_name='${JSON.stringify(JSON.stringify(textComponent))}'`);
   }
 
   // ポーション効果
@@ -837,7 +838,7 @@ function generateComponentCommand(container, potionType, count, customName, useC
 
       return `{id:"minecraft:${e.id}",amplifier:${amplifier},duration:${duration}}`;
     }).join(',');
-    components.push(`potion_contents={custom_effects:[${effectsJson}]}`);
+    components.push(`minecraft:potion_contents={custom_effects:[${effectsJson}]}`);
   }
 
   // カスタム色
@@ -845,11 +846,11 @@ function generateComponentCommand(container, potionType, count, customName, useC
     const colorInt = parseInt(color.replace('#', ''), 16);
     if (selectedEffects.length > 0) {
       const lastComp = components[components.length - 1];
-      if (lastComp && lastComp.startsWith('potion_contents=')) {
+      if (lastComp && lastComp.startsWith('minecraft:potion_contents=')) {
         components[components.length - 1] = lastComp.replace('}', `,custom_color:${colorInt}}`);
       }
     } else {
-      components.push(`potion_contents={custom_color:${colorInt}}`);
+      components.push(`minecraft:potion_contents={custom_color:${colorInt}}`);
     }
   }
 

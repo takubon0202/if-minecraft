@@ -252,16 +252,16 @@ function updateCommand() {
 
   let command;
   if (outputType === 'setblock') {
-    // /setblock形式
+    // /setblock形式（NBT形式）
     const frontText = `front_text:{messages:[${lines.join(',')}]${glowing ? ',has_glowing_text:1b' : ''}}`;
     const blockState = `[facing=${facing}]`;
     const nbt = `{${waxed ? 'is_waxed:1b,' : ''}${frontText}}`;
     command = `/setblock ${pos} minecraft:${signType}${blockState}${nbt}`;
   } else {
-    // /give形式
-    const frontText = `front_text={messages:[${lines.join(',')}]${glowing ? ',has_glowing_text:1b' : ''}}`;
+    // /give形式（コンポーネント形式、名前空間付き）
+    const frontText = `minecraft:front_text={messages:[${lines.join(',')}]${glowing ? ',has_glowing_text:1b' : ''}}`;
     const components = [frontText];
-    if (waxed) components.push('is_waxed={}');
+    if (waxed) components.push('minecraft:is_waxed={}');
     command = `/give @p minecraft:${signType}[${components.join(',')}]`;
   }
 

@@ -597,8 +597,8 @@ function updateCommand() {
   // 通常のトリム
   const generateItem = (type) => {
     const itemId = `minecraft:${state.armorMaterial}_${type}`;
-    // 1.21.5コンポーネント形式
-    const trimComponent = `trim={pattern:"minecraft:${state.pattern}",material:"minecraft:${state.trimMaterial}"}`;
+    // 1.21.5コンポーネント形式（名前空間付き）
+    const trimComponent = `minecraft:trim={pattern:"minecraft:${state.pattern}",material:"minecraft:${state.trimMaterial}"}`;
     return `/give @p ${itemId}[${trimComponent}]`;
   };
 

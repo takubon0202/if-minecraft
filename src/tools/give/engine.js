@@ -50,27 +50,30 @@ function generateGiveComponent(state, version) {
   // アイテムID
   const itemId = item.includes(':') ? item : `minecraft:${item}`;
 
+  // 1.21.5以降は簡略形式が使用可能
+  const useSimplifiedForm = compareVersions(version, '1.21.5') >= 0;
+
   // コンポーネントを構築
   const components = [];
 
-  // カスタム名
+  // カスタム名（名前空間付き）
   if (customName) {
     const escapedName = escapeJsonString(customName);
-    components.push(`custom_name='{"text":"${escapedName}","italic":false}'`);
+    components.push(`minecraft:custom_name='{"text":"${escapedName}","italic":false}'`);
   }
 
-  // 説明文
+  // 説明文（名前空間付き）
   if (lore) {
     const loreLines = lore.split('\n').filter(l => l.trim());
     if (loreLines.length > 0) {
       const loreJson = loreLines.map(line => `'{"text":"${escapeJsonString(line)}"}'`).join(',');
-      components.push(`lore=[${loreJson}]`);
+      components.push(`minecraft:lore=[${loreJson}]`);
     }
   }
 
-  // 耐久無限
+  // 耐久無限（名前空間付き）
   if (unbreakable) {
-    components.push('unbreakable={}');
+    components.push('minecraft:unbreakable={}');
   }
 
   // エンチャント
@@ -78,8 +81,15 @@ function generateGiveComponent(state, version) {
     const enchantLevels = enchantments.map(e => `"minecraft:${e.id}":${e.level}`).join(',');
     // エンチャントの本は stored_enchantments を使用
     const isEnchantedBook = itemId.includes('enchanted_book');
-    const componentName = isEnchantedBook ? 'stored_enchantments' : 'enchantments';
-    components.push(`${componentName}={levels:{${enchantLevels}}}`);
+    const componentName = isEnchantedBook ? 'minecraft:stored_enchantments' : 'minecraft:enchantments';
+
+    if (useSimplifiedForm) {
+      // 1.21.5+: 簡略形式
+      components.push(`${componentName}={${enchantLevels}}`);
+    } else {
+      // 1.20.5-1.21.4: 長い形式（levelsラッパー必須）
+      components.push(`${componentName}={levels:{${enchantLevels}}}`);
+    }
   }
 
   // Raw Components

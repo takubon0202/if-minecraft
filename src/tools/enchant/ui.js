@@ -9,7 +9,7 @@ import { workspaceStore } from '../../core/store.js';
 import { setOutput } from '../../app/sidepanel.js';
 import { getInviconUrl } from '../../core/wiki-images.js';
 import { applyTooltip } from '../../core/mc-tooltip.js';
-import { getVersionGroup, getVersionNote, ENCHANT_ID_MAP } from '../../core/version-compat.js';
+import { getVersionGroup, getVersionNote, compareVersions, ENCHANT_ID_MAP } from '../../core/version-compat.js';
 
 // 最大レベル定数
 const ABSOLUTE_MAX_LEVEL = 255;  // ゲーム内で設定可能な絶対最大値
@@ -1280,7 +1280,7 @@ function updateCommand(container) {
 
   if (group === 'latest' || group === 'component') {
     // 1.20.5+: コンポーネント形式
-    command = generateComponentCommand(item, count, customName, nameColor, unbreakable, hideEnchants, hideUnbreakable, useAttributes, container);
+    command = generateComponentCommand(item, count, customName, nameColor, unbreakable, hideEnchants, hideUnbreakable, useAttributes, container, version);
   } else if (group === 'nbt-modern' || group === 'nbt-legacy') {
     // 1.13-1.20.4: NBT形式
     command = generateNBTCommand(item, count, customName, nameColor, unbreakable, useAttributes, container);
@@ -1301,9 +1301,13 @@ function updateCommand(container) {
 
 /**
  * コンポーネント形式（1.20.5+）
+ * @param {string} version - Minecraftバージョン
  */
-function generateComponentCommand(item, count, customName, nameColor, unbreakable, hideEnchants, hideUnbreakable, useAttributes, container) {
+function generateComponentCommand(item, count, customName, nameColor, unbreakable, hideEnchants, hideUnbreakable, useAttributes, container, version = '1.21') {
   const components = [];
+
+  // 1.21.5以降は簡略形式が使用可能
+  const useSimplifiedForm = compareVersions(version, '1.21.5') >= 0;
 
   if (customName) {
     // カスタム名にJSON Text Componentを使用（色、italic:false）
@@ -1314,18 +1318,31 @@ function generateComponentCommand(item, count, customName, nameColor, unbreakabl
     if (nameColor && nameColor !== 'white') {
       textComponent.color = nameColor;
     }
-    components.push(`custom_name='${JSON.stringify(JSON.stringify(textComponent))}'`);
+    components.push(`minecraft:custom_name='${JSON.stringify(JSON.stringify(textComponent))}'`);
   }
 
   if (selectedEnchants.length > 0) {
-    const levels = selectedEnchants.map(e => `"minecraft:${e.id}":${e.level}`).join(',');
     // エンチャントの本は stored_enchantments を使用
     const isEnchantedBook = item.includes('enchanted_book');
-    const componentName = isEnchantedBook ? 'stored_enchantments' : 'enchantments';
-    if (hideEnchants) {
-      components.push(`${componentName}={levels:{${levels}},show_in_tooltip:false}`);
+    const componentName = isEnchantedBook ? 'minecraft:stored_enchantments' : 'minecraft:enchantments';
+
+    if (useSimplifiedForm) {
+      // 1.21.5+: 簡略形式（levelsラッパー不要）
+      const enchantPairs = selectedEnchants.map(e => `"minecraft:${e.id}":${e.level}`).join(',');
+      if (hideEnchants) {
+        // show_in_tooltip使用時は長い形式が必要
+        components.push(`${componentName}={levels:{${enchantPairs}},show_in_tooltip:false}`);
+      } else {
+        components.push(`${componentName}={${enchantPairs}}`);
+      }
     } else {
-      components.push(`${componentName}={levels:{${levels}}}`);
+      // 1.20.5-1.21.4: 長い形式（levelsラッパー必須）
+      const enchantPairs = selectedEnchants.map(e => `"minecraft:${e.id}":${e.level}`).join(',');
+      if (hideEnchants) {
+        components.push(`${componentName}={levels:{${enchantPairs}},show_in_tooltip:false}`);
+      } else {
+        components.push(`${componentName}={levels:{${enchantPairs}}}`);
+      }
     }
   }
 
