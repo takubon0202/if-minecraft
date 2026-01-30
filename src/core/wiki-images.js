@@ -500,18 +500,19 @@ export function getTrimmedArmorUrl(armorMaterial, armorType, trimMaterial) {
   };
 
   // トリム素材のマッピング（Wiki上の名前に変換）
+  // Wiki上のファイル名は短縮形を使用
   const trimMaterialMap = {
     'amethyst': 'Amethyst',
     'copper': 'Copper',
     'diamond': 'Diamond',
     'emerald': 'Emerald',
-    'gold': 'Gold',       // トリム素材は "Gold"（防具の "Golden" とは異なる）
+    'gold': 'Gold',
     'iron': 'Iron',
-    'lapis': 'Lapis_Lazuli',  // アンダースコア付き
+    'lapis': 'Lapis',        // "Lapis"（Lapis_Lazuliではない）
     'netherite': 'Netherite',
     'quartz': 'Quartz',
     'redstone': 'Redstone',
-    'resin': 'Resin_Brick',   // 樹脂は "Resin_Brick"
+    'resin': 'Resin',        // "Resin"（Resin_Brickではない）
   };
 
   // 防具部位のマッピング
