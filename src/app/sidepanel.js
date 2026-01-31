@@ -86,6 +86,10 @@ function switchPanel(panelId) {
   });
 }
 
+// コマンド文字数制限
+const CHAT_LIMIT = 256;           // チャット入力の最大文字数
+const COMMAND_BLOCK_LIMIT = 32767; // コマンドブロックの最大文字数
+
 /**
  * 出力を設定
  * @param {string} command - コマンド文字列
@@ -107,6 +111,63 @@ export function setOutput(command, toolId = '', state = null) {
   $('#copy-btn').disabled = !hasCommand;
   $('#share-btn').disabled = !hasCommand || !toolId;
   $('#save-btn').disabled = !hasCommand;
+
+  // 文字数制限の警告を更新
+  updateCommandLengthWarning(command);
+}
+
+/**
+ * コマンド文字数制限の警告を更新
+ * @param {string} command - コマンド文字列
+ */
+function updateCommandLengthWarning(command) {
+  let warningEl = $('#command-length-warning');
+
+  // 警告要素がなければ作成
+  if (!warningEl) {
+    const outputArea = $('.output-area');
+    if (outputArea) {
+      warningEl = createElement('div', {
+        id: 'command-length-warning',
+        className: 'command-length-warning'
+      });
+      outputArea.appendChild(warningEl);
+    }
+  }
+
+  if (!warningEl) return;
+
+  const len = command?.length || 0;
+
+  if (len === 0) {
+    // コマンドがない場合は警告を非表示
+    warningEl.className = 'command-length-warning';
+    warningEl.innerHTML = '';
+  } else if (len > COMMAND_BLOCK_LIMIT) {
+    // コマンドブロックの上限を超過
+    warningEl.className = 'command-length-warning warning-error';
+    warningEl.innerHTML = `
+      <span class="warning-icon">⛔</span>
+      <span class="warning-text">
+        <strong>コマンドが長すぎます</strong>
+        <span class="warning-detail">${len.toLocaleString()}文字（上限: ${COMMAND_BLOCK_LIMIT.toLocaleString()}文字）</span>
+      </span>
+    `;
+  } else if (len > CHAT_LIMIT) {
+    // チャット入力の上限を超過、コマンドブロック推奨
+    warningEl.className = 'command-length-warning warning-alert';
+    warningEl.innerHTML = `
+      <span class="warning-icon">⚠️</span>
+      <span class="warning-text">
+        <strong>コマンドブロックを使用してください</strong>
+        <span class="warning-detail">${len.toLocaleString()}文字（チャット上限: ${CHAT_LIMIT}文字）</span>
+      </span>
+    `;
+  } else {
+    // 制限内
+    warningEl.className = 'command-length-warning';
+    warningEl.innerHTML = '';
+  }
 }
 
 /**

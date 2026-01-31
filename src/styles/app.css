@@ -472,6 +472,63 @@
   flex-wrap: wrap;
 }
 
+/* --- Command Length Warning --- */
+.command-length-warning {
+  margin-top: var(--mc-space-sm);
+  padding: 0;
+  border-radius: var(--mc-radius-sm);
+  font-size: 0.8rem;
+  display: none;
+}
+
+.command-length-warning.warning-alert,
+.command-length-warning.warning-error {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--mc-space-sm);
+  padding: var(--mc-space-sm) var(--mc-space-md);
+}
+
+.command-length-warning.warning-alert {
+  background-color: rgba(255, 170, 0, 0.15);
+  border: 1px solid var(--mc-color-gold);
+  border-left: 4px solid var(--mc-color-gold);
+}
+
+.command-length-warning.warning-error {
+  background-color: rgba(255, 85, 85, 0.15);
+  border: 1px solid var(--mc-color-redstone);
+  border-left: 4px solid var(--mc-color-redstone);
+}
+
+.command-length-warning .warning-icon {
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.command-length-warning .warning-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.command-length-warning .warning-text strong {
+  color: var(--mc-text-primary);
+}
+
+.command-length-warning.warning-alert .warning-text strong {
+  color: var(--mc-color-gold);
+}
+
+.command-length-warning.warning-error .warning-text strong {
+  color: var(--mc-color-redstone);
+}
+
+.command-length-warning .warning-detail {
+  font-size: 0.7rem;
+  color: var(--mc-text-muted);
+}
+
 .action-btn {
   flex: 1;
   min-width: 80px;
