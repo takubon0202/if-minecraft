@@ -1,31 +1,38 @@
 /**
  * Book Generator - UI
+ * minecraft.tools スタイルの高度なリッチテキストエディター
  */
 
 import { $, createElement, debounce } from '../../core/dom.js';
+import { workspaceStore } from '../../core/store.js';
 import { setOutput } from '../../app/sidepanel.js';
-import {
-  renderJsonTextEditor,
-  initJsonTextEditor,
-  addSegment,
-  getEditorData,
-  setEditorData,
-  componentsToJson,
-} from '../../components/json-text-editor.js';
+import { AdvancedTextEditor } from '../../components/advanced-text-editor.js';
 import { getInviconUrl } from '../../core/wiki-images.js';
+import { compareVersions } from '../../core/version-compat.js';
 
-let pages = [];
+let pages = []; // 各ページのAdvancedTextEditorインスタンス
+let pageData = []; // 各ページのデータ
 let currentPage = 0;
+let currentEditor = null;
 
 /**
  * UIをレンダリング
  */
 export function render(manifest) {
+  const tempEditor = new AdvancedTextEditor('book-editor', {
+    placeholder: 'ページ内容を入力...',
+    showClickEvent: true,
+    showHoverEvent: true,
+    showPreview: false,
+    maxLength: 256,
+  });
+
   return `
-    <div class="tool-panel" id="book-panel">
+    <div class="tool-panel book-tool" id="book-panel">
       <div class="tool-header">
         <img src="${getInviconUrl(manifest.iconItem || 'written_book')}" class="tool-header-icon mc-wiki-image" width="32" height="32" alt="">
         <h2>${manifest.title}</h2>
+        <span class="version-badge" id="book-version-badge">1.21+</span>
         <button type="button" class="reset-btn" id="book-reset-btn" title="設定をリセット">リセット</button>
       </div>
 
@@ -53,14 +60,11 @@ export function render(manifest) {
           <button type="button" id="book-remove-page" class="mc-btn mc-btn-danger" disabled>ページ削除</button>
         </div>
 
-        <!-- ページエディタ -->
+        <!-- ページエディタ（高度なテキストエディター） -->
         <div class="form-group">
-          <label>ページ内容（1ページ最大256文字）</label>
+          <label>ページ内容（1文字ごとに色・書式を設定可能、最大256文字）</label>
           <div id="book-page-editor">
-            ${renderJsonTextEditor('book-editor', {
-              showClickEvent: true,
-              showHoverEvent: true,
-            })}
+            ${tempEditor.render()}
           </div>
         </div>
 
@@ -72,17 +76,28 @@ export function render(manifest) {
       </form>
 
       <!-- プレビュー -->
-      <div class="book-preview">
-        <label>プレビュー</label>
+      <div class="book-preview-section">
+        <label>本のプレビュー</label>
         <div class="book-preview-box" id="book-preview">
           <div class="book-header">
-            <span class="book-title-preview">冒険の書</span>
-            <span class="book-author-preview">by Steve</span>
+            <span class="book-title-preview" id="book-title-preview">冒険の書</span>
+            <span class="book-author-preview" id="book-author-preview">by Steve</span>
           </div>
           <div class="book-content-preview" id="book-content-preview">
             ここにページ内容が表示されます
           </div>
+          <div class="book-page-number">ページ <span id="book-preview-page">1</span></div>
         </div>
+      </div>
+
+      <div class="tool-info">
+        <h4>使い方</h4>
+        <ul>
+          <li>テキストを入力し、範囲選択して色・書式を適用</li>
+          <li>1文字ごとに異なる色・スタイルを設定可能</li>
+          <li>クリック/ホバーイベントで対話機能追加</li>
+          <li>ページを追加して複数ページの本を作成</li>
+        </ul>
       </div>
     </div>
   `;
@@ -92,69 +107,93 @@ export function render(manifest) {
  * 初期化
  */
 export function init(container) {
-  // 初期ページを作成
-  pages = [[]];
+  // 初期ページデータを作成
+  pageData = [{ groups: [], clickEvent: null, hoverEvent: null }];
   currentPage = 0;
 
-  // エディタ初期化
-  const editor = initJsonTextEditor('book-editor', debounce(() => {
-    saveCurrentPage();
-    updateCommand();
-  }, 150));
+  // Advanced Text Editor初期化
+  currentEditor = new AdvancedTextEditor('book-editor', {
+    placeholder: 'ページ内容を入力...',
+    showClickEvent: true,
+    showHoverEvent: true,
+    showPreview: false,
+    maxLength: 256,
+    onChange: debounce(() => {
+      saveCurrentPage();
+      updatePreview();
+      updateCommand();
+    }, 100),
+  });
+
+  currentEditor.init(container);
 
   // ページナビゲーション
   $('#book-prev-page', container)?.addEventListener('click', () => {
     if (currentPage > 0) {
       saveCurrentPage();
       currentPage--;
-      loadCurrentPage();
+      loadCurrentPage(container);
       updateNavButtons();
+      updatePreview();
     }
   });
 
   $('#book-next-page', container)?.addEventListener('click', () => {
-    if (currentPage < pages.length - 1) {
+    if (currentPage < pageData.length - 1) {
       saveCurrentPage();
       currentPage++;
-      loadCurrentPage();
+      loadCurrentPage(container);
       updateNavButtons();
+      updatePreview();
     }
   });
 
   $('#book-add-page', container)?.addEventListener('click', () => {
     saveCurrentPage();
-    pages.push([]);
-    currentPage = pages.length - 1;
-    loadCurrentPage();
+    pageData.push({ groups: [], clickEvent: null, hoverEvent: null });
+    currentPage = pageData.length - 1;
+    loadCurrentPage(container);
     updateNavButtons();
+    updatePreview();
     updateCommand();
   });
 
   $('#book-remove-page', container)?.addEventListener('click', () => {
-    if (pages.length > 1) {
-      pages.splice(currentPage, 1);
-      if (currentPage >= pages.length) currentPage = pages.length - 1;
-      loadCurrentPage();
+    if (pageData.length > 1) {
+      pageData.splice(currentPage, 1);
+      if (currentPage >= pageData.length) currentPage = pageData.length - 1;
+      loadCurrentPage(container);
       updateNavButtons();
+      updatePreview();
       updateCommand();
     }
   });
 
   // フォーム変更
-  $('#book-title', container)?.addEventListener('input', debounce(updateCommand, 150));
-  $('#book-author', container)?.addEventListener('input', debounce(updateCommand, 150));
+  $('#book-title', container)?.addEventListener('input', debounce(() => {
+    updatePreview();
+    updateCommand();
+  }, 150));
+  $('#book-author', container)?.addEventListener('input', debounce(() => {
+    updatePreview();
+    updateCommand();
+  }, 150));
   $('#book-count', container)?.addEventListener('input', debounce(updateCommand, 150));
-
-  // プレビュー更新
-  $('#book-title', container)?.addEventListener('input', updatePreview);
-  $('#book-author', container)?.addEventListener('input', updatePreview);
 
   // リセットボタン
   $('#book-reset-btn', container)?.addEventListener('click', () => {
     resetForm(container);
   });
 
+  // バージョン変更
+  window.addEventListener('mc-version-change', () => {
+    updateVersionBadge();
+    updateCommand();
+  });
+
+  updateVersionBadge();
   updateNavButtons();
+  updatePreview();
   updateCommand();
 }
 
@@ -175,11 +214,13 @@ function resetForm(container) {
   if (countInput) countInput.value = '1';
 
   // ページをリセット（1ページだけに）
-  pages = [[]];
+  pageData = [{ groups: [], clickEvent: null, hoverEvent: null }];
   currentPage = 0;
 
-  // エディタをリセット
-  setEditorData('book-editor', []);
+  // エディターをクリア
+  if (currentEditor) {
+    currentEditor.clear(container);
+  }
 
   // ナビゲーション更新
   updateNavButtons();
@@ -192,43 +233,59 @@ function resetForm(container) {
 }
 
 /**
+ * バージョンバッジを更新
+ */
+function updateVersionBadge() {
+  const version = workspaceStore.get('version') || '1.21';
+  const badge = document.getElementById('book-version-badge');
+  if (badge) {
+    badge.textContent = version + '+';
+  }
+}
+
+/**
  * 現在のページを保存
  */
 function saveCurrentPage() {
-  const data = getEditorData('book-editor');
-  pages[currentPage] = data;
+  if (!currentEditor) return;
+
+  const groups = currentEditor.getFormattedGroups();
+  pageData[currentPage] = {
+    groups,
+    clickEvent: currentEditor.clickEvent,
+    hoverEvent: currentEditor.hoverEvent,
+  };
 }
 
 /**
  * 現在のページを読み込み
  */
-function loadCurrentPage() {
-  const segmentsContainer = $('#book-editor-segments');
-  if (segmentsContainer) {
-    segmentsContainer.innerHTML = '';
-    const pageData = pages[currentPage] || [];
-    if (pageData.length === 0) {
-      addSegment('book-editor');
-    } else {
-      pageData.forEach(comp => addSegment('book-editor', comp));
-    }
-  }
+function loadCurrentPage(container) {
+  if (!currentEditor) return;
+
+  // エディターをクリア
+  currentEditor.clear(container);
+
+  // ページデータがあれば復元（今後の拡張用）
+  // 現時点では単純にクリアのみ
 }
 
 /**
  * ナビゲーションボタンを更新
  */
 function updateNavButtons() {
-  $('#book-current-page').textContent = currentPage + 1;
-  $('#book-total-pages').textContent = pages.length;
+  const currentPageEl = document.getElementById('book-current-page');
+  const totalPagesEl = document.getElementById('book-total-pages');
+  if (currentPageEl) currentPageEl.textContent = currentPage + 1;
+  if (totalPagesEl) totalPagesEl.textContent = pageData.length;
 
   const prevBtn = $('#book-prev-page');
   const nextBtn = $('#book-next-page');
   const removeBtn = $('#book-remove-page');
 
   if (prevBtn) prevBtn.disabled = currentPage === 0;
-  if (nextBtn) nextBtn.disabled = currentPage >= pages.length - 1;
-  if (removeBtn) removeBtn.disabled = pages.length <= 1;
+  if (nextBtn) nextBtn.disabled = currentPage >= pageData.length - 1;
+  if (removeBtn) removeBtn.disabled = pageData.length <= 1;
 }
 
 /**
@@ -238,11 +295,50 @@ function updatePreview() {
   const title = $('#book-title')?.value || '';
   const author = $('#book-author')?.value || '';
 
-  const titleEl = $('.book-title-preview');
-  const authorEl = $('.book-author-preview');
+  // タイトル・著者プレビュー
+  const titlePreview = document.getElementById('book-title-preview');
+  const authorPreview = document.getElementById('book-author-preview');
+  if (titlePreview) titlePreview.textContent = title;
+  if (authorPreview) authorPreview.textContent = author ? `by ${author}` : '';
 
-  if (titleEl) titleEl.textContent = title;
-  if (authorEl) authorEl.textContent = author ? `by ${author}` : '';
+  // ページ番号
+  const pageNumber = document.getElementById('book-preview-page');
+  if (pageNumber) pageNumber.textContent = currentPage + 1;
+
+  // コンテンツプレビュー
+  const contentPreview = document.getElementById('book-content-preview');
+  if (!contentPreview || !currentEditor) return;
+
+  const groups = currentEditor.getFormattedGroups();
+
+  if (!groups || groups.length === 0) {
+    contentPreview.innerHTML = '<span class="placeholder">ここにページ内容が表示されます</span>';
+    return;
+  }
+
+  contentPreview.innerHTML = groups.map((group) => {
+    const classes = ['book-text-segment'];
+
+    // 色クラス
+    if (group.color) {
+      if (group.color.startsWith('#')) {
+        // HEXカラーはインラインスタイル
+      } else {
+        classes.push(`book-color-${group.color.replace('_', '-')}`);
+      }
+    }
+
+    // スタイルクラス
+    if (group.bold) classes.push('book-bold');
+    if (group.italic) classes.push('book-italic');
+    if (group.underlined) classes.push('book-underlined');
+    if (group.strikethrough) classes.push('book-strikethrough');
+
+    const style = group.color?.startsWith('#') ? `color: ${group.color};` : '';
+    const text = escapeHtml(group.text).replace(/\n/g, '<br>');
+
+    return `<span class="${classes.join(' ')}" style="${style}">${text}</span>`;
+  }).join('');
 }
 
 /**
@@ -254,49 +350,155 @@ function updateCommand() {
   const title = $('#book-title')?.value || '本';
   const author = $('#book-author')?.value || 'Unknown';
   const count = parseInt($('#book-count')?.value) || 1;
+  const globalVersion = workspaceStore.get('version') || '1.21';
 
-  // ページをJSON形式に変換
-  const pagesJson = pages.map(pageComponents => {
-    if (!pageComponents || pageComponents.length === 0) {
+  // 各ページをJSON/SNBT形式に変換
+  const pagesOutput = pageData.map(page => {
+    if (!page.groups || page.groups.length === 0) {
       return '""';
     }
-    return componentsToJson(pageComponents);
+
+    // グループからコンポーネントを生成
+    const groups = page.groups;
+
+    if (compareVersions(globalVersion, '1.21') >= 0) {
+      // SNBT形式
+      if (groups.length === 0) return '""';
+
+      if (groups.length === 1) {
+        return formatGroupToSNBT(groups[0], page.clickEvent, page.hoverEvent);
+      }
+
+      const components = groups.map((g, idx) =>
+        formatGroupToSNBT(g, idx === 0 ? page.clickEvent : null, idx === 0 ? page.hoverEvent : null)
+      );
+      return `[${components.join(',')}]`;
+    } else {
+      // JSON形式
+      if (groups.length === 0) return '""';
+
+      const components = groups.map((g, idx) => {
+        const obj = { text: g.text };
+        if (g.color && g.color !== 'white') obj.color = g.color;
+        if (g.bold) obj.bold = true;
+        if (g.italic) obj.italic = true;
+        if (g.underlined) obj.underlined = true;
+        if (g.strikethrough) obj.strikethrough = true;
+        if (g.obfuscated) obj.obfuscated = true;
+        if (idx === 0 && page.clickEvent) obj.clickEvent = page.clickEvent;
+        if (idx === 0 && page.hoverEvent) obj.hoverEvent = page.hoverEvent;
+        return obj;
+      });
+
+      if (components.length === 1) {
+        return JSON.stringify(components[0]);
+      }
+      return JSON.stringify(['', ...components]);
+    }
   });
 
-  // コンポーネント形式（1.20.5+）- 名前空間付き
-  const components = [
-    `minecraft:written_book_content={pages:[${pagesJson.join(',')}],title:"${escapeString(title)}",author:"${escapeString(author)}"}`,
-  ];
-
-  const command = `/give @p minecraft:written_book[${components.join(',')}]${count > 1 ? ` ${count}` : ''}`;
-
-  // プレビュー更新
-  const contentPreview = $('#book-content-preview');
-  if (contentPreview && pages[currentPage]) {
-    contentPreview.innerHTML = pages[currentPage].map(comp => {
-      let style = '';
-      if (comp.color) style += `color: ${comp.color};`;
-      if (comp.bold) style += 'font-weight: bold;';
-      if (comp.italic) style += 'font-style: italic;';
-      return `<span style="${style}">${escapeHtml(comp.text)}</span>`;
-    }).join('') || '<span class="placeholder">ここにページ内容が表示されます</span>';
+  // コマンド生成
+  let command;
+  if (compareVersions(globalVersion, '1.20.5') >= 0) {
+    // 1.20.5+: コンポーネント形式
+    const pagesStr = pagesOutput.join(',');
+    const components = [
+      `minecraft:written_book_content={pages:[${pagesStr}],title:"${escapeSnbt(title)}",author:"${escapeSnbt(author)}"}`,
+    ];
+    command = `/give @p minecraft:written_book[${components.join(',')}]${count > 1 ? ` ${count}` : ''}`;
+  } else {
+    // 1.20.4以前: NBT形式
+    const pagesStr = pagesOutput.map(p => `'${p}'`).join(',');
+    command = `/give @p minecraft:written_book{pages:[${pagesStr}],title:"${escapeString(title)}",author:"${escapeString(author)}"}${count > 1 ? ` ${count}` : ''}`;
   }
 
-  setOutput(command, 'book', { title, author, count, pages });
+  setOutput(command, 'book', { title, author, count, pages: pageData });
+}
+
+/**
+ * グループをSNBT形式に変換
+ */
+function formatGroupToSNBT(group, clickEvent, hoverEvent) {
+  const parts = [`text:"${escapeSnbt(group.text)}"`];
+
+  if (group.color && group.color !== 'white') {
+    parts.push(`color:"${group.color}"`);
+  }
+
+  if (group.bold) parts.push('bold:true');
+  if (group.italic) parts.push('italic:true');
+  if (group.underlined) parts.push('underlined:true');
+  if (group.strikethrough) parts.push('strikethrough:true');
+  if (group.obfuscated) parts.push('obfuscated:true');
+
+  if (clickEvent) {
+    const clickParts = [`action:"${clickEvent.action}"`];
+    const value = clickEvent.value;
+
+    switch (clickEvent.action) {
+      case 'run_command':
+        clickParts.push(`command:"${escapeSnbt(value.startsWith('/') ? value.slice(1) : value)}"`);
+        break;
+      case 'suggest_command':
+        clickParts.push(`command:"${escapeSnbt(value)}"`);
+        break;
+      case 'open_url':
+        clickParts.push(`url:"${escapeSnbt(value)}"`);
+        break;
+      case 'change_page':
+        clickParts.push(`page:${parseInt(value) || 1}`);
+        break;
+    }
+    parts.push(`click_event:{${clickParts.join(',')}}`);
+  }
+
+  if (hoverEvent) {
+    const hoverParts = [`action:"${hoverEvent.action}"`];
+    if (hoverEvent.action === 'show_text') {
+      const text = typeof hoverEvent.contents === 'object'
+        ? hoverEvent.contents.text
+        : String(hoverEvent.contents);
+      hoverParts.push(`value:{text:"${escapeSnbt(text)}"}`);
+    }
+    parts.push(`hover_event:{${hoverParts.join(',')}}`);
+  }
+
+  return `{${parts.join(',')}}`;
 }
 
 function escapeString(str) {
   return str.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
 }
 
+function escapeSnbt(str) {
+  if (!str) return '';
+  return str
+    .replace(/\\/g, '\\\\')
+    .replace(/"/g, '\\"')
+    .replace(/\n/g, '\\n');
+}
+
 function escapeHtml(str) {
   if (!str) return '';
-  return str.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
 }
 
 // スタイル追加
 const style = document.createElement('style');
 style.textContent = `
+  .book-tool .version-badge {
+    background: var(--mc-color-grass-main);
+    color: white;
+    padding: 2px 8px;
+    font-size: 0.7rem;
+    border-radius: 3px;
+    margin-left: auto;
+  }
+
   .book-nav {
     display: flex;
     align-items: center;
@@ -310,11 +512,11 @@ style.textContent = `
     padding: 0 var(--mc-space-md);
   }
 
-  .book-preview {
+  .book-preview-section {
     margin-top: var(--mc-space-lg);
   }
 
-  .book-preview > label {
+  .book-preview-section > label {
     display: block;
     font-size: 0.75rem;
     color: var(--mc-text-muted);
@@ -325,8 +527,11 @@ style.textContent = `
     background: linear-gradient(135deg, #f5e6c8, #e8d4a8);
     border: 4px solid #8b6b3d;
     padding: var(--mc-space-md);
-    min-height: 200px;
-    max-width: 300px;
+    min-height: 250px;
+    max-width: 320px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
   }
 
   .book-header {
@@ -351,15 +556,71 @@ style.textContent = `
   }
 
   .book-content-preview {
+    flex: 1;
     font-family: var(--mc-font-mono);
-    font-size: 0.8rem;
+    font-size: 0.85rem;
     color: #1f1f1f;
     line-height: 1.5;
+    overflow-y: auto;
   }
 
   .book-content-preview .placeholder {
     color: #999;
     font-style: italic;
+  }
+
+  .book-page-number {
+    text-align: center;
+    font-size: 0.75rem;
+    color: #666;
+    padding-top: var(--mc-space-sm);
+    border-top: 1px solid #8b6b3d;
+    margin-top: var(--mc-space-md);
+  }
+
+  /* 本のテキストカラー */
+  .book-text-segment { display: inline; }
+  .book-color-black { color: #000000; }
+  .book-color-dark-blue { color: #0000AA; }
+  .book-color-dark-green { color: #00AA00; }
+  .book-color-dark-aqua { color: #00AAAA; }
+  .book-color-dark-red { color: #AA0000; }
+  .book-color-dark-purple { color: #AA00AA; }
+  .book-color-gold { color: #AA5500; }
+  .book-color-gray { color: #555555; }
+  .book-color-dark-gray { color: #333333; }
+  .book-color-blue { color: #3333FF; }
+  .book-color-green { color: #00AA00; }
+  .book-color-aqua { color: #00AAAA; }
+  .book-color-red { color: #AA0000; }
+  .book-color-light-purple { color: #AA00AA; }
+  .book-color-yellow { color: #AA5500; }
+
+  .book-bold { font-weight: bold; }
+  .book-italic { font-style: italic; }
+  .book-underlined { text-decoration: underline; }
+  .book-strikethrough { text-decoration: line-through; }
+
+  .tool-info {
+    margin-top: var(--mc-space-lg);
+    padding: var(--mc-space-md);
+    background-color: var(--mc-bg-surface);
+    border-left: 4px solid var(--mc-color-diamond);
+  }
+
+  .tool-info h4 {
+    margin: 0 0 var(--mc-space-sm) 0;
+    color: var(--mc-color-diamond);
+  }
+
+  .tool-info ul {
+    margin: 0;
+    padding-left: var(--mc-space-lg);
+  }
+
+  .tool-info li {
+    margin-bottom: var(--mc-space-xs);
+    font-size: 0.85rem;
   }
 `;
 document.head.appendChild(style);

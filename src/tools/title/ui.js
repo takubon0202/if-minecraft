@@ -1,16 +1,12 @@
 /**
  * Title Generator - UI
+ * minecraft.tools スタイルの高度なリッチテキストエディター
  */
 
 import { $, $$, debounce } from '../../core/dom.js';
 import { workspaceStore } from '../../core/store.js';
 import { setOutput } from '../../app/sidepanel.js';
-import {
-  renderJsonTextEditor,
-  initJsonTextEditor,
-  componentsToJson,
-  setEditorData,
-} from '../../components/json-text-editor.js';
+import { AdvancedTextEditor } from '../../components/advanced-text-editor.js';
 import { getInviconUrl } from '../../core/wiki-images.js';
 import { compareVersions, getVersionNote } from '../../core/version-compat.js';
 
@@ -21,6 +17,20 @@ let subtitleEditor = null;
  * UIをレンダリング
  */
 export function render(manifest) {
+  const tempTitleEditor = new AdvancedTextEditor('title-editor', {
+    placeholder: 'タイトルを入力...',
+    showClickEvent: false,
+    showHoverEvent: false,
+    showPreview: false,
+  });
+
+  const tempSubtitleEditor = new AdvancedTextEditor('subtitle-editor', {
+    placeholder: 'サブタイトルを入力...',
+    showClickEvent: false,
+    showHoverEvent: false,
+    showPreview: false,
+  });
+
   return `
     <div class="tool-panel title-tool" id="title-panel">
       <div class="tool-header">
@@ -36,10 +46,10 @@ export function render(manifest) {
         <div class="mc-title-screen">
           <div class="mc-title-content">
             <div class="mc-main-title" id="title-preview-main">
-              <span class="mc-color-white">タイトル</span>
+              <span class="mc-color-white mc-placeholder">タイトル</span>
             </div>
             <div class="mc-subtitle" id="title-preview-sub">
-              <span class="mc-color-white">サブタイトル</span>
+              <span class="mc-color-white mc-placeholder">サブタイトル</span>
             </div>
           </div>
           <div class="mc-actionbar-area">
@@ -110,22 +120,16 @@ export function render(manifest) {
           </div>
         </div>
 
-        <!-- タイトルテキスト -->
+        <!-- タイトルテキスト（高度なエディター） -->
         <div class="form-group" id="title-text-group">
-          <label>タイトルテキスト</label>
-          ${renderJsonTextEditor('title-editor', {
-            showClickEvent: false,
-            showHoverEvent: false,
-          })}
+          <label>タイトルテキスト（1文字ごとに色・書式を設定可能）</label>
+          ${tempTitleEditor.render()}
         </div>
 
-        <!-- サブタイトルテキスト -->
+        <!-- サブタイトルテキスト（高度なエディター） -->
         <div class="form-group" id="subtitle-text-group" style="display:none">
           <label>サブタイトルテキスト</label>
-          ${renderJsonTextEditor('subtitle-editor', {
-            showClickEvent: false,
-            showHoverEvent: false,
-          })}
+          ${tempSubtitleEditor.render()}
         </div>
 
         <!-- タイミング設定 -->
@@ -155,6 +159,15 @@ export function render(manifest) {
           </label>
         </div>
       </form>
+
+      <div class="tool-info">
+        <h4>使い方</h4>
+        <ul>
+          <li>テキストを入力し、範囲選択して色・書式を適用</li>
+          <li>1文字ごとに異なる色・スタイルを設定可能</li>
+          <li>Ctrl+B(太字)、Ctrl+I(斜体)、Ctrl+U(下線)のショートカット対応</li>
+        </ul>
+      </div>
     </div>
   `;
 }
@@ -163,9 +176,31 @@ export function render(manifest) {
  * 初期化
  */
 export function init(container) {
-  // エディタ初期化
-  titleEditor = initJsonTextEditor('title-editor', debounce(updateCommand, 150));
-  subtitleEditor = initJsonTextEditor('subtitle-editor', debounce(updateCommand, 150));
+  // タイトルエディタ初期化
+  titleEditor = new AdvancedTextEditor('title-editor', {
+    placeholder: 'タイトルを入力...',
+    showClickEvent: false,
+    showHoverEvent: false,
+    showPreview: false,
+    onChange: debounce(() => {
+      updateGamePreview();
+      updateCommand();
+    }, 100),
+  });
+  titleEditor.init(container);
+
+  // サブタイトルエディタ初期化
+  subtitleEditor = new AdvancedTextEditor('subtitle-editor', {
+    placeholder: 'サブタイトルを入力...',
+    showClickEvent: false,
+    showHoverEvent: false,
+    showPreview: false,
+    onChange: debounce(() => {
+      updateGamePreview();
+      updateCommand();
+    }, 100),
+  });
+  subtitleEditor.init(container);
 
   // 表示タイプ変更
   $$('input[name="title-type"]', container).forEach(radio => {
@@ -184,6 +219,7 @@ export function init(container) {
         titleGroup.style.display = 'block';
         subtitleGroup.style.display = 'none';
       }
+      updateGamePreview();
       updateCommand();
     });
   });
@@ -208,6 +244,7 @@ export function init(container) {
 
   // 初期表示
   updateVersionDisplay(container);
+  updateGamePreview();
   updateCommand();
 }
 
@@ -223,7 +260,6 @@ function resetForm(container) {
   const titleRadio = document.querySelector('input[name="title-type"][value="title"]');
   if (titleRadio) {
     titleRadio.checked = true;
-    // 表示状態も更新
     const titleGroup = $('#title-text-group', container);
     const subtitleGroup = $('#subtitle-text-group', container);
     if (titleGroup) titleGroup.style.display = 'block';
@@ -242,11 +278,12 @@ function resetForm(container) {
   const includeTimesCheckbox = $('#title-include-times', container);
   if (includeTimesCheckbox) includeTimesCheckbox.checked = true;
 
-  // エディタをリセット
-  setEditorData('title-editor', []);
-  setEditorData('subtitle-editor', []);
+  // エディタをクリア
+  if (titleEditor) titleEditor.clear(container);
+  if (subtitleEditor) subtitleEditor.clear(container);
 
-  // コマンド更新
+  // 更新
+  updateGamePreview();
   updateCommand();
 }
 
@@ -262,14 +299,129 @@ function updateVersionDisplay(container) {
     badge.textContent = version + '+';
   }
   if (note) {
-    // titleが使えないバージョンの警告
     if (compareVersions(version, '1.8') < 0) {
       note.textContent = '注意: このバージョンでは /title コマンドは使用できません';
       note.style.color = 'var(--mc-color-redstone)';
+    } else if (compareVersions(version, '1.16') < 0) {
+      note.textContent = `${version} - HEXカラーは非対応（16色のみ）`;
+      note.style.color = 'var(--mc-color-gold)';
     } else {
       note.textContent = getVersionNote(version);
       note.style.color = 'var(--mc-color-diamond)';
     }
+  }
+}
+
+/**
+ * ゲーム画面プレビューを更新
+ */
+function updateGamePreview() {
+  const type = document.querySelector('input[name="title-type"]:checked')?.value || 'title';
+  const target = $('#title-target')?.value || '@a';
+
+  const mainTitle = document.getElementById('title-preview-main');
+  const subtitle = document.getElementById('title-preview-sub');
+  const actionbar = document.getElementById('title-preview-actionbar');
+
+  if (!mainTitle || !subtitle || !actionbar) return;
+
+  // リセット
+  mainTitle.innerHTML = '';
+  subtitle.innerHTML = '';
+  actionbar.innerHTML = '';
+  mainTitle.style.display = 'none';
+  subtitle.style.display = 'none';
+  actionbar.style.display = 'none';
+
+  const titleGroups = titleEditor?.getFormattedGroups() || [];
+  const subtitleGroups = subtitleEditor?.getFormattedGroups() || [];
+
+  if (type === 'title' || type === 'both') {
+    mainTitle.style.display = 'block';
+    mainTitle.innerHTML = renderGroups(titleGroups, true);
+  }
+
+  if (type === 'subtitle' || type === 'both') {
+    subtitle.style.display = 'block';
+    const groups = subtitleGroups.length > 0 ? subtitleGroups : (type === 'both' ? [] : titleGroups);
+    subtitle.innerHTML = renderGroups(groups, false);
+  }
+
+  if (type === 'actionbar') {
+    actionbar.style.display = 'block';
+    actionbar.innerHTML = renderGroups(titleGroups, false);
+  }
+
+  // 統計バー更新
+  updateTitleStats(target, type, titleGroups, subtitleGroups);
+}
+
+/**
+ * グループをHTMLにレンダリング
+ */
+function renderGroups(groups, isMainTitle) {
+  if (!groups || groups.length === 0) {
+    const placeholder = isMainTitle ? 'タイトル' : 'サブタイトル';
+    return `<span class="mc-color-white mc-placeholder">${placeholder}</span>`;
+  }
+
+  return groups.map((group, index) => {
+    const classes = ['mc-text-segment'];
+
+    // 色クラス
+    if (group.color) {
+      if (group.color.startsWith('#')) {
+        // HEXカラーはインラインスタイル
+      } else {
+        classes.push(`mc-color-${group.color.replace('_', '-')}`);
+      }
+    } else {
+      classes.push('mc-color-white');
+    }
+
+    // スタイルクラス
+    if (group.bold) classes.push('mc-bold');
+    if (group.italic) classes.push('mc-italic');
+    if (group.underlined) classes.push('mc-underlined');
+    if (group.strikethrough) classes.push('mc-strikethrough');
+    if (group.obfuscated) classes.push('mc-obfuscated');
+
+    const style = group.color?.startsWith('#') ? `color: ${group.color};` : '';
+    const text = escapeHtml(group.text).replace(/\n/g, '<br>');
+
+    if (group.obfuscated) {
+      return `<span class="${classes.join(' ')}" style="${style}" data-text="${escapeHtml(group.text)}" data-index="${index}">${text}</span>`;
+    }
+
+    return `<span class="${classes.join(' ')}" style="${style}">${text}</span>`;
+  }).join('');
+}
+
+/**
+ * 統計バーを更新
+ */
+function updateTitleStats(target, type, titleGroups, subtitleGroups) {
+  const statTypeEl = document.getElementById('title-stat-type');
+  const statTargetEl = document.getElementById('title-stat-target');
+  const statCharsEl = document.getElementById('title-stat-chars');
+
+  const typeNames = {
+    title: 'タイトル',
+    subtitle: 'サブタイトル',
+    actionbar: 'アクションバー',
+    both: 'タイトル+サブ'
+  };
+
+  if (statTypeEl) statTypeEl.textContent = typeNames[type] || 'タイトル';
+  if (statTargetEl) statTargetEl.textContent = target;
+
+  if (statCharsEl) {
+    let totalChars = 0;
+    titleGroups.forEach(g => totalChars += (g.text || '').length);
+    if (type === 'both' || type === 'subtitle') {
+      subtitleGroups.forEach(g => totalChars += (g.text || '').length);
+    }
+    statCharsEl.textContent = totalChars;
   }
 }
 
@@ -285,32 +437,7 @@ function updateCommand() {
   const stay = parseInt($('#title-stay')?.value) || 70;
   const fadeOut = parseInt($('#title-fadeout')?.value) || 20;
 
-  const titleComponents = titleEditor?.getData() || [];
-  const subtitleComponents = subtitleEditor?.getData() || [];
-
-  // ゲーム画面プレビューを更新
-  updateGamePreview(type, titleComponents, subtitleComponents);
-
-  // 統計バーを更新
-  updateTitleStats(target, type, titleComponents, subtitleComponents);
-
-  // 現在のバージョンを取得
   const globalVersion = workspaceStore.get('version') || '1.21';
-
-  // バージョンをcomponentsToJson用の形式に変換
-  let jsonVersion = '1.21.5+';
-  if (compareVersions(globalVersion, '1.21') >= 0) {
-    jsonVersion = '1.21.5+';
-  } else if (compareVersions(globalVersion, '1.20') >= 0) {
-    jsonVersion = '1.20+';
-  } else if (compareVersions(globalVersion, '1.16') >= 0) {
-    jsonVersion = '1.16+';
-  } else if (compareVersions(globalVersion, '1.13') >= 0) {
-    jsonVersion = '1.13+';
-  } else {
-    jsonVersion = '1.12-';
-  }
-
   const commands = [];
 
   // タイミング設定
@@ -318,173 +445,28 @@ function updateCommand() {
     commands.push(`/title ${target} times ${fadeIn} ${stay} ${fadeOut}`);
   }
 
-  // コマンド生成（バージョン対応）
-  const jsonOptions = { version: jsonVersion };
-
+  // コマンド生成
   if (type === 'title' || type === 'both') {
-    const json = componentsToJson(titleComponents, jsonOptions);
+    const json = titleEditor?.getOutput(globalVersion) || '""';
     commands.push(`/title ${target} title ${json}`);
   }
 
   if (type === 'subtitle' || type === 'both') {
-    const json = componentsToJson(subtitleComponents.length > 0 ? subtitleComponents : titleComponents, jsonOptions);
+    const subtitleGroups = subtitleEditor?.getFormattedGroups() || [];
+    const useSubtitle = subtitleGroups.length > 0;
+    const json = useSubtitle
+      ? subtitleEditor.getOutput(globalVersion)
+      : titleEditor?.getOutput(globalVersion) || '""';
     commands.push(`/title ${target} subtitle ${json}`);
   }
 
   if (type === 'actionbar') {
-    const json = componentsToJson(titleComponents, jsonOptions);
+    const json = titleEditor?.getOutput(globalVersion) || '""';
     commands.push(`/title ${target} actionbar ${json}`);
   }
 
   const command = commands.join('\n');
   setOutput(command, 'title', { target, type, fadeIn, stay, fadeOut, version: globalVersion });
-}
-
-/**
- * ゲーム画面プレビューを更新
- */
-function updateGamePreview(type, titleComponents, subtitleComponents) {
-  const mainTitle = document.getElementById('title-preview-main');
-  const subtitle = document.getElementById('title-preview-sub');
-  const actionbar = document.getElementById('title-preview-actionbar');
-
-  if (!mainTitle || !subtitle || !actionbar) return;
-
-  // リセット
-  mainTitle.innerHTML = '';
-  subtitle.innerHTML = '';
-  actionbar.innerHTML = '';
-  mainTitle.style.display = 'none';
-  subtitle.style.display = 'none';
-  actionbar.style.display = 'none';
-
-  if (type === 'title' || type === 'both') {
-    mainTitle.style.display = 'block';
-    mainTitle.innerHTML = renderComponents(titleComponents, true);
-    startTitleObfuscatedAnimation('title-preview-main');
-  }
-
-  if (type === 'subtitle' || type === 'both') {
-    subtitle.style.display = 'block';
-    const subComps = subtitleComponents.length > 0 ? subtitleComponents : (type === 'both' ? [] : titleComponents);
-    subtitle.innerHTML = renderComponents(subComps, false);
-    startTitleObfuscatedAnimation('title-preview-sub');
-  }
-
-  if (type === 'actionbar') {
-    actionbar.style.display = 'block';
-    actionbar.innerHTML = renderComponents(titleComponents, false);
-    startTitleObfuscatedAnimation('title-preview-actionbar');
-  }
-}
-
-/**
- * 統計バーを更新
- */
-function updateTitleStats(target, type, titleComponents, subtitleComponents) {
-  const statTypeEl = document.getElementById('title-stat-type');
-  const statTargetEl = document.getElementById('title-stat-target');
-  const statCharsEl = document.getElementById('title-stat-chars');
-
-  // タイプ表示
-  const typeNames = {
-    title: 'タイトル',
-    subtitle: 'サブタイトル',
-    actionbar: 'アクションバー',
-    both: 'タイトル+サブ'
-  };
-  if (statTypeEl) {
-    statTypeEl.textContent = typeNames[type] || 'タイトル';
-  }
-
-  // ターゲット表示
-  if (statTargetEl) {
-    statTargetEl.textContent = target;
-  }
-
-  // 文字数を計算
-  if (statCharsEl) {
-    let totalChars = 0;
-    titleComponents.forEach(c => {
-      totalChars += (c.text || '').length;
-    });
-    if (type === 'both' || type === 'subtitle') {
-      subtitleComponents.forEach(c => {
-        totalChars += (c.text || '').length;
-      });
-    }
-    statCharsEl.textContent = totalChars;
-  }
-}
-
-/**
- * コンポーネントをHTMLにレンダリング
- */
-function renderComponents(components, isMainTitle) {
-  if (!components || components.length === 0) {
-    const placeholder = isMainTitle ? 'タイトル' : 'サブタイトル';
-    return `<span class="mc-color-white mc-placeholder">${placeholder}</span>`;
-  }
-
-  return components.map((comp, index) => {
-    const classes = ['mc-text-segment'];
-
-    // 色クラス
-    if (comp.color) {
-      classes.push(`mc-color-${comp.color.replace('_', '-')}`);
-    } else {
-      classes.push('mc-color-white');
-    }
-
-    // スタイルクラス
-    if (comp.bold) classes.push('mc-bold');
-    if (comp.italic) classes.push('mc-italic');
-    if (comp.underlined) classes.push('mc-underlined');
-    if (comp.strikethrough) classes.push('mc-strikethrough');
-
-    // 難読化テキスト
-    if (comp.obfuscated) {
-      classes.push('mc-obfuscated');
-      return `<span class="${classes.join(' ')}" data-text="${escapeHtml(comp.text)}" data-index="${index}">${escapeHtml(comp.text)}</span>`;
-    }
-
-    return `<span class="${classes.join(' ')}">${escapeHtml(comp.text)}</span>`;
-  }).join('');
-}
-
-// 難読化アニメーション
-const titleObfuscatedIntervals = new Map();
-const OBFUSCATED_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()';
-
-function startTitleObfuscatedAnimation(elementId) {
-  // 既存のインターバルをクリア
-  const existingInterval = titleObfuscatedIntervals.get(elementId);
-  if (existingInterval) {
-    clearInterval(existingInterval);
-  }
-
-  const container = document.getElementById(elementId);
-  if (!container) return;
-
-  const obfuscatedElements = container.querySelectorAll('.mc-obfuscated');
-  if (obfuscatedElements.length === 0) return;
-
-  const intervalId = setInterval(() => {
-    obfuscatedElements.forEach(el => {
-      const originalText = el.dataset.text || '';
-      let newText = '';
-      for (let i = 0; i < originalText.length; i++) {
-        if (originalText[i] === ' ') {
-          newText += ' ';
-        } else {
-          newText += OBFUSCATED_CHARS[Math.floor(Math.random() * OBFUSCATED_CHARS.length)];
-        }
-      }
-      el.textContent = newText;
-    });
-  }, 50);
-
-  titleObfuscatedIntervals.set(elementId, intervalId);
 }
 
 function escapeHtml(str) {
@@ -537,6 +519,28 @@ style.textContent = `
     width: 100%;
   }
 
+  .tool-info {
+    margin-top: var(--mc-space-lg);
+    padding: var(--mc-space-md);
+    background-color: var(--mc-bg-surface);
+    border-left: 4px solid var(--mc-color-diamond);
+  }
+
+  .tool-info h4 {
+    margin: 0 0 var(--mc-space-sm) 0;
+    color: var(--mc-color-diamond);
+  }
+
+  .tool-info ul {
+    margin: 0;
+    padding-left: var(--mc-space-lg);
+  }
+
+  .tool-info li {
+    margin-bottom: var(--mc-space-xs);
+    font-size: 0.85rem;
+  }
+
   /* ゲーム画面風プレビュー */
   .mc-title-screen-preview {
     margin-bottom: var(--mc-space-lg);
@@ -554,7 +558,6 @@ style.textContent = `
     justify-content: space-between;
   }
 
-  /* タイトルコンテンツ（中央揃え） */
   .mc-title-content {
     flex: 1;
     display: flex;
@@ -602,7 +605,6 @@ style.textContent = `
     opacity: 0.5;
   }
 
-  /* アクションバーエリア */
   .mc-actionbar-area {
     display: flex;
     flex-direction: column;
@@ -619,7 +621,6 @@ style.textContent = `
     display: none;
   }
 
-  /* ホットバー */
   .mc-hotbar {
     display: flex;
     justify-content: center;

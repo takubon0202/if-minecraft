@@ -1,32 +1,34 @@
 /**
  * Tellraw Generator - UI
+ * minecraft.tools スタイルの高度なリッチテキストエディター
  */
 
 import { $, debounce } from '../../core/dom.js';
 import { workspaceStore } from '../../core/store.js';
 import { setOutput } from '../../app/sidepanel.js';
-import {
-  renderJsonTextEditor,
-  initJsonTextEditor,
-  componentsToJson,
-  setEditorData,
-  MC_COLORS,
-} from '../../components/json-text-editor.js';
+import { AdvancedTextEditor } from '../../components/advanced-text-editor.js';
 import { getInviconUrl } from '../../core/wiki-images.js';
 import { getVersionNote, compareVersions } from '../../core/version-compat.js';
 
-let editorInstance = null;
+let editor = null;
 
 /**
  * UIをレンダリング
  */
 export function render(manifest) {
+  const tempEditor = new AdvancedTextEditor('tellraw-editor', {
+    placeholder: 'メッセージを入力...',
+    showClickEvent: true,
+    showHoverEvent: true,
+    showPreview: false,
+  });
+
   return `
     <div class="tool-panel tellraw-tool" id="tellraw-panel">
       <div class="tool-header">
         <img src="${getInviconUrl(manifest.iconItem || 'paper')}" class="tool-header-icon mc-wiki-image" width="32" height="32" alt="">
         <h2>${manifest.title}</h2>
-        <span class="version-badge">1.21.5+</span>
+        <span class="version-badge" id="tellraw-version-badge">1.21+</span>
         <button type="button" class="reset-btn" id="tellraw-reset-btn" title="設定をリセット">リセット</button>
       </div>
 
@@ -46,7 +48,7 @@ export function render(manifest) {
           </div>
           <div class="mc-chat-area" id="tellraw-chat-preview">
             <div class="mc-chat-message">
-              <span class="mc-color-white">テキストを入力するとここにプレビューが表示されます</span>
+              <span class="mc-color-white mc-placeholder">テキストを入力するとここにプレビューが表示されます</span>
             </div>
           </div>
         </div>
@@ -64,13 +66,10 @@ export function render(manifest) {
           </select>
         </div>
 
-        <!-- JSON Text Editor -->
+        <!-- 高度なテキストエディター -->
         <div class="form-group">
-          <label>メッセージ内容</label>
-          ${renderJsonTextEditor('tellraw-editor', {
-            showClickEvent: true,
-            showHoverEvent: true,
-          })}
+          <label>メッセージ内容（1文字ごとに色・書式を設定可能）</label>
+          ${tempEditor.render()}
         </div>
 
         <!-- バージョン情報 -->
@@ -82,9 +81,10 @@ export function render(manifest) {
       <div class="tool-info">
         <h4>使い方</h4>
         <ul>
-          <li>テキストセグメントを追加して装飾</li>
-          <li>各セグメントに色・スタイルを設定</li>
+          <li>テキストを入力し、範囲選択して色・書式を適用</li>
+          <li>1文字ごとに異なる色・スタイルを設定可能</li>
           <li>クリック/ホバーイベントで対話機能追加</li>
+          <li>Ctrl+B(太字)、Ctrl+I(斜体)、Ctrl+U(下線)のショートカット対応</li>
         </ul>
       </div>
     </div>
@@ -95,8 +95,19 @@ export function render(manifest) {
  * 初期化
  */
 export function init(container) {
-  // JSON Text Editor初期化
-  editorInstance = initJsonTextEditor('tellraw-editor', debounce(updateCommand, 150));
+  // Advanced Text Editor初期化
+  editor = new AdvancedTextEditor('tellraw-editor', {
+    placeholder: 'メッセージを入力...',
+    showClickEvent: true,
+    showHoverEvent: true,
+    showPreview: false,
+    onChange: debounce(() => {
+      updateGamePreview();
+      updateCommand();
+    }, 100),
+  });
+
+  editor.init(container);
 
   // ターゲット変更
   $('#tellraw-target', container)?.addEventListener('change', updateCommand);
@@ -125,26 +136,10 @@ function resetForm(container) {
   const targetSelect = $('#tellraw-target', container);
   if (targetSelect) targetSelect.value = '@a';
 
-  // クリックイベントをリセット
-  const clickAction = container.querySelector('.jte-click-action');
-  const clickValue = container.querySelector('.jte-click-value');
-  if (clickAction) clickAction.value = '';
-  if (clickValue) {
-    clickValue.value = '';
-    clickValue.style.display = 'none';
+  // エディターをクリア
+  if (editor) {
+    editor.clear(container);
   }
-
-  // ホバーイベントをリセット
-  const hoverAction = container.querySelector('.jte-hover-action');
-  const hoverValue = container.querySelector('.jte-hover-value');
-  if (hoverAction) hoverAction.value = '';
-  if (hoverValue) {
-    hoverValue.value = '';
-    hoverValue.style.display = 'none';
-  }
-
-  // エディタをリセット
-  setEditorData('tellraw-editor', []);
 
   // コマンド更新
   updateCommand();
@@ -156,6 +151,11 @@ function resetForm(container) {
 function updateVersionDisplay() {
   const version = workspaceStore.get('version') || '1.21';
   const note = document.getElementById('tellraw-version-note');
+  const badge = document.getElementById('tellraw-version-badge');
+
+  if (badge) {
+    badge.textContent = version + '+';
+  }
 
   if (note) {
     const versionNote = getVersionNote(version);
@@ -164,6 +164,9 @@ function updateVersionDisplay() {
     if (compareVersions(version, '1.7') < 0) {
       note.textContent = '注意: このバージョンでは /tellraw コマンドは使用できません';
       note.style.color = 'var(--mc-color-redstone)';
+    } else if (compareVersions(version, '1.16') < 0) {
+      note.textContent = `${version} - HEXカラーは非対応（16色のみ）`;
+      note.style.color = 'var(--mc-color-gold)';
     } else {
       note.textContent = `現在のバージョン: ${version} - ${versionNote}`;
       note.style.color = 'var(--mc-color-diamond)';
@@ -172,46 +175,15 @@ function updateVersionDisplay() {
 }
 
 /**
- * コマンドを更新
- */
-function updateCommand() {
-  const target = $('#tellraw-target')?.value || '@a';
-  const globalVersion = workspaceStore.get('version') || '1.21';
-  const components = editorInstance?.getData() || [];
-
-  // バージョンをcomponentsToJson用の形式に変換
-  let version = '1.21.5+';
-  if (compareVersions(globalVersion, '1.21') >= 0) {
-    version = '1.21.5+';
-  } else if (compareVersions(globalVersion, '1.20') >= 0) {
-    version = '1.20+';
-  } else if (compareVersions(globalVersion, '1.16') >= 0) {
-    version = '1.16+';
-  } else if (compareVersions(globalVersion, '1.13') >= 0) {
-    version = '1.13+';
-  } else {
-    version = '1.12-';
-  }
-
-  // ゲーム画面プレビューを更新
-  updateGamePreview(components);
-
-  // バージョンに応じたJSON生成
-  const jsonText = componentsToJson(components, { version });
-
-  const command = `/tellraw ${target} ${jsonText}`;
-
-  setOutput(command, 'tellraw', { target, version: globalVersion, components });
-}
-
-/**
  * ゲーム画面プレビューを更新
  */
-function updateGamePreview(components) {
+function updateGamePreview() {
   const chatPreview = document.getElementById('tellraw-chat-preview');
-  if (!chatPreview) return;
+  if (!chatPreview || !editor) return;
 
-  if (!components || components.length === 0) {
+  const groups = editor.getFormattedGroups();
+
+  if (!groups || groups.length === 0) {
     chatPreview.innerHTML = `
       <div class="mc-chat-message">
         <span class="mc-color-white mc-placeholder">テキストを入力するとここにプレビューが表示されます</span>
@@ -220,35 +192,59 @@ function updateGamePreview(components) {
     return;
   }
 
-  const messageHtml = components.map((comp, index) => {
+  const messageHtml = groups.map((group, index) => {
     const classes = ['mc-text-segment'];
 
     // 色クラス
-    if (comp.color) {
-      classes.push(`mc-color-${comp.color.replace('_', '-')}`);
+    if (group.color) {
+      if (group.color.startsWith('#')) {
+        // HEXカラーはインラインスタイル
+      } else {
+        classes.push(`mc-color-${group.color.replace('_', '-')}`);
+      }
     } else {
       classes.push('mc-color-white');
     }
 
     // スタイルクラス
-    if (comp.bold) classes.push('mc-bold');
-    if (comp.italic) classes.push('mc-italic');
-    if (comp.underlined) classes.push('mc-underlined');
-    if (comp.strikethrough) classes.push('mc-strikethrough');
+    if (group.bold) classes.push('mc-bold');
+    if (group.italic) classes.push('mc-italic');
+    if (group.underlined) classes.push('mc-underlined');
+    if (group.strikethrough) classes.push('mc-strikethrough');
+    if (group.obfuscated) classes.push('mc-obfuscated');
+
+    const style = group.color?.startsWith('#') ? `color: ${group.color};` : '';
+    const text = escapeHtml(group.text).replace(/\n/g, '<br>');
 
     // 難読化テキスト
-    if (comp.obfuscated) {
-      classes.push('mc-obfuscated');
-      return `<span class="${classes.join(' ')}" data-text="${escapeHtml(comp.text)}" data-index="${index}">${escapeHtml(comp.text)}</span>`;
+    if (group.obfuscated) {
+      return `<span class="${classes.join(' ')}" style="${style}" data-text="${escapeHtml(group.text)}" data-index="${index}">${text}</span>`;
     }
 
-    return `<span class="${classes.join(' ')}">${escapeHtml(comp.text)}</span>`;
+    return `<span class="${classes.join(' ')}" style="${style}">${text}</span>`;
   }).join('');
 
   chatPreview.innerHTML = `<div class="mc-chat-message">${messageHtml}</div>`;
 
   // 難読化アニメーション
   startChatObfuscatedAnimation();
+}
+
+/**
+ * コマンドを更新
+ */
+function updateCommand() {
+  const target = $('#tellraw-target')?.value || '@a';
+  const globalVersion = workspaceStore.get('version') || '1.21';
+
+  if (!editor) return;
+
+  // バージョンに応じた出力
+  const jsonText = editor.getOutput(globalVersion);
+
+  const command = `/tellraw ${target} ${jsonText}`;
+
+  setOutput(command, 'tellraw', { target, version: globalVersion });
 }
 
 // 難読化アニメーション
@@ -271,13 +267,13 @@ function startChatObfuscatedAnimation() {
       const originalText = el.dataset.text || '';
       let newText = '';
       for (let i = 0; i < originalText.length; i++) {
-        if (originalText[i] === ' ') {
-          newText += ' ';
+        if (originalText[i] === ' ' || originalText[i] === '\n') {
+          newText += originalText[i] === '\n' ? '<br>' : ' ';
         } else {
           newText += OBFUSCATED_CHARS[Math.floor(Math.random() * OBFUSCATED_CHARS.length)];
         }
       }
-      el.textContent = newText;
+      el.innerHTML = newText;
     });
   }, 50);
 }
@@ -301,12 +297,6 @@ style.textContent = `
     font-size: 0.7rem;
     border-radius: 3px;
     margin-left: auto;
-  }
-
-  .version-options {
-    display: flex;
-    gap: var(--mc-space-md);
-    flex-wrap: wrap;
   }
 
   .version-note {
