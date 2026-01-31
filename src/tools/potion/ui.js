@@ -569,8 +569,7 @@ function renderEffectGrid(container, type) {
                    onclick="event.stopPropagation()">
             <span>∞</span>
           </label>
-          <button type="button" class="effect-add-btn" data-effect="${e.id}"
-                  onclick="event.stopPropagation()" title="追加">+</button>
+          <button type="button" class="effect-add-btn" data-effect="${e.id}" title="追加">+</button>
         </div>
       </div>
     `;
@@ -1059,7 +1058,7 @@ style.textContent = `
     vertical-align: middle;
   }
 
-  .effect-item .effect-name { font-size: 0.75rem; flex: 1; }
+  .effect-item .effect-name { font-size: 0.8rem; flex: 1; color: #e8e8e8; font-weight: 500; }
 
   /* エフェクトグリッドアイテム（レベル入力付き） */
   .effect-grid {
@@ -1067,29 +1066,31 @@ style.textContent = `
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: 8px;
     padding: var(--mc-space-sm);
-    background: var(--mc-bg-panel);
+    background: rgba(60, 60, 60, 0.5);
     max-height: 350px;
     overflow-y: auto;
+    border-radius: 6px;
   }
 
   .effect-item {
     display: flex;
     flex-direction: column;
     gap: 6px;
-    padding: 8px;
-    background: var(--mc-bg-surface);
-    border: 2px solid transparent;
-    border-radius: 4px;
-    border-left: 3px solid var(--effect-color);
+    padding: 10px;
+    background: rgba(70, 70, 70, 0.8);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    border-left: 4px solid var(--effect-color);
     transition: all 0.15s;
   }
 
   .effect-item:hover {
-    background: rgba(92, 183, 70, 0.1);
+    background: rgba(92, 183, 70, 0.15);
+    border-color: rgba(255, 255, 255, 0.2);
   }
 
   .effect-item.selected {
-    background: rgba(92, 183, 70, 0.2);
+    background: rgba(92, 183, 70, 0.25);
     border-color: var(--mc-color-grass-main);
   }
 
@@ -1117,22 +1118,22 @@ style.textContent = `
   }
 
   .effect-item .effect-input-group label {
-    font-size: 0.65rem;
-    color: var(--mc-text-muted);
+    font-size: 0.7rem;
+    color: #b0b0b0;
     font-weight: bold;
   }
 
   .effect-item .effect-level-input,
   .effect-item .effect-duration-input {
-    width: 45px;
-    padding: 3px 4px;
-    font-size: 0.75rem;
+    width: 50px;
+    padding: 4px 6px;
+    font-size: 0.8rem;
     font-weight: bold;
     text-align: center;
-    background: var(--mc-bg-panel);
-    border: 1px solid var(--mc-border-dark);
-    color: var(--mc-color-diamond);
-    border-radius: 3px;
+    background: rgba(40, 40, 40, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #6EECD2;
+    border-radius: 4px;
   }
 
   .effect-item .effect-level-input:focus,

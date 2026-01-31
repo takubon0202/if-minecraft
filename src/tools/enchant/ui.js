@@ -44,9 +44,18 @@ const ENCHANT_CATEGORIES = {
       { id: 'fire_aspect', name: '火属性', en: 'Fire Aspect', defaultMax: 2, desc: '攻撃対象に発火' },
       { id: 'looting', name: 'ドロップ増加', en: 'Looting', defaultMax: 3, desc: 'Mobのドロップ増加' },
       { id: 'sweeping_edge', name: '範囲ダメージ増加', en: 'Sweeping Edge', defaultMax: 3, desc: '範囲攻撃ダメージ増加' },
-      { id: 'density', name: '密度', en: 'Density', defaultMax: 5, desc: 'メイス専用、落下ダメージ増加' },
-      { id: 'breach', name: '貫通', en: 'Breach', defaultMax: 4, desc: 'メイス専用、防具無視ダメージ' },
-      { id: 'wind_burst', name: '風爆発', en: 'Wind Burst', defaultMax: 3, desc: 'メイス専用、着地時に風爆発' },
+    ]
+  },
+  mace: {
+    name: 'メイス',
+    iconItem: 'mace',
+    enchants: [
+      { id: 'density', name: '重撃', en: 'Density', defaultMax: 5, desc: '落下距離1ブロックあたり+0.5ダメージ（レベルごと）' },
+      { id: 'breach', name: '防具貫通', en: 'Breach', defaultMax: 4, desc: '防具によるダメージ軽減を15%×レベル無視' },
+      { id: 'wind_burst', name: 'ウィンドバースト', en: 'Wind Burst', defaultMax: 3, desc: 'スマッシュ攻撃時に使用者を打ち上げ（レベル×7ブロック）' },
+      { id: 'smite', name: 'アンデッド特効', en: 'Smite', defaultMax: 5, desc: 'アンデッド系に追加ダメージ' },
+      { id: 'bane_of_arthropods', name: '虫特効', en: 'Bane of Arthropods', defaultMax: 5, desc: '虫系に追加ダメージ' },
+      { id: 'fire_aspect', name: '火属性', en: 'Fire Aspect', defaultMax: 2, desc: '攻撃対象に発火' },
     ]
   },
   tool: {
@@ -165,6 +174,12 @@ const ITEM_CATEGORIES = {
       { id: 'golden_sword', name: '金の剣' },
       { id: 'diamond_sword', name: 'ダイヤの剣' },
       { id: 'netherite_sword', name: 'ネザライトの剣' },
+    ]
+  },
+  mace: {
+    name: 'メイス',
+    items: [
+      { id: 'mace', name: 'メイス' },
     ]
   },
   pickaxe: {
@@ -349,6 +364,32 @@ const PRESETS = [
       { id: 'sharpness', level: 5 },
       { id: 'fire_aspect', level: 2 },
       { id: 'knockback', level: 2 },
+      { id: 'unbreaking', level: 3 },
+    ]
+  },
+  {
+    id: 'max-mace',
+    name: '最強メイス',
+    category: 'attack',
+    item: 'mace',
+    desc: '重撃5、防具貫通4、ウィンドバースト3、修繕付き',
+    enchants: [
+      { id: 'density', level: 5 },
+      { id: 'breach', level: 4 },
+      { id: 'wind_burst', level: 3 },
+      { id: 'unbreaking', level: 3 },
+      { id: 'mending', level: 1 },
+    ]
+  },
+  {
+    id: 'smash-mace',
+    name: 'スマッシュメイス',
+    category: 'attack',
+    item: 'mace',
+    desc: '重撃255で超高落下ダメージ',
+    enchants: [
+      { id: 'density', level: 255 },
+      { id: 'fire_aspect', level: 2 },
       { id: 'unbreaking', level: 3 },
     ]
   },

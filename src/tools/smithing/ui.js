@@ -238,6 +238,19 @@ export function render(manifest) {
             <div class="preview-info" id="preview-info">
               ${renderPreviewInfo()}
             </div>
+
+            <!-- コマンド出力セクション -->
+            <div class="command-output-section" id="command-output-section">
+              <label class="section-label">生成コマンド</label>
+              <div class="command-output-grid" id="command-output-grid">
+                ${renderCommandOutputs()}
+              </div>
+              <div class="command-actions">
+                <button type="button" class="copy-all-btn" id="copy-all-commands" title="全てのコマンドをコピー">
+                  📋 全てコピー
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </form>
@@ -438,6 +451,61 @@ function renderPreviewInfo() {
   `;
 }
 
+/**
+ * コマンド出力をレンダリング（4部位個別表示）
+ */
+function renderCommandOutputs() {
+  const patternInfo = TRIM_PATTERNS.find(p => p.id === state.pattern);
+
+  // ネザライト強化の場合
+  if (patternInfo?.category === 'upgrade') {
+    return ARMOR_TYPES.map(type => {
+      const typeInfo = ARMOR_TYPES.find(t => t.id === type.id);
+      const command = `/give @p minecraft:netherite_${type.id}`;
+      const isActive = state.fullSet || type.id === state.armorType;
+      return `
+        <div class="command-output-item ${isActive ? 'active' : ''}" data-armor-type="${type.id}">
+          <div class="command-item-header">
+            ${wikiImg(getArmorImageUrl('netherite', type.id), typeInfo?.name || '', 24)}
+            <span class="command-item-label">${typeInfo?.name || ''}</span>
+            <button type="button" class="copy-single-btn" data-command="${encodeURIComponent(command)}" title="コピー">📋</button>
+          </div>
+          <code class="command-text">${command}</code>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // 通常のトリム
+  return ARMOR_TYPES.map(type => {
+    const typeInfo = ARMOR_TYPES.find(t => t.id === type.id);
+    const itemId = `minecraft:${state.armorMaterial}_${type.id}`;
+    const trimComponent = `minecraft:trim={pattern:"minecraft:${state.pattern}",material:"minecraft:${state.trimMaterial}"}`;
+    const command = `/give @p ${itemId}[${trimComponent}]`;
+    const isActive = state.fullSet || type.id === state.armorType;
+    return `
+      <div class="command-output-item ${isActive ? 'active' : ''}" data-armor-type="${type.id}">
+        <div class="command-item-header">
+          ${wikiImg(getArmorImageUrl(state.armorMaterial, type.id), typeInfo?.name || '', 24)}
+          <span class="command-item-label">${typeInfo?.name || ''}</span>
+          <button type="button" class="copy-single-btn" data-command="${encodeURIComponent(command)}" title="コピー">📋</button>
+        </div>
+        <code class="command-text">${command}</code>
+      </div>
+    `;
+  }).join('');
+}
+
+/**
+ * コマンド出力セクションを更新
+ */
+function updateCommandOutputs(container) {
+  const outputGrid = $('#command-output-grid', container);
+  if (outputGrid) {
+    outputGrid.innerHTML = renderCommandOutputs();
+  }
+}
+
 // ======================================
 // 初期化・イベント処理
 // ======================================
@@ -516,8 +584,37 @@ export function init(container) {
     resetForm(container);
   });
 
+  // 個別コピーボタン
+  delegate(container, 'click', '.copy-single-btn', (e, target) => {
+    e.stopPropagation();
+    const command = decodeURIComponent(target.dataset.command);
+    navigator.clipboard.writeText(command).then(() => {
+      target.textContent = '✓';
+      setTimeout(() => { target.textContent = '📋'; }, 1000);
+    });
+  });
+
+  // 全てコピーボタン
+  $('#copy-all-commands', container)?.addEventListener('click', () => {
+    const commands = [];
+    const items = $$('.command-output-item.active', container);
+    items.forEach(item => {
+      const codeEl = item.querySelector('.command-text');
+      if (codeEl) commands.push(codeEl.textContent);
+    });
+    const allCommands = commands.join('\n');
+    navigator.clipboard.writeText(allCommands).then(() => {
+      const btn = $('#copy-all-commands', container);
+      if (btn) {
+        btn.textContent = '✓ コピーしました';
+        setTimeout(() => { btn.textContent = '📋 全てコピー'; }, 1500);
+      }
+    });
+  });
+
   // 初期コマンド生成
   updateCommand();
+  updateCommandOutputs(container);
 }
 
 /**
@@ -599,6 +696,8 @@ function updatePreview(container) {
   if (info) {
     info.innerHTML = renderPreviewInfo();
   }
+  // コマンド出力も更新
+  updateCommandOutputs(container);
 }
 
 /**
@@ -1087,6 +1186,100 @@ style.textContent = `
   .trim-info-label {
     font-weight: 500;
     color: var(--mc-text-primary);
+  }
+
+  /* コマンド出力セクション */
+  .command-output-section {
+    margin-top: var(--mc-space-md);
+    padding: var(--mc-space-md);
+    background: rgba(40, 40, 40, 0.6);
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .command-output-grid {
+    display: flex;
+    flex-direction: column;
+    gap: var(--mc-space-sm);
+    margin-bottom: var(--mc-space-md);
+  }
+
+  .command-output-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: var(--mc-space-sm);
+    background: rgba(30, 30, 30, 0.8);
+    border-radius: 6px;
+    border-left: 3px solid rgba(255,255,255,0.2);
+    opacity: 0.5;
+    transition: all 0.2s ease;
+  }
+
+  .command-output-item.active {
+    opacity: 1;
+    border-left-color: var(--mc-color-grass-main);
+    background: rgba(92, 183, 70, 0.1);
+  }
+
+  .command-item-header {
+    display: flex;
+    align-items: center;
+    gap: var(--mc-space-sm);
+  }
+
+  .command-item-label {
+    flex: 1;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: #e0e0e0;
+  }
+
+  .copy-single-btn {
+    padding: 2px 6px;
+    font-size: 0.75rem;
+    background: rgba(255,255,255,0.1);
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .copy-single-btn:hover {
+    background: rgba(255,255,255,0.2);
+  }
+
+  .command-text {
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 0.7rem;
+    color: #aaffaa;
+    background: rgba(0,0,0,0.3);
+    padding: 4px 8px;
+    border-radius: 4px;
+    word-break: break-all;
+    display: block;
+  }
+
+  .command-actions {
+    display: flex;
+    justify-content: center;
+  }
+
+  .copy-all-btn {
+    padding: var(--mc-space-sm) var(--mc-space-lg);
+    font-size: 0.85rem;
+    font-weight: bold;
+    background: var(--mc-color-grass-main);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .copy-all-btn:hover {
+    background: var(--mc-color-grass-light);
+    transform: scale(1.02);
   }
 
   /* プレビュー下部のトリム情報 */
