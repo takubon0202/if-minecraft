@@ -33,6 +33,8 @@ import * as tellraw from '../tools/tellraw/manifest.js';
 import * as title from '../tools/title/manifest.js';
 import * as sign from '../tools/sign/manifest.js';
 import * as book from '../tools/book/manifest.js';
+// プラグイン/MOD
+import * as worldedit from '../tools/worldedit/manifest.js';
 
 // 登録済みツール
 const tools = new Map();
@@ -62,6 +64,8 @@ async function init() {
   registerTool(title);
   registerTool(sign);
   registerTool(book);
+  // プラグイン/MOD
+  registerTool(worldedit);
 
   // コンポーネント初期化
   initNav();
