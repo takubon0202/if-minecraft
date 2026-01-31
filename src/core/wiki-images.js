@@ -300,7 +300,7 @@ const ITEM_NAME_MAP = {
   'short_grass': 'Short_Grass',
   'tall_grass': 'Tall_Grass',
   'seagrass': 'Seagrass',
-  'tall_seagrass': 'Tall_Seagrass',
+  'tall_seagrass': 'Seagrass',  // Tall SeagrassはInvicon存在しない、Seagrassで代用
   'lily_of_the_valley': 'Lily_of_the_Valley',
   'vine': 'Vines',  // 複数形
   'cave_vines': 'Glow_Berries',  // cave_vinesはアイテムなし、Glow Berriesで代用
