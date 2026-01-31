@@ -1268,8 +1268,8 @@ function updateCommand(container) {
   const itemId = $('#item-select', container)?.value;
   const item = useCustom && customId ? customId : `minecraft:${itemId}`;
 
-  // リッチテキストエディターからカスタム名を取得
-  const customNameSNBT = enchantCustomNameEditor?.getSNBT() || '';
+  // リッチテキストエディターからJSON形式のカスタム名を取得
+  const customNameJSON = enchantCustomNameEditor?.getJSON() || '';
   const customNamePlain = enchantCustomNameEditor?.getPlainText() || '';
   const count = parseInt($('#item-count', container)?.value) || 1;
   const unbreakable = $('#opt-unbreakable', container)?.checked;
@@ -1280,11 +1280,11 @@ function updateCommand(container) {
   let command;
 
   if (group === 'latest' || group === 'component') {
-    // 1.20.5+: コンポーネント形式（SNBT対応）
-    command = generateComponentCommand(item, count, customNameSNBT, unbreakable, hideEnchants, hideUnbreakable, useAttributes, container, version);
+    // 1.20.5+: コンポーネント形式（JSON Text Component）
+    command = generateComponentCommand(item, count, customNameJSON, unbreakable, hideEnchants, hideUnbreakable, useAttributes, container, version);
   } else if (group === 'nbt-modern' || group === 'nbt-legacy') {
-    // 1.13-1.20.4: NBT形式（SNBT対応）
-    command = generateNBTCommand(item, count, customNameSNBT, unbreakable, useAttributes, container);
+    // 1.13-1.20.4: NBT形式（JSON Text Component）
+    command = generateNBTCommand(item, count, customNameJSON, unbreakable, useAttributes, container);
   } else {
     // 1.12: レガシー形式（プレーンテキストのみ）
     command = generateLegacyCommand(item, count, customNamePlain, unbreakable, container);
@@ -1304,15 +1304,16 @@ function updateCommand(container) {
  * コンポーネント形式（1.20.5+）
  * @param {string} version - Minecraftバージョン
  */
-function generateComponentCommand(item, count, customNameSNBT, unbreakable, hideEnchants, hideUnbreakable, useAttributes, container, version = '1.21') {
+function generateComponentCommand(item, count, customNameJSON, unbreakable, hideEnchants, hideUnbreakable, useAttributes, container, version = '1.21') {
   const components = [];
 
   // 1.21.5以降は簡略形式が使用可能
   const useSimplifiedForm = compareVersions(version, '1.21.5') >= 0;
 
-  // カスタム名（リッチテキストエディターからのSNBT形式）
-  if (customNameSNBT) {
-    components.push(`minecraft:custom_name='${customNameSNBT}'`);
+  // カスタム名（JSON Text Component形式）
+  // 形式: minecraft:custom_name='{"text":"名前","color":"gold","bold":true}'
+  if (customNameJSON) {
+    components.push(`minecraft:custom_name='${customNameJSON}'`);
   }
 
   if (selectedEnchants.length > 0) {
@@ -1365,12 +1366,13 @@ function generateComponentCommand(item, count, customNameSNBT, unbreakable, hide
 /**
  * NBT形式（1.13-1.20.4）
  */
-function generateNBTCommand(item, count, customNameSNBT, unbreakable, useAttributes, container) {
+function generateNBTCommand(item, count, customNameJSON, unbreakable, useAttributes, container) {
   const nbtParts = [];
 
-  // カスタム名（リッチテキストエディターからのSNBT形式）
-  if (customNameSNBT) {
-    nbtParts.push(`display:{Name:'${customNameSNBT}'}`);
+  // カスタム名（JSON Text Component形式）
+  // 形式: display:{Name:'{"text":"名前","color":"gold"}'}
+  if (customNameJSON) {
+    nbtParts.push(`display:{Name:'${customNameJSON}'}`);
   }
 
   if (selectedEnchants.length > 0) {

@@ -805,8 +805,8 @@ function updateCommand(container) {
   const activeType = $('.type-tab.active', container);
   const potionType = activeType?.dataset.type || 'potion';
   const count = parseInt($('#potion-count', container)?.value) || 1;
-  // リッチテキストエディターからSNBT形式のカスタム名を取得
-  const customNameSNBT = customNameEditor?.getSNBT() || '';
+  // リッチテキストエディターからJSON形式のカスタム名を取得
+  const customNameJSON = customNameEditor?.getJSON() || '';
   const customNamePlain = customNameEditor?.getPlainText() || '';
   const useColor = $('#potion-use-color', container)?.checked;
   const color = $('#potion-color', container)?.value;
@@ -818,11 +818,11 @@ function updateCommand(container) {
   let command;
 
   if (versionGroup === 'latest' || versionGroup === 'component') {
-    // 1.20.5+ コンポーネント形式（SNBT対応）
-    command = generateComponentCommand(container, potionType, count, customNameSNBT, useColor, color);
+    // 1.20.5+ コンポーネント形式（JSON Text Component）
+    command = generateComponentCommand(container, potionType, count, customNameJSON, useColor, color);
   } else if (versionGroup === 'nbt-modern' || versionGroup === 'nbt-legacy') {
-    // 1.13-1.20.4 NBT形式（SNBT対応）
-    command = generateNBTCommand(container, potionType, count, customNameSNBT, useColor, color);
+    // 1.13-1.20.4 NBT形式（JSON Text Component）
+    command = generateNBTCommand(container, potionType, count, customNameJSON, useColor, color);
   } else {
     // 1.12- レガシー形式（プレーンテキストのみ）
     command = generateLegacyCommand(container, potionType, count, customNamePlain, useColor, color);
@@ -841,13 +841,13 @@ function updateCommand(container) {
 /**
  * コンポーネント形式（1.20.5+）
  */
-function generateComponentCommand(container, potionType, count, customNameSNBT, useColor, color) {
+function generateComponentCommand(container, potionType, count, customNameJSON, useColor, color) {
   const components = [];
 
-  // カスタム名（リッチテキストエディターからのSNBT形式）
-  if (customNameSNBT) {
-    // SNBT形式をそのまま使用（エディターが生成する形式は配列または単一オブジェクト）
-    components.push(`minecraft:custom_name='${customNameSNBT}'`);
+  // カスタム名（JSON Text Component形式）
+  // 形式: minecraft:custom_name='{"text":"名前","color":"gold","bold":true}'
+  if (customNameJSON) {
+    components.push(`minecraft:custom_name='${customNameJSON}'`);
   }
 
   // ポーション効果
@@ -892,13 +892,13 @@ function generateComponentCommand(container, potionType, count, customNameSNBT, 
 /**
  * NBT形式（1.13-1.20.4）
  */
-function generateNBTCommand(container, potionType, count, customNameSNBT, useColor, color) {
+function generateNBTCommand(container, potionType, count, customNameJSON, useColor, color) {
   const nbtParts = [];
 
-  // カスタム名（リッチテキストエディターからのSNBT形式）
-  if (customNameSNBT) {
-    // NBT形式ではJSON文字列として埋め込む
-    nbtParts.push(`display:{Name:'${customNameSNBT}'}`);
+  // カスタム名（JSON Text Component形式）
+  // 形式: display:{Name:'{"text":"名前","color":"gold"}'}
+  if (customNameJSON) {
+    nbtParts.push(`display:{Name:'${customNameJSON}'}`);
   }
 
   // ポーション効果

@@ -345,9 +345,10 @@ export class RichTextEditor {
   }
 
   /**
-   * SNBT形式のテキストコンポーネントを生成
+   * JSON形式のテキストコンポーネントを生成
+   * Minecraftの/giveコマンドで使用される正式なJSON Text Component形式
    */
-  generateSNBT() {
+  generateJSON() {
     if (this.characters.length === 0) return '';
 
     // 連続する同じ書式の文字をグループ化
@@ -375,40 +376,44 @@ export class RichTextEditor {
 
     // 単一グループの場合
     if (groups.length === 1) {
-      return this.formatToSNBT(groups[0]);
+      return JSON.stringify(this.formatToJSONObject(groups[0]));
     }
 
     // 複数グループの場合は配列形式
-    const components = groups.map(g => this.formatToSNBT(g));
-    return `[${components.join(',')}]`;
+    const components = groups.map(g => this.formatToJSONObject(g));
+    return JSON.stringify(components);
   }
 
   /**
-   * 単一フォーマットグループをSNBT形式に変換
+   * 単一フォーマットグループをJSONオブジェクトに変換
    */
-  formatToSNBT(group) {
-    const parts = [`text:"${this.escapeString(group.text)}"`];
+  formatToJSONObject(group) {
+    const obj = {
+      text: group.text,
+      italic: false  // アイテム名のデフォルト斜体を無効化
+    };
 
-    // 色
+    // 色（whiteは省略可能だが明示的に設定）
     if (group.color && group.color !== 'white') {
-      if (group.color.startsWith('#')) {
-        parts.push(`color:"${group.color}"`);
-      } else {
-        parts.push(`color:"${group.color}"`);
-      }
+      obj.color = group.color;
     }
 
     // 書式
-    if (group.bold) parts.push('bold:true');
-    if (group.italic) parts.push('italic:true');
-    if (group.underlined) parts.push('underlined:true');
-    if (group.strikethrough) parts.push('strikethrough:true');
-    if (group.obfuscated) parts.push('obfuscated:true');
+    if (group.bold) obj.bold = true;
+    if (group.italic) obj.italic = true;
+    if (group.underlined) obj.underlined = true;
+    if (group.strikethrough) obj.strikethrough = true;
+    if (group.obfuscated) obj.obfuscated = true;
 
-    // italic: falseを追加（アイテム名のデフォルト斜体を無効化）
-    if (!group.italic) parts.push('italic:false');
+    return obj;
+  }
 
-    return `{${parts.join(',')}}`;
+  /**
+   * 後方互換性のため generateSNBT を維持（内部的にはJSON形式）
+   * @deprecated generateJSON() を使用してください
+   */
+  generateSNBT() {
+    return this.generateJSON();
   }
 
   /**
@@ -447,10 +452,18 @@ export class RichTextEditor {
   }
 
   /**
-   * SNBT出力を取得
+   * JSON形式の出力を取得（推奨）
+   */
+  getJSON() {
+    return this.generateJSON();
+  }
+
+  /**
+   * SNBT出力を取得（後方互換性のため維持、内部的にはJSON形式）
+   * @deprecated getJSON() を使用してください
    */
   getSNBT() {
-    return this.generateSNBT();
+    return this.generateJSON();
   }
 
   /**
