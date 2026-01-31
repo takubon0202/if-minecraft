@@ -805,21 +805,29 @@ function updateCommand(container) {
   const activeType = $('.type-tab.active', container);
   const potionType = activeType?.dataset.type || 'potion';
   const count = parseInt($('#potion-count', container)?.value) || 1;
-  // リッチテキストエディターからJSON形式のカスタム名を取得
-  const customNameJSON = customNameEditor?.getJSON() || '';
-  const customNamePlain = customNameEditor?.getPlainText() || '';
-  const useColor = $('#potion-use-color', container)?.checked;
-  const color = $('#potion-color', container)?.value;
 
   // 現在のバージョンを取得
   const version = workspaceStore.get('version') || '1.21';
   const versionGroup = getVersionGroup(version);
 
+  // バージョンに応じてリッチテキストエディターから適切な形式を取得
+  // 1.21.5以降: SNBT形式 {text:"...",color:"red"}
+  // 1.20.5-1.21.4: JSON形式 {"text":"...","color":"red"}
+  const useSNBT = compareVersions(version, '1.21.5') >= 0;
+  const customNameForComponent = useSNBT
+    ? customNameEditor?.getSNBT() || ''
+    : customNameEditor?.getJSON() || '';
+  const customNameJSON = customNameEditor?.getJSON() || '';
+  const customNamePlain = customNameEditor?.getPlainText() || '';
+
+  const useColor = $('#potion-use-color', container)?.checked;
+  const color = $('#potion-color', container)?.value;
+
   let command;
 
   if (versionGroup === 'latest' || versionGroup === 'component') {
-    // 1.20.5+ コンポーネント形式（JSON Text Component）
-    command = generateComponentCommand(container, potionType, count, customNameJSON, useColor, color);
+    // 1.20.5+ コンポーネント形式
+    command = generateComponentCommand(container, potionType, count, customNameForComponent, useSNBT, useColor, color);
   } else if (versionGroup === 'nbt-modern' || versionGroup === 'nbt-legacy') {
     // 1.13-1.20.4 NBT形式（JSON Text Component）
     command = generateNBTCommand(container, potionType, count, customNameJSON, useColor, color);
@@ -840,14 +848,28 @@ function updateCommand(container) {
 
 /**
  * コンポーネント形式（1.20.5+）
+ * @param {HTMLElement} container
+ * @param {string} potionType
+ * @param {number} count
+ * @param {string} customName - カスタム名（SNBT or JSON形式）
+ * @param {boolean} useSNBT - true: 1.21.5+のSNBT形式, false: 1.20.5-1.21.4のJSON形式
+ * @param {boolean} useColor
+ * @param {string} color
  */
-function generateComponentCommand(container, potionType, count, customNameJSON, useColor, color) {
+function generateComponentCommand(container, potionType, count, customName, useSNBT, useColor, color) {
   const components = [];
 
-  // カスタム名（JSON Text Component形式）
-  // 形式: minecraft:custom_name='{"text":"名前","color":"gold","bold":true}'
-  if (customNameJSON) {
-    components.push(`minecraft:custom_name='${customNameJSON}'`);
+  // カスタム名
+  // 1.21.5+: SNBT形式 minecraft:custom_name={text:"...",color:"red"}
+  // 1.20.5-1.21.4: JSON形式 minecraft:custom_name='{"text":"...","color":"red"}'
+  if (customName) {
+    if (useSNBT) {
+      // SNBT形式（1.21.5+）: クォートなしで直接埋め込み
+      components.push(`minecraft:custom_name=${customName}`);
+    } else {
+      // JSON形式（1.20.5-1.21.4）: シングルクォートで囲む
+      components.push(`minecraft:custom_name='${customName}'`);
+    }
   }
 
   // ポーション効果

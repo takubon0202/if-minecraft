@@ -345,13 +345,11 @@ export class RichTextEditor {
   }
 
   /**
-   * JSON形式のテキストコンポーネントを生成
-   * Minecraftの/giveコマンドで使用される正式なJSON Text Component形式
+   * 文字をグループ化（共通処理）
    */
-  generateJSON() {
-    if (this.characters.length === 0) return '';
+  getFormattedGroups() {
+    if (this.characters.length === 0) return [];
 
-    // 連続する同じ書式の文字をグループ化
     const groups = [];
     let currentGroup = null;
 
@@ -374,6 +372,18 @@ export class RichTextEditor {
       }
     }
 
+    return groups;
+  }
+
+  /**
+   * JSON形式のテキストコンポーネントを生成
+   * Minecraft 1.20.5-1.21.4向け
+   * 形式: {"text":"...",color":"red","bold":true}
+   */
+  generateJSON() {
+    const groups = this.getFormattedGroups();
+    if (groups.length === 0) return '';
+
     // 単一グループの場合
     if (groups.length === 1) {
       return JSON.stringify(this.formatToJSONObject(groups[0]));
@@ -382,6 +392,25 @@ export class RichTextEditor {
     // 複数グループの場合は配列形式
     const components = groups.map(g => this.formatToJSONObject(g));
     return JSON.stringify(components);
+  }
+
+  /**
+   * SNBT形式のテキストコンポーネントを生成
+   * Minecraft 1.21.5以降向け
+   * 形式: {text:"...",color:"red",bold:true}
+   */
+  generateSNBT() {
+    const groups = this.getFormattedGroups();
+    if (groups.length === 0) return '';
+
+    // 単一グループの場合
+    if (groups.length === 1) {
+      return this.formatToSNBTString(groups[0]);
+    }
+
+    // 複数グループの場合は配列形式
+    const components = groups.map(g => this.formatToSNBTString(g));
+    return `[${components.join(',')}]`;
   }
 
   /**
@@ -409,11 +438,32 @@ export class RichTextEditor {
   }
 
   /**
-   * 後方互換性のため generateSNBT を維持（内部的にはJSON形式）
-   * @deprecated generateJSON() を使用してください
+   * 単一フォーマットグループをSNBT文字列に変換
+   * SNBT形式: {text:"...",color:"red",bold:true}
    */
-  generateSNBT() {
-    return this.generateJSON();
+  formatToSNBTString(group) {
+    const parts = [`text:"${this.escapeString(group.text)}"`];
+
+    // italic:false（アイテム名のデフォルト斜体を無効化）
+    parts.push('italic:false');
+
+    // 色
+    if (group.color && group.color !== 'white') {
+      parts.push(`color:"${group.color}"`);
+    }
+
+    // 書式
+    if (group.bold) parts.push('bold:true');
+    if (group.italic) {
+      // italicがtrueの場合、先に追加したfalseを置き換え
+      const idx = parts.indexOf('italic:false');
+      if (idx !== -1) parts[idx] = 'italic:true';
+    }
+    if (group.underlined) parts.push('underlined:true');
+    if (group.strikethrough) parts.push('strikethrough:true');
+    if (group.obfuscated) parts.push('obfuscated:true');
+
+    return `{${parts.join(',')}}`;
   }
 
   /**
@@ -452,18 +502,19 @@ export class RichTextEditor {
   }
 
   /**
-   * JSON形式の出力を取得（推奨）
+   * JSON形式の出力を取得
+   * Minecraft 1.20.5-1.21.4向け
    */
   getJSON() {
     return this.generateJSON();
   }
 
   /**
-   * SNBT出力を取得（後方互換性のため維持、内部的にはJSON形式）
-   * @deprecated getJSON() を使用してください
+   * SNBT形式の出力を取得
+   * Minecraft 1.21.5以降向け
    */
   getSNBT() {
-    return this.generateJSON();
+    return this.generateSNBT();
   }
 
   /**
