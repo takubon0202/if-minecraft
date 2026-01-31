@@ -600,7 +600,8 @@ function renderBlocksGrid(version, category) {
 
   return blocks.map(block => `
     <div class="we-block-item" data-block-id="${block.id}" title="${block.name} (${block.id})">
-      <img src="${getInviconUrl(block.id)}" width="32" height="32" alt="${block.name}" onerror="this.style.opacity='0.3'">
+      <img src="${getInviconUrl(block.id)}" width="48" height="48" alt="${block.name}"
+        onerror="this.onerror=null; this.src='https://minecraft.wiki/images/Invicon_Barrier.png'; this.parentElement.classList.add('we-block-fallback');">
       <span class="we-block-name">${block.name}</span>
       <span class="we-block-version">${block.minVersion}+</span>
     </div>
@@ -2685,48 +2686,58 @@ style.textContent = `
 
   .we-blocks-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    gap: 8px;
-    max-height: 500px;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 12px;
+    max-height: 600px;
     overflow-y: auto;
-    padding: 4px;
+    padding: 12px;
+    background: #1a1a2e;
+    border-radius: 8px;
   }
 
   .we-block-item {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 10px 8px;
+    padding: 12px 10px;
     background: #2d2d44;
-    border: 2px solid #3d3d5c;
-    border-radius: 8px;
+    border: 2px solid #4a4a6a;
+    border-radius: 10px;
     cursor: pointer;
-    transition: all 0.15s;
+    transition: all 0.2s;
     text-align: center;
+    min-height: 100px;
   }
 
   .we-block-item:hover {
-    background: rgba(92, 183, 70, 0.2);
-    border-color: var(--mc-color-grass-main);
-    transform: translateY(-2px);
+    background: #3d5c3d;
+    border-color: #5cb746;
+    transform: translateY(-3px);
+    box-shadow: 0 4px 12px rgba(92, 183, 70, 0.3);
   }
 
   .we-block-item img {
     image-rendering: pixelated;
-    margin-bottom: 4px;
+    margin-bottom: 8px;
+    width: 48px;
+    height: 48px;
   }
 
   .we-block-name {
-    font-size: 0.8rem;
-    color: #e0e0e0;
+    font-size: 0.85rem;
+    color: #e8e8e8;
     word-break: break-word;
     line-height: 1.3;
+    font-weight: 500;
   }
 
   .we-block-version {
-    font-size: 0.7rem;
-    color: #9090a0;
-    margin-top: 2px;
+    font-size: 0.75rem;
+    color: #a0a0b0;
+    margin-top: 4px;
+    background: rgba(0,0,0,0.2);
+    padding: 2px 6px;
+    border-radius: 4px;
   }
 
   .we-no-blocks {
@@ -2751,14 +2762,29 @@ style.textContent = `
   }
 
   .we-block-selector-content {
-    background: var(--mc-bg-base);
-    border: 2px solid var(--mc-border-dark);
-    border-radius: 8px;
-    width: 90%;
-    max-width: 600px;
-    max-height: 80vh;
+    background: #1e1e2e;
+    border: 3px solid #4a4a6a;
+    border-radius: 12px;
+    width: 95%;
+    max-width: 800px;
+    max-height: 85vh;
     display: flex;
     flex-direction: column;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  }
+
+  /* フォールバック表示 */
+  .we-block-fallback {
+    background: #3a3a50 !important;
+    border-style: dashed !important;
+  }
+
+  .we-block-fallback img {
+    opacity: 0.5;
+  }
+
+  .we-block-fallback .we-block-name {
+    color: #a0a0a0;
   }
 
   .we-block-selector-header {
