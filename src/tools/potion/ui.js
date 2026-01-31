@@ -9,6 +9,7 @@ import { workspaceStore } from '../../core/store.js';
 import { setOutput } from '../../app/sidepanel.js';
 import { getInviconUrl, getEffectIconUrl } from '../../core/wiki-images.js';
 import { compareVersions, getVersionGroup, getVersionNote } from '../../core/version-compat.js';
+import { RichTextEditor, RICH_TEXT_EDITOR_CSS } from '../../core/rich-text-editor.js';
 
 // 全エフェクト一覧（33種類+）- colorは色付き円のフォールバック用
 const EFFECTS = [
@@ -122,12 +123,20 @@ const PRESETS = [
 
 let selectedEffects = [];
 let searchQuery = '';
+let customNameEditor = null;
 
 /**
  * UIをレンダリング
  */
 export function render(manifest) {
+  // リッチテキストエディターのインスタンスを作成
+  customNameEditor = new RichTextEditor('potion-name-rte', {
+    placeholder: '例: 最強のポーション',
+    showPreview: true,
+    onChange: () => {} // 初期化時に更新
+  });
   return `
+    <style>${RICH_TEXT_EDITOR_CSS}</style>
     <div class="tool-panel potion-tool" id="potion-panel">
       <div class="tool-header">
         <img src="${getInviconUrl(manifest.iconItem || 'potion')}" class="tool-header-icon mc-wiki-image" width="32" height="32" alt="">
@@ -157,10 +166,12 @@ export function render(manifest) {
             <label for="potion-count">個数</label>
             <input type="number" id="potion-count" class="mc-input" value="1" min="1" max="64">
           </div>
-          <div class="form-group">
-            <label for="potion-name">カスタム名</label>
-            <input type="text" id="potion-name" class="mc-input" placeholder="例: 最強のポーション">
-          </div>
+        </div>
+
+        <!-- カスタム名（リッチテキストエディター） -->
+        <div class="form-group">
+          <label>カスタム名 <small style="color: var(--mc-text-muted);">（1文字ごとに色や書式を設定可能）</small></label>
+          ${customNameEditor.render()}
         </div>
 
         <!-- カスタムカラー -->
@@ -285,6 +296,15 @@ export function render(manifest) {
 export function init(container) {
   selectedEffects = [];
   searchQuery = '';
+
+  // リッチテキストエディターの初期化
+  if (customNameEditor) {
+    customNameEditor.init(container);
+    customNameEditor.options.onChange = () => {
+      updatePreview(container);
+      updateCommand(container);
+    };
+  }
 
   // エフェクトグリッド初期表示
   renderEffectGrid(container, 'beneficial');
@@ -460,11 +480,14 @@ function resetForm(container) {
     t.classList.toggle('active', i === 0);
   });
 
-  // 個数とカスタム名をリセット
+  // 個数をリセット
   const countInput = $('#potion-count', container);
   if (countInput) countInput.value = '1';
-  const nameInput = $('#potion-name', container);
-  if (nameInput) nameInput.value = '';
+
+  // リッチテキストエディターをクリア
+  if (customNameEditor) {
+    customNameEditor.clear(container);
+  }
 
   // カスタム色をオフに
   const useColor = $('#potion-use-color', container);
@@ -650,7 +673,7 @@ function updatePreview(container) {
 
   const activeType = $('.type-tab.active', container);
   const potionType = POTION_TYPES.find(t => t.id === activeType?.dataset.type) || POTION_TYPES[0];
-  const customName = $('#potion-name', container)?.value;
+  const customName = customNameEditor?.getPlainText() || '';
   const count = parseInt($('#potion-count', container)?.value) || 1;
   const useColor = $('#potion-use-color', container)?.checked;
   const customColor = $('#potion-color', container)?.value;
@@ -782,7 +805,9 @@ function updateCommand(container) {
   const activeType = $('.type-tab.active', container);
   const potionType = activeType?.dataset.type || 'potion';
   const count = parseInt($('#potion-count', container)?.value) || 1;
-  const customName = $('#potion-name', container)?.value;
+  // リッチテキストエディターからSNBT形式のカスタム名を取得
+  const customNameSNBT = customNameEditor?.getSNBT() || '';
+  const customNamePlain = customNameEditor?.getPlainText() || '';
   const useColor = $('#potion-use-color', container)?.checked;
   const color = $('#potion-color', container)?.value;
 
@@ -793,20 +818,20 @@ function updateCommand(container) {
   let command;
 
   if (versionGroup === 'latest' || versionGroup === 'component') {
-    // 1.20.5+ コンポーネント形式
-    command = generateComponentCommand(container, potionType, count, customName, useColor, color);
+    // 1.20.5+ コンポーネント形式（SNBT対応）
+    command = generateComponentCommand(container, potionType, count, customNameSNBT, useColor, color);
   } else if (versionGroup === 'nbt-modern' || versionGroup === 'nbt-legacy') {
-    // 1.13-1.20.4 NBT形式
-    command = generateNBTCommand(container, potionType, count, customName, useColor, color);
+    // 1.13-1.20.4 NBT形式（SNBT対応）
+    command = generateNBTCommand(container, potionType, count, customNameSNBT, useColor, color);
   } else {
-    // 1.12- レガシー形式
-    command = generateLegacyCommand(container, potionType, count, customName, useColor, color);
+    // 1.12- レガシー形式（プレーンテキストのみ）
+    command = generateLegacyCommand(container, potionType, count, customNamePlain, useColor, color);
   }
 
   setOutput(command, 'potion', {
     potionType,
     count,
-    customName,
+    customName: customNamePlain,
     effects: selectedEffects,
     customColor: useColor ? color : null,
     version
@@ -816,13 +841,13 @@ function updateCommand(container) {
 /**
  * コンポーネント形式（1.20.5+）
  */
-function generateComponentCommand(container, potionType, count, customName, useColor, color) {
+function generateComponentCommand(container, potionType, count, customNameSNBT, useColor, color) {
   const components = [];
 
-  // カスタム名（名前空間付き、JSON Text Component形式）
-  if (customName) {
-    const textComponent = { text: customName, italic: false };
-    components.push(`minecraft:custom_name='${JSON.stringify(JSON.stringify(textComponent))}'`);
+  // カスタム名（リッチテキストエディターからのSNBT形式）
+  if (customNameSNBT) {
+    // SNBT形式をそのまま使用（エディターが生成する形式は配列または単一オブジェクト）
+    components.push(`minecraft:custom_name='${customNameSNBT}'`);
   }
 
   // ポーション効果
@@ -867,12 +892,13 @@ function generateComponentCommand(container, potionType, count, customName, useC
 /**
  * NBT形式（1.13-1.20.4）
  */
-function generateNBTCommand(container, potionType, count, customName, useColor, color) {
+function generateNBTCommand(container, potionType, count, customNameSNBT, useColor, color) {
   const nbtParts = [];
 
-  // カスタム名
-  if (customName) {
-    nbtParts.push(`display:{Name:'{"text":"${customName}"}'}`);
+  // カスタム名（リッチテキストエディターからのSNBT形式）
+  if (customNameSNBT) {
+    // NBT形式ではJSON文字列として埋め込む
+    nbtParts.push(`display:{Name:'${customNameSNBT}'}`);
   }
 
   // ポーション効果
@@ -910,13 +936,13 @@ function generateNBTCommand(container, potionType, count, customName, useColor, 
 /**
  * レガシー形式（1.12-）
  */
-function generateLegacyCommand(container, potionType, count, customName, useColor, color) {
+function generateLegacyCommand(container, potionType, count, customNamePlain, useColor, color) {
   // 1.12ではポーションは damage value で指定
   const nbtParts = [];
 
-  // カスタム名
-  if (customName) {
-    nbtParts.push(`display:{Name:"${customName}"}`);
+  // カスタム名（レガシー形式ではプレーンテキスト）
+  if (customNamePlain) {
+    nbtParts.push(`display:{Name:"${customNamePlain}"}`);
   }
 
   // ポーション効果

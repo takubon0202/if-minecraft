@@ -10,6 +10,7 @@ import { setOutput } from '../../app/sidepanel.js';
 import { getInviconUrl } from '../../core/wiki-images.js';
 import { applyTooltip } from '../../core/mc-tooltip.js';
 import { getVersionGroup, getVersionNote, compareVersions, ENCHANT_ID_MAP } from '../../core/version-compat.js';
+import { RichTextEditor, RICH_TEXT_EDITOR_CSS } from '../../core/rich-text-editor.js';
 
 // 最大レベル定数
 const ABSOLUTE_MAX_LEVEL = 255;  // ゲーム内で設定可能な絶対最大値
@@ -500,12 +501,21 @@ const PRESETS = [
 let selectedEnchants = [];
 let selectedAttributes = [];
 let searchQuery = '';
+let enchantCustomNameEditor = null;
 
 /**
  * UIをレンダリング
  */
 export function render(manifest) {
+  // リッチテキストエディターのインスタンスを作成
+  enchantCustomNameEditor = new RichTextEditor('enchant-name-rte', {
+    placeholder: '最強の剣',
+    showPreview: true,
+    onChange: () => {}
+  });
+
   return `
+    <style>${RICH_TEXT_EDITOR_CSS}</style>
     <div class="tool-panel enchant-tool" id="enchant-panel">
       <div class="tool-header">
         <img src="${getInviconUrl(manifest.iconItem || 'enchanted_book')}" class="tool-header-icon mc-wiki-image" width="32" height="32" alt="">
@@ -632,34 +642,18 @@ export function render(manifest) {
           </label>
         </div>
 
-        <!-- カスタム名・色・個数 -->
+        <!-- 個数 -->
         <div class="form-row">
-          <div class="form-group" style="flex: 2;">
-            <label for="custom-name">カスタム名</label>
-            <input type="text" id="custom-name" class="mc-input" placeholder="最強の剣">
-          </div>
           <div class="form-group">
             <label for="item-count">個数</label>
             <input type="number" id="item-count" class="mc-input" value="1" min="1" max="64">
           </div>
         </div>
 
-        <!-- 名前の色選択 -->
+        <!-- カスタム名（リッチテキストエディター） -->
         <div class="form-group">
-          <label>名前の色</label>
-          <div class="color-selector-grid">
-            ${TEXT_COLORS.map(c => `
-              <button type="button" class="color-btn ${c.id === 'white' ? 'selected' : ''}"
-                data-color="${c.id}"
-                title="${c.name}"
-                style="background-color: ${c.hex}; ${c.id === 'white' || c.id === 'yellow' || c.id === 'gold' || c.id === 'aqua' || c.id === 'green' ? 'color: #000;' : 'color: #fff;'}">
-              </button>
-            `).join('')}
-          </div>
-          <div class="color-preview" id="color-preview">
-            <span class="color-preview-label">プレビュー:</span>
-            <span class="color-preview-text" id="color-preview-text" style="color: #FFFFFF;">カスタム名</span>
-          </div>
+          <label>カスタム名 <small style="color: var(--mc-text-muted);">（1文字ごとに色や書式を設定可能）</small></label>
+          ${enchantCustomNameEditor.render()}
         </div>
 
         <!-- プリセット（カテゴリ別） -->
@@ -734,6 +728,15 @@ export function init(container) {
   selectedEnchants = [];
   selectedAttributes = [];
   searchQuery = '';
+
+  // リッチテキストエディターの初期化
+  if (enchantCustomNameEditor) {
+    enchantCustomNameEditor.init(container);
+    enchantCustomNameEditor.options.onChange = () => {
+      updatePreview(container);
+      updateCommand(container);
+    };
+  }
 
   // アイテムカテゴリ変更
   $('#item-category', container)?.addEventListener('change', (e) => {
@@ -897,36 +900,6 @@ export function init(container) {
     updateCommand(container);
   }, 150));
 
-  // 色選択ボタン
-  delegate(container, 'click', '.color-btn', (e, target) => {
-    // 以前の選択を解除
-    $$('.color-btn.selected', container).forEach(btn => btn.classList.remove('selected'));
-    // 新しい選択を適用
-    target.classList.add('selected');
-
-    // プレビューの色を更新
-    const colorId = target.dataset.color;
-    const colorInfo = TEXT_COLORS.find(c => c.id === colorId);
-    const previewText = $('#color-preview-text', container);
-    if (previewText && colorInfo) {
-      previewText.style.color = colorInfo.hex;
-    }
-
-    // プレビューのツールチップも更新
-    updatePreview(container);
-    updateCommand(container);
-  });
-
-  // カスタム名入力時にプレビューテキストも更新
-  $('#custom-name', container)?.addEventListener('input', debounce((e) => {
-    const previewText = $('#color-preview-text', container);
-    if (previewText) {
-      previewText.textContent = e.target.value || 'カスタム名';
-    }
-    updatePreview(container);
-    updateCommand(container);
-  }, 150));
-
   // バージョン変更時にコマンド再生成
   window.addEventListener('mc-version-change', () => {
     updateVersionDisplay(container);
@@ -1009,20 +982,13 @@ function resetForm(container) {
   const optHideUnbreakable = $('#opt-hide-unbreakable', container);
   if (optHideUnbreakable) optHideUnbreakable.checked = false;
 
-  // カスタム名と個数をリセット
-  const customName = $('#custom-name', container);
-  if (customName) customName.value = '';
+  // 個数をリセット
   const itemCount = $('#item-count', container);
   if (itemCount) itemCount.value = '1';
 
-  // 色選択をリセット
-  $$('.color-btn.selected', container).forEach(btn => btn.classList.remove('selected'));
-  const whiteBtn = $('.color-btn[data-color="white"]', container);
-  if (whiteBtn) whiteBtn.classList.add('selected');
-  const previewText = $('#color-preview-text', container);
-  if (previewText) {
-    previewText.style.color = '#FFFFFF';
-    previewText.textContent = 'カスタム名';
+  // リッチテキストエディターをクリア
+  if (enchantCustomNameEditor) {
+    enchantCustomNameEditor.clear(container);
   }
 
   // 選択されたエンチャントの表示を更新
@@ -1159,10 +1125,8 @@ function updatePreview(container) {
   const itemId = $('#item-select', container)?.value;
   const count = parseInt($('#item-count', container)?.value) || 1;
 
-  // カスタム名と色を取得
-  const customName = $('#custom-name', container)?.value;
-  const selectedColorId = $('.color-btn.selected', container)?.dataset?.color || 'white';
-  const colorInfo = TEXT_COLORS.find(c => c.id === selectedColorId);
+  // リッチテキストエディターからカスタム名を取得
+  const customName = enchantCustomNameEditor?.getPlainText() || '';
 
   // アイテム名とアイコン
   let itemName = 'アイテム';
@@ -1192,16 +1156,11 @@ function updatePreview(container) {
     }
   }
 
-  // ツールチップにカスタム名または通常名を表示（色付き）
+  // ツールチップにカスタム名または通常名を表示
   if (itemNameEl) {
     const displayName = customName || itemName;
     itemNameEl.textContent = displayName;
-    // カスタム名がある場合は選択した色を適用
-    if (customName && colorInfo) {
-      itemNameEl.style.color = colorInfo.hex;
-    } else {
-      itemNameEl.style.color = ''; // デフォルト色にリセット
-    }
+    itemNameEl.style.color = ''; // リッチテキストエディターで色を設定するため、ここではリセット
   }
 
   // アイテム個数表示（2以上のみ表示）
@@ -1309,8 +1268,9 @@ function updateCommand(container) {
   const itemId = $('#item-select', container)?.value;
   const item = useCustom && customId ? customId : `minecraft:${itemId}`;
 
-  const customName = $('#custom-name', container)?.value;
-  const nameColor = $('.color-btn.selected', container)?.dataset?.color || 'white';
+  // リッチテキストエディターからカスタム名を取得
+  const customNameSNBT = enchantCustomNameEditor?.getSNBT() || '';
+  const customNamePlain = enchantCustomNameEditor?.getPlainText() || '';
   const count = parseInt($('#item-count', container)?.value) || 1;
   const unbreakable = $('#opt-unbreakable', container)?.checked;
   const hideEnchants = $('#opt-hide-enchants', container)?.checked;
@@ -1320,21 +1280,21 @@ function updateCommand(container) {
   let command;
 
   if (group === 'latest' || group === 'component') {
-    // 1.20.5+: コンポーネント形式
-    command = generateComponentCommand(item, count, customName, nameColor, unbreakable, hideEnchants, hideUnbreakable, useAttributes, container, version);
+    // 1.20.5+: コンポーネント形式（SNBT対応）
+    command = generateComponentCommand(item, count, customNameSNBT, unbreakable, hideEnchants, hideUnbreakable, useAttributes, container, version);
   } else if (group === 'nbt-modern' || group === 'nbt-legacy') {
-    // 1.13-1.20.4: NBT形式
-    command = generateNBTCommand(item, count, customName, nameColor, unbreakable, useAttributes, container);
+    // 1.13-1.20.4: NBT形式（SNBT対応）
+    command = generateNBTCommand(item, count, customNameSNBT, unbreakable, useAttributes, container);
   } else {
-    // 1.12: レガシー形式
-    command = generateLegacyCommand(item, count, customName, nameColor, unbreakable, container);
+    // 1.12: レガシー形式（プレーンテキストのみ）
+    command = generateLegacyCommand(item, count, customNamePlain, unbreakable, container);
   }
 
   setOutput(command, 'enchant', {
     item,
     enchants: selectedEnchants,
     unbreakable,
-    customName,
+    customName: customNamePlain,
     count,
     version
   });
@@ -1344,22 +1304,15 @@ function updateCommand(container) {
  * コンポーネント形式（1.20.5+）
  * @param {string} version - Minecraftバージョン
  */
-function generateComponentCommand(item, count, customName, nameColor, unbreakable, hideEnchants, hideUnbreakable, useAttributes, container, version = '1.21') {
+function generateComponentCommand(item, count, customNameSNBT, unbreakable, hideEnchants, hideUnbreakable, useAttributes, container, version = '1.21') {
   const components = [];
 
   // 1.21.5以降は簡略形式が使用可能
   const useSimplifiedForm = compareVersions(version, '1.21.5') >= 0;
 
-  if (customName) {
-    // カスタム名にJSON Text Componentを使用（色、italic:false）
-    const textComponent = {
-      text: customName,
-      italic: false
-    };
-    if (nameColor && nameColor !== 'white') {
-      textComponent.color = nameColor;
-    }
-    components.push(`minecraft:custom_name='${JSON.stringify(JSON.stringify(textComponent))}'`);
+  // カスタム名（リッチテキストエディターからのSNBT形式）
+  if (customNameSNBT) {
+    components.push(`minecraft:custom_name='${customNameSNBT}'`);
   }
 
   if (selectedEnchants.length > 0) {
@@ -1412,20 +1365,12 @@ function generateComponentCommand(item, count, customName, nameColor, unbreakabl
 /**
  * NBT形式（1.13-1.20.4）
  */
-function generateNBTCommand(item, count, customName, nameColor, unbreakable, useAttributes, container) {
+function generateNBTCommand(item, count, customNameSNBT, unbreakable, useAttributes, container) {
   const nbtParts = [];
 
-  if (customName) {
-    // JSON Text Componentで色を含める
-    const textComponent = {
-      text: escapeJsonString(customName),
-      italic: false
-    };
-    if (nameColor && nameColor !== 'white') {
-      textComponent.color = nameColor;
-    }
-    const displayParts = [`Name:'${JSON.stringify(textComponent)}'`];
-    nbtParts.push(`display:{${displayParts.join(',')}}`);
+  // カスタム名（リッチテキストエディターからのSNBT形式）
+  if (customNameSNBT) {
+    nbtParts.push(`display:{Name:'${customNameSNBT}'}`);
   }
 
   if (selectedEnchants.length > 0) {
@@ -1456,14 +1401,14 @@ function generateNBTCommand(item, count, customName, nameColor, unbreakable, use
 
 /**
  * レガシー形式（1.12.2以前）
- * ※1.12以前はJSON Text Componentをサポートしないため、色は無視されます
+ * ※1.12以前はJSON Text Componentをサポートしないため、プレーンテキストのみ
  */
-function generateLegacyCommand(item, count, customName, nameColor, unbreakable, container) {
+function generateLegacyCommand(item, count, customNamePlain, unbreakable, container) {
   const nbtParts = [];
 
-  if (customName) {
-    // 1.12以前は単純な文字列のみ（色は無視）
-    nbtParts.push(`display:{Name:"${escapeJsonString(customName)}"}`);
+  // カスタム名（レガシー形式ではプレーンテキスト）
+  if (customNamePlain) {
+    nbtParts.push(`display:{Name:"${escapeJsonString(customNamePlain)}"}`);
   }
 
   if (selectedEnchants.length > 0) {
