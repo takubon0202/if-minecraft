@@ -1021,6 +1021,26 @@ function formatDuration(ticks) {
 // スタイル追加（ポーション固有スタイルのみ - 共通スタイルはtheme.cssに定義）
 const style = document.createElement('style');
 style.textContent = `
+  /* 設定行（横並び） */
+  .form-row {
+    display: flex;
+    gap: var(--mc-space-md);
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+
+  .form-row .form-group {
+    flex: 1;
+    min-width: 120px;
+  }
+
+  .form-row .form-group label {
+    display: block;
+    margin-bottom: var(--mc-space-xs);
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
   /* ポーションタイプタブ（4列グリッド） */
   .potion-type-tabs {
     display: grid;

@@ -96,7 +96,7 @@ const ITEM_NAME_MAP = {
   'potion': 'Water_Bottle',
   'splash_potion': 'Splash_Water_Bottle',
   'lingering_potion': 'Lingering_Water_Bottle',
-  'tipped_arrow': 'Tipped_Arrow',
+  'tipped_arrow': 'Arrow_of_Slowness',  // 汎用の効果付き矢アイコン（Tipped_Arrowは存在しない）
 
   // === 効果付きポーション（代表例） ===
   'potion_healing': 'Potion_of_Healing',
