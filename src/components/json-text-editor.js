@@ -411,14 +411,22 @@ export function componentsToJson(components, options = {}) {
 
   // 単一のテキストのみの場合はシンプルな形式
   if (components.length === 1 && !components[0].color && !hasStyles(components[0])) {
+    // 1.21.5+ではSNBT形式で文字列を出力
+    if (version === '1.21.5+') {
+      return `"${escapeSnbtString(components[0].text)}"`;
+    }
     return JSON.stringify(components[0].text);
   }
 
   // バージョン判定
   const isNewFormat = version === '1.21.5+';
-  const isLegacy = version === '1.12-';
 
-  // 複数セグメントまたはスタイル付きの場合
+  // 1.21.5+の場合はSNBT形式で出力
+  if (isNewFormat) {
+    return componentsToSNBT(components, { arrayFormat });
+  }
+
+  // 1.20以前はJSON形式で出力
   const result = components.map(comp => {
     const obj = { text: comp.text };
 
@@ -432,23 +440,14 @@ export function componentsToJson(components, options = {}) {
     if (comp.strikethrough) obj.strikethrough = true;
     if (comp.obfuscated) obj.obfuscated = true;
 
-    // クリックイベント（1.12でも使用可能だがキャメルケース）
+    // クリックイベント（キャメルケース）
     if (comp.clickEvent) {
-      if (isNewFormat) {
-        obj.click_event = convertClickEventToNewFormat(comp.clickEvent);
-      } else {
-        // 1.12-1.20.x はキャメルケース
-        obj.clickEvent = comp.clickEvent;
-      }
+      obj.clickEvent = comp.clickEvent;
     }
 
-    // ホバーイベント（1.12でも使用可能だがキャメルケース）
+    // ホバーイベント（キャメルケース）
     if (comp.hoverEvent) {
-      if (isNewFormat) {
-        obj.hover_event = convertHoverEventToNewFormat(comp.hoverEvent);
-      } else {
-        obj.hoverEvent = comp.hoverEvent;
-      }
+      obj.hoverEvent = comp.hoverEvent;
     }
 
     return obj;
@@ -465,6 +464,98 @@ export function componentsToJson(components, options = {}) {
   }
 
   return JSON.stringify(result);
+}
+
+/**
+ * コンポーネントをSNBT形式に変換（1.21.5+向け）
+ * SNBT形式: {text:"...",color:"red",bold:true}（引用符なしキー）
+ */
+function componentsToSNBT(components, options = {}) {
+  const { arrayFormat = false } = options;
+
+  const snbtComponents = components.map(comp => componentToSNBT(comp));
+
+  if (arrayFormat) {
+    return `["",${snbtComponents.join(',')}]`;
+  }
+
+  if (snbtComponents.length === 1) {
+    return snbtComponents[0];
+  }
+
+  return `[${snbtComponents.join(',')}]`;
+}
+
+/**
+ * 単一コンポーネントをSNBT形式に変換
+ */
+function componentToSNBT(comp) {
+  const parts = [];
+
+  // text（必須）
+  parts.push(`text:"${escapeSnbtString(comp.text)}"`);
+
+  // 色
+  if (comp.color) {
+    parts.push(`color:"${comp.color}"`);
+  }
+
+  // 書式
+  if (comp.bold) parts.push('bold:true');
+  if (comp.italic) parts.push('italic:true');
+  if (comp.underlined) parts.push('underlined:true');
+  if (comp.strikethrough) parts.push('strikethrough:true');
+  if (comp.obfuscated) parts.push('obfuscated:true');
+
+  // クリックイベント（1.21.5+形式: snake_case）
+  if (comp.clickEvent) {
+    const clickEvent = convertClickEventToNewFormat(comp.clickEvent);
+    parts.push(`click_event:${objectToSNBT(clickEvent)}`);
+  }
+
+  // ホバーイベント（1.21.5+形式: snake_case）
+  if (comp.hoverEvent) {
+    const hoverEvent = convertHoverEventToNewFormat(comp.hoverEvent);
+    parts.push(`hover_event:${objectToSNBT(hoverEvent)}`);
+  }
+
+  return `{${parts.join(',')}}`;
+}
+
+/**
+ * JavaScriptオブジェクトをSNBT形式に変換
+ */
+function objectToSNBT(obj) {
+  if (obj === null || obj === undefined) return 'null';
+  if (typeof obj === 'boolean') return obj.toString();
+  if (typeof obj === 'number') return obj.toString();
+  if (typeof obj === 'string') return `"${escapeSnbtString(obj)}"`;
+
+  if (Array.isArray(obj)) {
+    return `[${obj.map(item => objectToSNBT(item)).join(',')}]`;
+  }
+
+  if (typeof obj === 'object') {
+    const parts = Object.entries(obj).map(([key, value]) => {
+      return `${key}:${objectToSNBT(value)}`;
+    });
+    return `{${parts.join(',')}}`;
+  }
+
+  return String(obj);
+}
+
+/**
+ * SNBT用文字列エスケープ
+ */
+function escapeSnbtString(str) {
+  if (!str) return '';
+  return str
+    .replace(/\\/g, '\\\\')
+    .replace(/"/g, '\\"')
+    .replace(/\n/g, '\\n')
+    .replace(/\r/g, '\\r')
+    .replace(/\t/g, '\\t');
 }
 
 /**
