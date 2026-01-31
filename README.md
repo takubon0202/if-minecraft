@@ -93,7 +93,7 @@ Vanilla JavaScript による軽量・高速な SPA アーキテクチャを採�
 | **Target Selector** | ターゲットセレクター | @p/@a/@r/@e/@sの引数生成 |
 | **Coordinate** | 座標ヘルパー | 絶対/相対/ローカル座標変換 |
 
-### コマンド生成（6種）
+### コマンド生成（7種）
 
 | ツール | 説明 | 機能 |
 |--------|------|------|
@@ -103,6 +103,7 @@ Vanilla JavaScript による軽量・高速な SPA アーキテクチャを採�
 | **/enchant Generator** | エンチャント | 全42種、最大Lv255、カテゴリ別プリセット、カスタム名色選択、属性追加 |
 | **/potion Generator** | ポーション | 全33種エフェクト、4タイプ、カテゴリ別プリセット、カスタムカラー |
 | **Smithing Generator** | 鍛冶型 | 19種トリムパターン、11種素材、防具プレビュー |
+| **WorldEdit** | WorldEditコマンド生成 | 69種コマンド、615ブロック対応、エンティティ操作、バイオーム変更 |
 
 ### テキスト系（6種）
 
@@ -134,6 +135,25 @@ Vanilla JavaScript による軽量・高速な SPA アーキテクチャを採�
 | **4種ポーションタイプ** | 通常/スプラッシュ/残留/効果付きの矢 |
 | **カスタムカラー** | ポーション液体の色をカスタマイズ |
 
+### WorldEditツールの詳細機能
+
+| 機能 | 説明 |
+|------|------|
+| **69種コマンド** | 選択範囲、ブロック編集、クリップボード、図形生成、ブラシ、ユーティリティ、ナビゲーション、バイオーム、スナップショット、エンティティ |
+| **615ブロック対応** | 1.12〜1.21.11の全バージョンブロック（22カテゴリ） |
+| **エンティティ操作** | /remove、//copy -e、//paste -e、//butcher（10種フラグ） |
+| **バイオーム変更** | 57種バイオーム対応（//setbiome、//replacebiome） |
+| **ブロック状態指定** | facing、axis、half、waterloggedなどプリセット付き |
+| **マスク・パターン** | 複数ブロックのランダム配置、条件付き置換 |
+
+### WorldEditエンティティタイプ（17種）
+
+| カテゴリ | タイプ |
+|----------|--------|
+| **エイリアス** | items, arrows, boats, minecarts, tnt, xp, paintings, itemframes, armorstands, endercrystals |
+| **投擲物** | snowball, egg, ender_pearl, trident, firework_rocket |
+| **その他** | falling_block, lightning_bolt |
+
 ### カスタム名の色（16色）
 
 | 色 | ID | 用途 |
@@ -163,12 +183,14 @@ Vanilla JavaScript による軽量・高速な SPA アーキテクチャを採�
 if-minecraft/
 ├── .claude/                    # Claude CLI 設定
 │   ├── commands/               # カスタムコマンド
-│   │   ├── codex.md           # Codex CLI 連携
-│   │   ├── gemini.md          # Gemini CLI 連携
+│   │   ├── codex.md           # Codex CLI 連携（非対話モード）
 │   │   ├── antigravity.md     # Antigravity 物理演出
 │   │   ├── evaluate.md        # ページ品質評価
 │   │   ├── persona.md         # ペルソナ視点評価
 │   │   └── review.md          # 総合レビュー
+│   ├── skills/                 # スキルファイル
+│   │   ├── gemini.md          # Gemini CLI 連携（3系のみ）
+│   │   └── research.md        # リサーチスキル
 │   └── settings.json          # AI CLI 統合設定
 │
 ├── src/                        # ソースコード
@@ -200,7 +222,7 @@ if-minecraft/
 │   ├── scripts/               # クライアントスクリプト
 │   │   └── antigravity.js     # Matter.js 物理演出
 │   │
-│   └── tools/                 # ツールプラグイン（17種）
+│   └── tools/                 # ツールプラグイン（18種）
 │       ├── id-browser/        # ID ブラウザ
 │       ├── block-ids/         # ブロックID一覧
 │       ├── color-codes/       # カラーコード
@@ -212,6 +234,7 @@ if-minecraft/
 │       ├── enchant/           # エンチャント
 │       ├── potion/            # ポーション
 │       ├── smithing/          # 鍛冶型
+│       ├── worldedit/         # WorldEditコマンド
 │       ├── json-text/         # JSONテキスト
 │       ├── tellraw/           # tellraw
 │       ├── title/             # title
@@ -394,12 +417,27 @@ export function init(container) {
 
 | コマンド | 説明 | 実行内容 |
 |----------|------|----------|
-| `/codex [タスク]` | Codex CLI 呼び出し | `codex exec "[タスク]"` |
-| `/gemini [タスク]` | Gemini CLI 呼び出し | `gemini -m gemini-3-pro "[タスク]"` |
+| `/codex [タスク]` | Codex CLI 呼び出し（非対話モード） | `echo "[タスク]" \| codex exec - --sandbox read-only` |
+| `/gemini [タスク]` | Gemini CLI 呼び出し | `gemini -m gemini-3-pro-preview "[タスク]"` |
+| `/research [内容]` | 最新情報リサーチ | 日付付きでGemini 3 Proに調査依頼 |
 | `/antigravity` | 物理演出実装 | Matter.js による Antigravity 効果 |
 | `/evaluate` | ページ品質評価 | SEO、事業内容、分かりやすさ、申込意欲 |
 | `/persona` | ペルソナ視点評価 | 初心者・中級・上級の3ペルソナ |
 | `/review` | 総合レビュー | `/evaluate` + `/persona` 統合 |
+
+### AI CLI 使用ルール
+
+**Gemini（Gemini 3系のみ使用）:**
+```bash
+gemini -m gemini-3-pro-preview "今日は2026年1月31日です。[質問]"
+```
+- Gemini 2.5系は使用禁止
+
+**Codex（非対話モード必須）:**
+```bash
+echo "今日は2026年1月31日です。[質問]" | codex exec - --sandbox read-only
+```
+- `codex exec -` 形式でstdinからプロンプトを渡す
 
 ---
 
@@ -431,6 +469,29 @@ export function init(container) {
 ---
 
 ## データ管理
+
+### ブロックデータ（src/data/blocks.js）
+
+WorldEditツール用の包括的なブロックデータベース。
+
+| 項目 | 値 |
+|------|-----|
+| **総ブロック数** | 615個 |
+| **対応バージョン** | 1.12〜1.21.11（47バージョン） |
+| **カテゴリ数** | 22種類 |
+
+#### バージョン別ブロック数
+
+| バージョン | ブロック数 | 追加内容 |
+|-----------|----------|----------|
+| 1.21.11 | 615 | 1.21.10/11はブロック追加なし |
+| 1.21.9 | 615 | 棚12種、銅製品6種+酸化バリエーション |
+| 1.21.6 | 569 | dried_ghast_block |
+| 1.21.5 | 568 | 茂み、ホタルの茂み、野草など7種 |
+| 1.21.4 | 561 | ペールガーデン30種（ペールオーク、レジン） |
+| 1.21 | 531 | トライアルチャンバー関連 |
+| 1.20 | 465 | サクラ、考古学関連 |
+| 1.12 | 262 | ベースブロック |
 
 ### Minecraft データ構造
 

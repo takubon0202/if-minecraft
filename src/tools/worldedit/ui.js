@@ -1,11 +1,22 @@
 /**
  * WorldEdit Command Generator - UI
  * WorldEditプラグイン/MODのコマンド生成ツール
+ * 全ブロック対応・バージョン別フィルタリング機能付き
  */
 
 import { $, $$, debounce, delegate } from '../../core/dom.js';
+import { workspaceStore } from '../../core/store.js';
 import { setOutput } from '../../app/sidepanel.js';
 import { getInviconUrl } from '../../core/wiki-images.js';
+import {
+  BLOCK_CATEGORIES,
+  ALL_BLOCKS,
+  SUPPORTED_VERSIONS,
+  getBlocksForVersion,
+  getBlocksByCategory,
+  searchBlocks,
+  compareVersions
+} from '../../data/blocks.js';
 
 // WorldEditコマンドカテゴリ
 const COMMAND_CATEGORIES = {
@@ -136,45 +147,43 @@ const COMMAND_CATEGORIES = {
       { cmd: '/ceil', desc: '天井に移動', args: '[クリアランス]' },
       { cmd: '/up', desc: '上に移動', args: '<距離>' },
     ]
+  },
+  biome: {
+    name: 'バイオーム',
+    icon: 'grass_block',
+    color: '#228B22',
+    commands: [
+      { cmd: '//setbiome', desc: 'バイオームを設定', args: '<バイオームID>' },
+      { cmd: '//replacebiome', desc: 'バイオームを置換', args: '<元のバイオーム> <新しいバイオーム>' },
+      { cmd: '/biomeinfo', desc: '現在のバイオームを確認', args: '[-p] [-t]' },
+      { cmd: '/biomelist', desc: 'バイオーム一覧を表示', args: '' },
+    ]
+  },
+  snapshot: {
+    name: 'スナップショット',
+    icon: 'clock',
+    color: '#4169E1',
+    commands: [
+      { cmd: '/restore', desc: 'スナップショットから復元', args: '[スナップショット]' },
+      { cmd: '/snapshot list', desc: 'スナップショット一覧', args: '' },
+      { cmd: '/snapshot use', desc: 'スナップショット選択', args: '<名前>' },
+      { cmd: '/snapshot before', desc: '指定日以前のスナップショット', args: '<日付>' },
+      { cmd: '/snapshot after', desc: '指定日以後のスナップショット', args: '<日付>' },
+    ]
+  },
+  entity: {
+    name: 'エンティティ',
+    icon: 'zombie_head',
+    color: '#FF6B6B',
+    commands: [
+      { cmd: '/remove', desc: 'エンティティを削除', args: '<タイプ> <半径>' },
+      { cmd: '//copy -e', desc: 'エンティティ込みでコピー', args: '' },
+      { cmd: '//cut -e', desc: 'エンティティ込みで切り取り', args: '[ブロック]' },
+      { cmd: '//paste -e', desc: 'エンティティ込みで貼り付け', args: '[-a] [-o] [-s]' },
+      { cmd: '//butcher', desc: 'Mobを削除', args: '[半径] [-p] [-n] [-g] [-a] [-r] [-l]' },
+    ]
   }
 };
-
-// よく使うブロック
-const COMMON_BLOCKS = [
-  { id: 'stone', name: '石' },
-  { id: 'granite', name: '花崗岩' },
-  { id: 'diorite', name: '閃緑岩' },
-  { id: 'andesite', name: '安山岩' },
-  { id: 'cobblestone', name: '丸石' },
-  { id: 'mossy_cobblestone', name: '苔むした丸石' },
-  { id: 'stone_bricks', name: '石レンガ' },
-  { id: 'mossy_stone_bricks', name: '苔むした石レンガ' },
-  { id: 'cracked_stone_bricks', name: 'ひび割れた石レンガ' },
-  { id: 'dirt', name: '土' },
-  { id: 'grass_block', name: '草ブロック' },
-  { id: 'sand', name: '砂' },
-  { id: 'gravel', name: '砂利' },
-  { id: 'oak_planks', name: 'オーク板材' },
-  { id: 'spruce_planks', name: 'トウヒ板材' },
-  { id: 'birch_planks', name: 'シラカバ板材' },
-  { id: 'oak_log', name: 'オーク原木' },
-  { id: 'spruce_log', name: 'トウヒ原木' },
-  { id: 'glass', name: 'ガラス' },
-  { id: 'white_wool', name: '白の羊毛' },
-  { id: 'white_concrete', name: '白のコンクリート' },
-  { id: 'bricks', name: 'レンガ' },
-  { id: 'obsidian', name: '黒曜石' },
-  { id: 'bedrock', name: '岩盤' },
-  { id: 'netherrack', name: 'ネザーラック' },
-  { id: 'end_stone', name: 'エンドストーン' },
-  { id: 'quartz_block', name: 'クォーツブロック' },
-  { id: 'prismarine', name: 'プリズマリン' },
-  { id: 'sea_lantern', name: 'シーランタン' },
-  { id: 'glowstone', name: 'グロウストーン' },
-  { id: 'air', name: '空気' },
-  { id: 'water', name: '水' },
-  { id: 'lava', name: '溶岩' },
-];
 
 // 方向オプション
 const DIRECTIONS = [
@@ -187,37 +196,238 @@ const DIRECTIONS = [
   { id: 'me', name: '向いている方向 (me)', alias: 'm' },
 ];
 
-// コマンドタイプ
+// コマンドタイプ（全コマンドUI対応）
 const COMMAND_TYPES = [
+  // === 選択範囲 ===
+  { id: 'expand', name: '//expand - 範囲拡張', category: 'selection' },
+  { id: 'contract', name: '//contract - 範囲縮小', category: 'selection' },
+  { id: 'shift', name: '//shift - 範囲移動', category: 'selection' },
+  { id: 'outset', name: '//outset - 全方向拡張', category: 'selection' },
+  { id: 'inset', name: '//inset - 全方向縮小', category: 'selection' },
+  { id: 'count', name: '//count - ブロック数カウント', category: 'selection' },
+
+  // === ブロック編集 ===
   { id: 'set', name: '//set - ブロック配置', category: 'editing' },
   { id: 'replace', name: '//replace - ブロック置換', category: 'editing' },
+  { id: 'overlay', name: '//overlay - 上面重ね', category: 'editing' },
+  { id: 'walls', name: '//walls - 壁生成', category: 'editing' },
+  { id: 'outline', name: '//outline - 輪郭生成', category: 'editing' },
+  { id: 'hollow', name: '//hollow - 中空化', category: 'editing' },
+  { id: 'center', name: '//center - 中心配置', category: 'editing' },
+  { id: 'smooth', name: '//smooth - 平滑化', category: 'editing' },
+  { id: 'move', name: '//move - 移動', category: 'editing' },
+  { id: 'stack', name: '//stack - 積み重ね', category: 'editing' },
+  { id: 'naturalize', name: '//naturalize - 自然化', category: 'editing' },
+  { id: 'line', name: '//line - 線描画', category: 'editing' },
+  { id: 'curve', name: '//curve - 曲線描画', category: 'editing' },
+  { id: 'deform', name: '//deform - 変形', category: 'editing' },
+  { id: 'regen', name: '//regen - 地形再生成', category: 'editing' },
+
+  // === クリップボード ===
+  { id: 'copy', name: '//copy - コピー', category: 'clipboard' },
+  { id: 'cut', name: '//cut - 切り取り', category: 'clipboard' },
+  { id: 'paste', name: '//paste - 貼り付け', category: 'clipboard' },
+  { id: 'rotate', name: '//rotate - 回転', category: 'clipboard' },
+  { id: 'flip', name: '//flip - 反転', category: 'clipboard' },
+  { id: 'schematic-save', name: '//schematic save - 保存', category: 'clipboard' },
+  { id: 'schematic-load', name: '//schematic load - 読込', category: 'clipboard' },
+
+  // === 図形生成 ===
   { id: 'sphere', name: '//sphere - 球体生成', category: 'generation' },
   { id: 'hsphere', name: '//hsphere - 中空球体', category: 'generation' },
   { id: 'cylinder', name: '//cylinder - 円柱生成', category: 'generation' },
   { id: 'hcyl', name: '//hcyl - 中空円柱', category: 'generation' },
+  { id: 'cone', name: '//cone - 円錐生成', category: 'generation' },
   { id: 'pyramid', name: '//pyramid - ピラミッド', category: 'generation' },
-  { id: 'walls', name: '//walls - 壁生成', category: 'editing' },
-  { id: 'outline', name: '//outline - 輪郭生成', category: 'editing' },
-  { id: 'move', name: '//move - 移動', category: 'editing' },
-  { id: 'stack', name: '//stack - 積み重ね', category: 'editing' },
-  { id: 'copy', name: '//copy - コピー', category: 'clipboard' },
-  { id: 'paste', name: '//paste - 貼り付け', category: 'clipboard' },
-  { id: 'rotate', name: '//rotate - 回転', category: 'clipboard' },
-  { id: 'expand', name: '//expand - 範囲拡張', category: 'selection' },
-  { id: 'contract', name: '//contract - 範囲縮小', category: 'selection' },
+  { id: 'hpyramid', name: '//hpyramid - 中空ピラミッド', category: 'generation' },
+  { id: 'generate', name: '//generate - 式で生成', category: 'generation' },
+  { id: 'forest', name: '//forest - 森生成', category: 'generation' },
+  { id: 'flora', name: '//flora - 植物生成', category: 'generation' },
+
+  // === ブラシ ===
   { id: 'brush-sphere', name: '/brush sphere - 球体ブラシ', category: 'brush' },
   { id: 'brush-cylinder', name: '/brush cylinder - 円柱ブラシ', category: 'brush' },
+  { id: 'brush-clipboard', name: '/brush clipboard - クリップボード', category: 'brush' },
+  { id: 'brush-smooth', name: '/brush smooth - 平滑化', category: 'brush' },
+  { id: 'brush-gravity', name: '/brush gravity - 重力', category: 'brush' },
+  { id: 'brush-forest', name: '/brush forest - 森ブラシ', category: 'brush' },
+  { id: 'brush-extinguish', name: '/brush ex - 消火', category: 'brush' },
+  { id: 'brush-butcher', name: '/brush butcher - モブ削除', category: 'brush' },
+  { id: 'brush-deform', name: '/brush deform - 変形', category: 'brush' },
+  { id: 'brush-snow', name: '/brush snow - 積雪', category: 'brush' },
+  { id: 'brush-biome', name: '/brush biome - バイオーム', category: 'brush' },
+
+  // === ユーティリティ ===
   { id: 'undo', name: '//undo - 取り消し', category: 'utility' },
+  { id: 'redo', name: '//redo - やり直し', category: 'utility' },
   { id: 'drain', name: '//drain - 水抜き', category: 'utility' },
+  { id: 'fixwater', name: '//fixwater - 水源修正', category: 'utility' },
+  { id: 'fixlava', name: '//fixlava - 溶岩源修正', category: 'utility' },
+  { id: 'fill', name: '//fill - 穴埋め', category: 'utility' },
+  { id: 'fillr', name: '//fillr - 再帰穴埋め', category: 'utility' },
+  { id: 'removeabove', name: '//removeabove - 上削除', category: 'utility' },
+  { id: 'removebelow', name: '//removebelow - 下削除', category: 'utility' },
+  { id: 'removenear', name: '//removenear - 周囲削除', category: 'utility' },
+  { id: 'snow', name: '//snow - 積雪', category: 'utility' },
+  { id: 'thaw', name: '//thaw - 解凍', category: 'utility' },
+  { id: 'green', name: '//green - 緑化', category: 'utility' },
+  { id: 'extinguish', name: '//ex - 消火', category: 'utility' },
+  { id: 'butcher', name: '//butcher - モブ削除', category: 'utility' },
+
+  // === バイオーム ===
+  { id: 'setbiome', name: '//setbiome - バイオーム設定', category: 'biome' },
+  { id: 'replacebiome', name: '//replacebiome - バイオーム置換', category: 'biome' },
+
+  // === エンティティ ===
+  { id: 'remove', name: '/remove - エンティティ削除', category: 'entity' },
 ];
+
+// バイオーム一覧
+const BIOMES = [
+  { id: 'plains', name: '平原' },
+  { id: 'sunflower_plains', name: 'ヒマワリ平原' },
+  { id: 'forest', name: '森林' },
+  { id: 'flower_forest', name: '花の森' },
+  { id: 'birch_forest', name: 'シラカバの森' },
+  { id: 'dark_forest', name: '暗い森' },
+  { id: 'taiga', name: 'タイガ' },
+  { id: 'snowy_taiga', name: '雪のタイガ' },
+  { id: 'old_growth_pine_taiga', name: '原生タイガ（松）' },
+  { id: 'old_growth_spruce_taiga', name: '原生タイガ（トウヒ）' },
+  { id: 'jungle', name: 'ジャングル' },
+  { id: 'sparse_jungle', name: 'まばらなジャングル' },
+  { id: 'bamboo_jungle', name: '竹林' },
+  { id: 'savanna', name: 'サバンナ' },
+  { id: 'savanna_plateau', name: 'サバンナの高原' },
+  { id: 'desert', name: '砂漠' },
+  { id: 'badlands', name: '荒野' },
+  { id: 'eroded_badlands', name: '侵食された荒野' },
+  { id: 'wooded_badlands', name: '森のある荒野' },
+  { id: 'swamp', name: '沼地' },
+  { id: 'mangrove_swamp', name: 'マングローブの沼地' },
+  { id: 'beach', name: '砂浜' },
+  { id: 'stony_shore', name: '石の海岸' },
+  { id: 'ocean', name: '海洋' },
+  { id: 'deep_ocean', name: '深海' },
+  { id: 'warm_ocean', name: '暖かい海' },
+  { id: 'lukewarm_ocean', name: 'ぬるい海' },
+  { id: 'cold_ocean', name: '冷たい海' },
+  { id: 'frozen_ocean', name: '凍った海' },
+  { id: 'river', name: '川' },
+  { id: 'frozen_river', name: '凍った川' },
+  { id: 'snowy_plains', name: '雪原' },
+  { id: 'ice_spikes', name: '樹氷' },
+  { id: 'snowy_beach', name: '雪の砂浜' },
+  { id: 'mountains', name: '山岳' },
+  { id: 'meadow', name: '牧草地' },
+  { id: 'grove', name: '林' },
+  { id: 'snowy_slopes', name: '雪の斜面' },
+  { id: 'jagged_peaks', name: 'ギザギザの山頂' },
+  { id: 'frozen_peaks', name: '凍った山頂' },
+  { id: 'stony_peaks', name: '石の山頂' },
+  { id: 'mushroom_fields', name: 'キノコ島' },
+  { id: 'cherry_grove', name: 'サクラの木立' },
+  { id: 'pale_garden', name: 'ペールガーデン' },
+  { id: 'nether_wastes', name: 'ネザーの荒地' },
+  { id: 'soul_sand_valley', name: 'ソウルサンドの谷' },
+  { id: 'crimson_forest', name: '真紅の森' },
+  { id: 'warped_forest', name: '歪んだ森' },
+  { id: 'basalt_deltas', name: '玄武岩デルタ' },
+  { id: 'the_end', name: 'ジ・エンド' },
+  { id: 'end_highlands', name: 'エンドの高地' },
+  { id: 'end_midlands', name: 'エンドの中地' },
+  { id: 'small_end_islands', name: '小さなエンドの島' },
+  { id: 'end_barrens', name: 'エンドの荒地' },
+  { id: 'deep_dark', name: 'ディープダーク' },
+  { id: 'dripstone_caves', name: '鍾乳洞' },
+  { id: 'lush_caves', name: '繁茂した洞窟' },
+];
+
+// 木の種類
+const TREE_TYPES = [
+  { id: 'oak', name: 'オーク' },
+  { id: 'spruce', name: 'トウヒ' },
+  { id: 'birch', name: 'シラカバ' },
+  { id: 'jungle', name: 'ジャングル' },
+  { id: 'acacia', name: 'アカシア' },
+  { id: 'dark_oak', name: 'ダークオーク' },
+  { id: 'mangrove', name: 'マングローブ' },
+  { id: 'cherry', name: 'サクラ' },
+  { id: 'pale_oak', name: 'ペールオーク' },
+  { id: 'random', name: 'ランダム' },
+];
+
+// Butcherフラグ
+const BUTCHER_FLAGS = [
+  { id: 'p', name: 'ペット（-p）', desc: '飼いならされた動物' },
+  { id: 'n', name: 'NPC（-n）', desc: '村人など' },
+  { id: 'g', name: 'ゴーレム（-g）', desc: 'アイアンゴーレム等' },
+  { id: 'a', name: '動物（-a）', desc: '家畜など' },
+  { id: 'b', name: 'アンビエント（-b）', desc: 'コウモリ等' },
+  { id: 't', name: '名札付き（-t）', desc: '名前のついたMob' },
+  { id: 'f', name: '友好的全て（-f）', desc: '全友好Mob' },
+  { id: 'r', name: '防具立て（-r）', desc: 'アーマースタンド' },
+  { id: 'w', name: '水棲（-w）', desc: '魚、イカ等' },
+  { id: 'l', name: '落雷（-l）', desc: 'ライトニング' },
+];
+
+// エンティティタイプ（/remove用）
+const ENTITY_TYPES = [
+  // WorldEditエイリアス
+  { id: 'items', name: 'ドロップアイテム', category: 'alias' },
+  { id: 'arrows', name: '矢', category: 'alias' },
+  { id: 'boats', name: 'ボート', category: 'alias' },
+  { id: 'minecarts', name: 'トロッコ', category: 'alias' },
+  { id: 'tnt', name: '点火されたTNT', category: 'alias' },
+  { id: 'xp', name: '経験値オーブ', category: 'alias' },
+  { id: 'paintings', name: '絵画', category: 'alias' },
+  { id: 'itemframes', name: '額縁', category: 'alias' },
+  { id: 'armorstands', name: '防具立て', category: 'alias' },
+  { id: 'endercrystals', name: 'エンドクリスタル', category: 'alias' },
+  // 投擲物
+  { id: 'snowball', name: '雪玉', category: 'projectile' },
+  { id: 'egg', name: '卵', category: 'projectile' },
+  { id: 'ender_pearl', name: 'エンダーパール', category: 'projectile' },
+  { id: 'trident', name: 'トライデント', category: 'projectile' },
+  { id: 'firework_rocket', name: 'ロケット花火', category: 'projectile' },
+  // その他
+  { id: 'falling_block', name: '落下ブロック', category: 'other' },
+  { id: 'lightning_bolt', name: '落雷', category: 'other' },
+];
+
+// クリップボードフラグ
+const CLIPBOARD_FLAGS = {
+  copy: [
+    { id: 'e', name: 'エンティティを含める（-e）', desc: 'Mob、防具立て、絵画等もコピー' },
+    { id: 'b', name: 'バイオームを含める（-b）', desc: 'バイオーム情報もコピー' },
+  ],
+  cut: [
+    { id: 'e', name: 'エンティティを含める（-e）', desc: 'Mob等も切り取り' },
+  ],
+  paste: [
+    { id: 'a', name: '空気を除外（-a）', desc: '空気ブロックを貼り付けない' },
+    { id: 'e', name: 'エンティティを含める（-e）', desc: 'Mob等も貼り付け' },
+    { id: 'o', name: '元の位置（-o）', desc: 'コピー時の座標に貼り付け' },
+    { id: 's', name: '選択範囲を設定（-s）', desc: '貼り付け後に選択範囲を設定' },
+    { id: 'n', name: 'NBTをスキップ（-n）', desc: 'タイルエンティティのNBTをスキップ' },
+  ],
+  schematic: [
+    { id: 'e', name: 'エンティティを含める（-e）', desc: 'Mob等も保存' },
+  ],
+};
 
 let currentTab = 'generator';  // 'generator' or 'reference'
 let currentCommandType = 'set';
+let selectedBlock = 'stone';
+let blockSelectorVisible = false;
+let currentBlockCategory = 'all';
 
 /**
  * UIをレンダリング
  */
 export function render(manifest) {
+  const version = workspaceStore.get('version') || '1.21';
+
   return `
     <div class="tool-panel worldedit-tool" id="worldedit-panel">
       <div class="tool-header">
@@ -227,10 +437,20 @@ export function render(manifest) {
       </div>
       <p class="we-description">WorldEditプラグイン/MODのコマンドを簡単に生成できます。初心者でも複雑なコマンドを作成可能！</p>
 
+      <!-- バージョン選択 -->
+      <div class="we-version-selector">
+        <label for="we-version">対象バージョン:</label>
+        <select id="we-version" class="mc-select">
+          ${SUPPORTED_VERSIONS.map(v => `<option value="${v}" ${v === version ? 'selected' : ''}>${v}</option>`).join('')}
+        </select>
+        <span class="we-block-count" id="we-block-count">利用可能ブロック: ${getBlocksForVersion(version).length}個</span>
+      </div>
+
       <!-- タブ切り替え -->
       <div class="we-tabs">
         <button type="button" class="we-tab active" data-tab="generator">コマンド生成</button>
         <button type="button" class="we-tab" data-tab="reference">コマンドリファレンス</button>
+        <button type="button" class="we-tab" data-tab="blocks">ブロック一覧</button>
       </div>
 
       <!-- コマンド生成タブ -->
@@ -246,7 +466,7 @@ export function render(manifest) {
 
           <!-- 動的パラメータエリア -->
           <div id="we-params-area">
-            ${renderParamsForType('set')}
+            ${renderParamsForType('set', version)}
           </div>
 
           <!-- パターン指定（複数ブロック） -->
@@ -277,7 +497,7 @@ export function render(manifest) {
                 </div>
                 <div class="form-group">
                   <label for="we-mask-block">マスクブロック</label>
-                  <input type="text" id="we-mask-block" class="mc-input" placeholder="air" list="we-block-list">
+                  <input type="text" id="we-mask-block" class="mc-input" placeholder="air">
                 </div>
               </div>
             </div>
@@ -312,10 +532,45 @@ export function render(manifest) {
         </div>
       </div>
 
-      <!-- ブロックIDリスト（datalist） -->
-      <datalist id="we-block-list">
-        ${COMMON_BLOCKS.map(b => `<option value="${b.id}">${b.name}</option>`).join('')}
-      </datalist>
+      <!-- ブロック一覧タブ -->
+      <div class="we-tab-content" id="we-blocks">
+        <div class="we-blocks-header">
+          <input type="text" id="we-block-search" class="mc-input" placeholder="ブロックを検索...">
+          <select id="we-block-category-filter" class="mc-select">
+            <option value="all">全カテゴリ</option>
+            ${Object.entries(BLOCK_CATEGORIES).map(([catId, cat]) => `
+              <option value="${catId}">${cat.name}</option>
+            `).join('')}
+          </select>
+        </div>
+        <div class="we-blocks-grid" id="we-blocks-grid">
+          ${renderBlocksGrid(version, 'all')}
+        </div>
+      </div>
+
+      <!-- ブロックセレクターモーダル -->
+      <div class="we-block-selector-modal" id="we-block-selector-modal" style="display: none;">
+        <div class="we-block-selector-content">
+          <div class="we-block-selector-header">
+            <h3>ブロックを選択</h3>
+            <button type="button" class="we-block-selector-close" id="we-block-selector-close">&times;</button>
+          </div>
+          <div class="we-block-selector-search">
+            <input type="text" id="we-block-selector-search" class="mc-input" placeholder="検索...">
+          </div>
+          <div class="we-block-selector-categories">
+            <button type="button" class="we-block-cat-btn active" data-category="all">全て</button>
+            ${Object.entries(BLOCK_CATEGORIES).map(([catId, cat]) => `
+              <button type="button" class="we-block-cat-btn" data-category="${catId}" title="${cat.name}">
+                <img src="${getInviconUrl(cat.icon)}" width="16" height="16" alt="">
+              </button>
+            `).join('')}
+          </div>
+          <div class="we-block-selector-grid" id="we-block-selector-grid">
+            ${renderBlockSelectorGrid(version, 'all', '')}
+          </div>
+        </div>
+      </div>
 
       <!-- プレビュー -->
       <div class="we-preview-section">
@@ -338,20 +593,85 @@ export function render(manifest) {
 }
 
 /**
+ * ブロック一覧グリッドをレンダリング
+ */
+function renderBlocksGrid(version, category) {
+  const blocks = category === 'all' ? getBlocksForVersion(version) : getBlocksByCategory(version, category);
+
+  return blocks.map(block => `
+    <div class="we-block-item" data-block-id="${block.id}" title="${block.name} (${block.id})">
+      <img src="${getInviconUrl(block.id)}" width="32" height="32" alt="${block.name}" onerror="this.style.opacity='0.3'">
+      <span class="we-block-name">${block.name}</span>
+      <span class="we-block-version">${block.minVersion}+</span>
+    </div>
+  `).join('');
+}
+
+/**
+ * ブロックセレクターグリッドをレンダリング
+ */
+function renderBlockSelectorGrid(version, category, searchQuery) {
+  let blocks = category === 'all' ? getBlocksForVersion(version) : getBlocksByCategory(version, category);
+
+  if (searchQuery) {
+    const query = searchQuery.toLowerCase();
+    blocks = blocks.filter(b =>
+      b.id.toLowerCase().includes(query) ||
+      b.name.toLowerCase().includes(query)
+    );
+  }
+
+  if (blocks.length === 0) {
+    return '<p class="we-no-blocks">該当するブロックがありません</p>';
+  }
+
+  return blocks.map(block => `
+    <button type="button" class="we-block-selector-item" data-block-id="${block.id}" title="${block.name}">
+      <img src="${getInviconUrl(block.id)}" width="24" height="24" alt="" onerror="this.style.opacity='0.3'">
+    </button>
+  `).join('');
+}
+
+/**
  * コマンドタイプに応じたパラメータUIを生成
  */
-function renderParamsForType(type) {
+function renderParamsForType(type, version) {
   const blockInput = `
     <div class="form-group">
       <label for="we-block">ブロック</label>
-      <input type="text" id="we-block" class="mc-input" placeholder="stone" list="we-block-list" value="stone">
-      <div class="we-block-quick">
-        ${COMMON_BLOCKS.slice(0, 8).map(b => `
-          <button type="button" class="we-quick-block" data-block="${b.id}" title="${b.name}">
-            <img src="${getInviconUrl(b.id)}" width="20" height="20" alt="${b.name}" onerror="this.style.opacity='0.3'">
-          </button>
-        `).join('')}
+      <div class="we-block-input-wrapper">
+        <button type="button" class="we-block-preview" id="we-block-preview" title="クリックして変更">
+          <img src="${getInviconUrl(selectedBlock)}" width="24" height="24" alt="">
+          <span id="we-block-name">${selectedBlock}</span>
+        </button>
+        <input type="text" id="we-block" class="mc-input" value="${selectedBlock}">
       </div>
+      <div class="we-block-quick" id="we-block-quick">
+        ${renderQuickBlocks(version)}
+      </div>
+      <!-- ブロック状態入力（高度なオプション） -->
+      <details class="we-block-state-details">
+        <summary>ブロック状態を指定（任意）</summary>
+        <div class="we-block-state-area">
+          <input type="text" id="we-block-state" class="mc-input" placeholder="facing=north,half=top">
+          <small class="we-hint">例: facing=north,half=top,waterlogged=true</small>
+          <div class="we-state-presets">
+            <span class="we-state-preset" data-state="facing=north">facing=north</span>
+            <span class="we-state-preset" data-state="facing=south">facing=south</span>
+            <span class="we-state-preset" data-state="facing=east">facing=east</span>
+            <span class="we-state-preset" data-state="facing=west">facing=west</span>
+            <span class="we-state-preset" data-state="axis=x">axis=x</span>
+            <span class="we-state-preset" data-state="axis=y">axis=y</span>
+            <span class="we-state-preset" data-state="axis=z">axis=z</span>
+            <span class="we-state-preset" data-state="half=top">half=top</span>
+            <span class="we-state-preset" data-state="half=bottom">half=bottom</span>
+            <span class="we-state-preset" data-state="waterlogged=true">waterlogged</span>
+            <span class="we-state-preset" data-state="lit=true">lit=true</span>
+            <span class="we-state-preset" data-state="open=true">open=true</span>
+            <span class="we-state-preset" data-state="powered=true">powered</span>
+          </div>
+        </div>
+      </details>
     </div>
   `;
 
@@ -364,12 +684,24 @@ function renderParamsForType(type) {
         <div class="form-row">
           <div class="form-group">
             <label for="we-from-block">元のブロック</label>
-            <input type="text" id="we-from-block" class="mc-input" placeholder="stone" list="we-block-list">
+            <div class="we-block-input-wrapper">
+              <button type="button" class="we-block-preview we-from-block-preview" id="we-from-block-preview" title="クリックして変更">
+                <img src="${getInviconUrl('stone')}" width="24" height="24" alt="">
+                <span>stone</span>
+              </button>
+              <input type="text" id="we-from-block" class="mc-input" placeholder="stone" value="stone">
+            </div>
             <small class="we-hint">空欄で全ブロック対象</small>
           </div>
           <div class="form-group">
             <label for="we-to-block">新しいブロック</label>
-            <input type="text" id="we-to-block" class="mc-input" placeholder="air" list="we-block-list" value="air">
+            <div class="we-block-input-wrapper">
+              <button type="button" class="we-block-preview we-to-block-preview" id="we-to-block-preview" title="クリックして変更">
+                <img src="${getInviconUrl('air')}" width="24" height="24" alt="">
+                <span>air</span>
+              </button>
+              <input type="text" id="we-to-block" class="mc-input" placeholder="air" value="air">
+            </div>
           </div>
         </div>
       `;
@@ -429,7 +761,7 @@ function renderParamsForType(type) {
         </div>
         <div class="form-group">
           <label for="we-leave-block">元の場所に残すブロック（任意）</label>
-          <input type="text" id="we-leave-block" class="mc-input" placeholder="air" list="we-block-list">
+          <input type="text" id="we-leave-block" class="mc-input" placeholder="air">
         </div>
       `;
 
@@ -450,7 +782,31 @@ function renderParamsForType(type) {
       `;
 
     case 'copy':
-      return `<p class="we-info">選択範囲をクリップボードにコピーします。先に //pos1 と //pos2 で範囲を選択してください。</p>`;
+      return `
+        <p class="we-info">選択範囲をクリップボードにコピーします。先に //pos1 と //pos2 で範囲を選択してください。</p>
+        <div class="form-group">
+          <label>オプション</label>
+          <div class="we-checkboxes">
+            <label><input type="checkbox" id="we-copy-e"> -e（エンティティを含める：Mob、防具立て、絵画等）</label>
+            <label><input type="checkbox" id="we-copy-b"> -b（バイオームを含める）</label>
+          </div>
+        </div>
+      `;
+
+    case 'cut':
+      return `
+        <p class="we-info">選択範囲を切り取ります。元の場所は空気に置き換わります。</p>
+        <div class="form-group">
+          <label>オプション</label>
+          <div class="we-checkboxes">
+            <label><input type="checkbox" id="we-cut-e"> -e（エンティティを含める：Mob、防具立て、絵画等）</label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="we-leave-block">元の場所に残すブロック（任意）</label>
+          <input type="text" id="we-leave-block" class="mc-input" placeholder="air">
+        </div>
+      `;
 
     case 'paste':
       return `
@@ -458,8 +814,10 @@ function renderParamsForType(type) {
           <label>オプション</label>
           <div class="we-checkboxes">
             <label><input type="checkbox" id="we-paste-a"> -a（空気をコピーしない）</label>
+            <label><input type="checkbox" id="we-paste-e"> -e（エンティティを含める：Mob、防具立て、絵画等）</label>
             <label><input type="checkbox" id="we-paste-o"> -o（元の位置を基準にする）</label>
             <label><input type="checkbox" id="we-paste-s"> -s（選択範囲を更新）</label>
+            <label><input type="checkbox" id="we-paste-n"> -n（NBTをスキップ）</label>
           </div>
         </div>
       `;
@@ -539,11 +897,488 @@ function renderParamsForType(type) {
       `;
 
     case 'drain':
+    case 'fixwater':
+    case 'fixlava':
+    case 'snow':
+    case 'thaw':
+    case 'green':
+    case 'extinguish':
       return `
         <div class="form-group">
           <label for="we-radius">半径</label>
           <input type="number" id="we-radius" class="mc-input" value="10" min="1" max="100">
         </div>
+      `;
+
+    case 'redo':
+      return `
+        <div class="form-group">
+          <label for="we-count">やり直す回数</label>
+          <input type="number" id="we-count" class="mc-input" value="1" min="1" max="100">
+        </div>
+      `;
+
+    case 'overlay':
+    case 'center':
+      return blockInput;
+
+    case 'hollow':
+      return `
+        ${blockInput}
+        <div class="form-group">
+          <label for="we-thickness">厚さ（任意）</label>
+          <input type="number" id="we-thickness" class="mc-input" value="1" min="1" max="10">
+        </div>
+      `;
+
+    case 'smooth':
+      return `
+        <div class="form-row">
+          <div class="form-group">
+            <label for="we-iterations">反復回数</label>
+            <input type="number" id="we-iterations" class="mc-input" value="1" min="1" max="20">
+          </div>
+          <div class="form-group">
+            <label for="we-mask-block">マスク（任意）</label>
+            <input type="text" id="we-mask-block" class="mc-input" placeholder="grass_block,dirt">
+          </div>
+        </div>
+      `;
+
+    case 'naturalize':
+      return '<p class="we-info">選択範囲の地表を自然化します（最上層→草、2-4層→土、5層以降→石）。先に範囲を選択してください。</p>';
+
+    case 'line':
+    case 'curve':
+      return `
+        ${blockInput}
+        <div class="form-group">
+          <label for="we-thickness">太さ（任意）</label>
+          <input type="number" id="we-thickness" class="mc-input" value="1" min="1" max="10">
+        </div>
+        <div class="form-group">
+          <label><input type="checkbox" id="we-hollow"> 中空（-h）</label>
+        </div>
+        <p class="we-hint">//line: pos1とpos2を直線で結ぶ<br>//curve: 選択した全点を通る曲線</p>
+      `;
+
+    case 'deform':
+      return `
+        <div class="form-group">
+          <label for="we-expression">変形式（x, y, z変数使用可）</label>
+          <input type="text" id="we-expression" class="mc-input" placeholder="y+=sin(x*0.1)*3" value="y+=sin(x*0.1)*3">
+          <small class="we-hint">例: y+=sin(x*0.1)*3 (波形)</small>
+        </div>
+        <div class="form-group">
+          <label>オプション</label>
+          <div class="we-checkboxes">
+            <label><input type="checkbox" id="we-deform-r"> -r（Raw座標）</label>
+            <label><input type="checkbox" id="we-deform-o"> -o（オフセット）</label>
+          </div>
+        </div>
+      `;
+
+    case 'regen':
+      return `
+        <div class="form-group">
+          <label for="we-seed">シード値（任意）</label>
+          <input type="text" id="we-seed" class="mc-input" placeholder="ランダム">
+        </div>
+        <div class="form-group">
+          <label><input type="checkbox" id="we-regen-biome"> -b（バイオーム再生成）</label>
+        </div>
+        <p class="we-hint">選択範囲を元の地形に再生成します</p>
+      `;
+
+    case 'flip':
+      return `
+        <div class="form-group">
+          <label for="we-direction">反転方向</label>
+          <select id="we-direction" class="mc-select">
+            ${DIRECTIONS.map(d => `<option value="${d.id}">${d.name}</option>`).join('')}
+          </select>
+        </div>
+      `;
+
+    case 'schematic-save':
+      return `
+        <div class="form-group">
+          <label for="we-filename">ファイル名</label>
+          <input type="text" id="we-filename" class="mc-input" placeholder="my_build" value="my_build">
+        </div>
+        <div class="form-group">
+          <label>オプション</label>
+          <div class="we-checkboxes">
+            <label><input type="checkbox" id="we-schem-e"> -e（エンティティを含める）</label>
+            <label><input type="checkbox" id="we-force"> -f（上書き）</label>
+          </div>
+        </div>
+      `;
+
+    case 'schematic-load':
+      return `
+        <div class="form-group">
+          <label for="we-filename">ファイル名</label>
+          <input type="text" id="we-filename" class="mc-input" placeholder="my_build">
+        </div>
+      `;
+
+    case 'cone':
+      return `
+        ${blockInput}
+        <div class="form-row">
+          <div class="form-group">
+            <label for="we-radius">底面半径</label>
+            <input type="number" id="we-radius" class="mc-input" value="5" min="1" max="100">
+          </div>
+          <div class="form-group">
+            <label for="we-height">高さ</label>
+            <input type="number" id="we-height" class="mc-input" value="10" min="1" max="256">
+          </div>
+        </div>
+        <div class="form-group">
+          <label><input type="checkbox" id="we-hollow"> 中空（-h）</label>
+        </div>
+      `;
+
+    case 'hpyramid':
+      return `
+        ${blockInput}
+        <div class="form-group">
+          <label for="we-size">高さ（サイズ）</label>
+          <input type="number" id="we-size" class="mc-input" value="10" min="1" max="100">
+        </div>
+      `;
+
+    case 'generate':
+      return `
+        ${blockInput}
+        <div class="form-group">
+          <label for="we-expression">生成式（x, y, z変数使用可）</label>
+          <input type="text" id="we-expression" class="mc-input" placeholder="(x^2+y^2+z^2)^0.5 < 5" value="(x^2+y^2+z^2)^0.5 < 5">
+          <small class="we-hint">例: (x^2+y^2+z^2)^0.5 < 5 (球体)</small>
+        </div>
+        <div class="form-group">
+          <label>オプション</label>
+          <div class="we-checkboxes">
+            <label><input type="checkbox" id="we-gen-h"> -h（中空）</label>
+            <label><input type="checkbox" id="we-gen-r"> -r（Raw座標）</label>
+            <label><input type="checkbox" id="we-gen-o"> -o（オフセット）</label>
+            <label><input type="checkbox" id="we-gen-c"> -c（洞窟モード）</label>
+          </div>
+        </div>
+      `;
+
+    case 'forest':
+      return `
+        <div class="form-row">
+          <div class="form-group">
+            <label for="we-tree-type">木の種類</label>
+            <select id="we-tree-type" class="mc-select">
+              ${TREE_TYPES.map(t => `<option value="${t.id}">${t.name}</option>`).join('')}
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="we-density">密度（%）</label>
+            <input type="number" id="we-density" class="mc-input" value="5" min="1" max="100">
+          </div>
+        </div>
+      `;
+
+    case 'flora':
+      return `
+        <div class="form-group">
+          <label for="we-density">密度（%）</label>
+          <input type="number" id="we-density" class="mc-input" value="10" min="1" max="100">
+        </div>
+        <p class="we-info">選択範囲の上面に草花を生成します</p>
+      `;
+
+    case 'shift':
+    case 'outset':
+    case 'inset':
+      return `
+        <div class="form-row">
+          <div class="form-group">
+            <label for="we-distance">距離（ブロック数）</label>
+            <input type="number" id="we-distance" class="mc-input" value="5" min="1">
+          </div>
+          ${type === 'shift' ? `
+          <div class="form-group">
+            <label for="we-direction">方向</label>
+            <select id="we-direction" class="mc-select">
+              ${DIRECTIONS.map(d => `<option value="${d.id}">${d.name}</option>`).join('')}
+            </select>
+          </div>
+          ` : `
+          <div class="form-group">
+            <label>オプション</label>
+            <div class="we-checkboxes">
+              <label><input type="checkbox" id="we-horizontal"> -h（水平のみ）</label>
+              <label><input type="checkbox" id="we-vertical"> -v（垂直のみ）</label>
+            </div>
+          </div>
+          `}
+        </div>
+      `;
+
+    case 'count':
+      return `
+        <div class="form-group">
+          <label for="we-block">カウントするブロック</label>
+          <div class="we-block-input-wrapper">
+            <button type="button" class="we-block-preview" id="we-block-preview" title="クリックして変更">
+              <img src="${getInviconUrl(selectedBlock)}" width="24" height="24" alt="">
+              <span id="we-block-name">${selectedBlock}</span>
+            </button>
+            <input type="text" id="we-block" class="mc-input" value="${selectedBlock}">
+          </div>
+        </div>
+      `;
+
+    case 'fill':
+    case 'fillr':
+      return `
+        ${blockInput}
+        <div class="form-row">
+          <div class="form-group">
+            <label for="we-radius">半径</label>
+            <input type="number" id="we-radius" class="mc-input" value="10" min="1" max="100">
+          </div>
+          <div class="form-group">
+            <label for="we-depth">深さ</label>
+            <input type="number" id="we-depth" class="mc-input" value="10" min="1" max="256">
+          </div>
+        </div>
+        <p class="we-hint">${type === 'fill' ? '指定半径内の穴を埋めます' : '再帰的に穴を埋めます（深い穴向け）'}</p>
+      `;
+
+    case 'removeabove':
+    case 'removebelow':
+      return `
+        <div class="form-row">
+          <div class="form-group">
+            <label for="we-size">サイズ（半径）</label>
+            <input type="number" id="we-size" class="mc-input" value="5" min="1" max="100">
+          </div>
+          <div class="form-group">
+            <label for="we-height">${type === 'removeabove' ? '高さ' : '深さ'}</label>
+            <input type="number" id="we-height" class="mc-input" value="256" min="1" max="256">
+          </div>
+        </div>
+      `;
+
+    case 'removenear':
+      return `
+        ${blockInput}
+        <div class="form-group">
+          <label for="we-radius">半径</label>
+          <input type="number" id="we-radius" class="mc-input" value="5" min="1" max="50">
+        </div>
+      `;
+
+    case 'butcher':
+      return `
+        <div class="form-group">
+          <label for="we-radius">半径（-1で全て）</label>
+          <input type="number" id="we-radius" class="mc-input" value="50" min="-1" max="500">
+        </div>
+        <div class="form-group">
+          <label>対象Mobフラグ</label>
+          <div class="we-checkboxes we-butcher-flags">
+            ${BUTCHER_FLAGS.map(f => `
+              <label title="${f.desc}"><input type="checkbox" id="we-butcher-${f.id}"> ${f.name}</label>
+            `).join('')}
+          </div>
+        </div>
+        <p class="we-hint">デフォルト: 敵対モブのみ削除</p>
+      `;
+
+    // === ブラシコマンド追加 ===
+    case 'brush-clipboard':
+      return `
+        <div class="form-group">
+          <label>オプション</label>
+          <div class="we-checkboxes">
+            <label><input type="checkbox" id="we-brush-a"> -a（空気無視）</label>
+            <label><input type="checkbox" id="we-brush-o"> -o（原位置）</label>
+            <label><input type="checkbox" id="we-brush-e"> -e（エンティティ）</label>
+            <label><input type="checkbox" id="we-brush-b"> -b（バイオーム）</label>
+          </div>
+        </div>
+        <p class="we-info">クリップボードの内容をブラシとして使用</p>
+      `;
+
+    case 'brush-smooth':
+      return `
+        <div class="form-row">
+          <div class="form-group">
+            <label for="we-radius">半径</label>
+            <input type="number" id="we-radius" class="mc-input" value="3" min="1" max="10">
+          </div>
+          <div class="form-group">
+            <label for="we-iterations">反復回数</label>
+            <input type="number" id="we-iterations" class="mc-input" value="4" min="1" max="20">
+          </div>
+        </div>
+      `;
+
+    case 'brush-gravity':
+      return `
+        <div class="form-row">
+          <div class="form-group">
+            <label for="we-radius">半径</label>
+            <input type="number" id="we-radius" class="mc-input" value="3" min="1" max="10">
+          </div>
+          <div class="form-group">
+            <label for="we-height">高さ（-h）</label>
+            <input type="number" id="we-height" class="mc-input" value="5" min="1" max="50">
+          </div>
+        </div>
+      `;
+
+    case 'brush-forest':
+      return `
+        <div class="form-row">
+          <div class="form-group">
+            <label for="we-tree-type">木の種類</label>
+            <select id="we-tree-type" class="mc-select">
+              ${TREE_TYPES.map(t => `<option value="${t.id}">${t.name}</option>`).join('')}
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="we-radius">半径</label>
+            <input type="number" id="we-radius" class="mc-input" value="3" min="1" max="10">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="we-density">密度（%）</label>
+          <input type="number" id="we-density" class="mc-input" value="5" min="1" max="100">
+        </div>
+      `;
+
+    case 'brush-extinguish':
+      return `
+        <div class="form-group">
+          <label for="we-radius">半径</label>
+          <input type="number" id="we-radius" class="mc-input" value="5" min="1" max="20">
+        </div>
+      `;
+
+    case 'brush-butcher':
+      return `
+        <div class="form-group">
+          <label for="we-radius">半径</label>
+          <input type="number" id="we-radius" class="mc-input" value="5" min="1" max="20">
+        </div>
+        <div class="form-group">
+          <label>対象Mobフラグ</label>
+          <div class="we-checkboxes we-butcher-flags">
+            ${BUTCHER_FLAGS.map(f => `
+              <label title="${f.desc}"><input type="checkbox" id="we-butcher-${f.id}"> ${f.name}</label>
+            `).join('')}
+          </div>
+        </div>
+      `;
+
+    case 'brush-deform':
+      return `
+        <div class="form-row">
+          <div class="form-group">
+            <label for="we-radius">半径</label>
+            <input type="number" id="we-radius" class="mc-input" value="3" min="1" max="10">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="we-expression">変形式</label>
+          <input type="text" id="we-expression" class="mc-input" placeholder="y-=0.5" value="y-=0.5">
+        </div>
+      `;
+
+    case 'brush-snow':
+      return `
+        <div class="form-group">
+          <label for="we-radius">半径</label>
+          <input type="number" id="we-radius" class="mc-input" value="3" min="1" max="10">
+        </div>
+        <div class="form-group">
+          <label><input type="checkbox" id="we-stack"> -s（積雪スタック）</label>
+        </div>
+      `;
+
+    case 'brush-biome':
+      return `
+        <div class="form-row">
+          <div class="form-group">
+            <label for="we-biome">バイオーム</label>
+            <select id="we-biome" class="mc-select">
+              ${BIOMES.map(b => `<option value="${b.id}">${b.name}</option>`).join('')}
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="we-radius">半径</label>
+            <input type="number" id="we-radius" class="mc-input" value="3" min="1" max="10">
+          </div>
+        </div>
+        <div class="form-group">
+          <label><input type="checkbox" id="we-column"> -c（Y軸全体）</label>
+        </div>
+      `;
+
+    // === バイオームコマンド ===
+    case 'setbiome':
+      return `
+        <div class="form-group">
+          <label for="we-biome">バイオーム</label>
+          <select id="we-biome" class="mc-select">
+            ${BIOMES.map(b => `<option value="${b.id}">${b.name}</option>`).join('')}
+          </select>
+        </div>
+        <p class="we-info">選択範囲のバイオームを変更します</p>
+      `;
+
+    case 'replacebiome':
+      return `
+        <div class="form-row">
+          <div class="form-group">
+            <label for="we-from-biome">元のバイオーム</label>
+            <select id="we-from-biome" class="mc-select">
+              ${BIOMES.map(b => `<option value="${b.id}">${b.name}</option>`).join('')}
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="we-to-biome">新しいバイオーム</label>
+            <select id="we-to-biome" class="mc-select">
+              ${BIOMES.map(b => `<option value="${b.id}">${b.name}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+      `;
+
+    // === エンティティコマンド ===
+    case 'remove':
+      return `
+        <div class="form-row">
+          <div class="form-group">
+            <label for="we-entity-type">エンティティタイプ</label>
+            <select id="we-entity-type" class="mc-select">
+              <optgroup label="WorldEditエイリアス">
+                ${ENTITY_TYPES.filter(e => e.category === 'alias').map(e => `<option value="${e.id}">${e.name} (${e.id})</option>`).join('')}
+              </optgroup>
+              <optgroup label="投擲物">
+                ${ENTITY_TYPES.filter(e => e.category === 'projectile').map(e => `<option value="${e.id}">${e.name} (${e.id})</option>`).join('')}
+              </optgroup>
+              <optgroup label="その他">
+                ${ENTITY_TYPES.filter(e => e.category === 'other').map(e => `<option value="${e.id}">${e.name} (${e.id})</option>`).join('')}
+              </optgroup>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="we-radius">半径（-1で全て）</label>
+            <input type="number" id="we-radius" class="mc-input" value="50" min="-1" max="500">
+          </div>
+        </div>
+        <p class="we-hint">/remove items 50 = 半径50以内のドロップアイテムを削除</p>
       `;
 
     default:
@@ -552,11 +1387,50 @@ function renderParamsForType(type) {
 }
 
 /**
+ * クイックブロック選択ボタンをレンダリング
+ */
+function renderQuickBlocks(version) {
+  const quickBlocks = [
+    'stone', 'cobblestone', 'dirt', 'grass_block',
+    'oak_planks', 'glass', 'white_wool', 'bricks'
+  ];
+
+  return quickBlocks.map(blockId => {
+    const block = ALL_BLOCKS.find(b => b.id === blockId);
+    if (!block || compareVersions(version, block.minVersion) < 0) return '';
+    return `
+      <button type="button" class="we-quick-block" data-block="${blockId}" title="${block.name}">
+        <img src="${getInviconUrl(blockId)}" width="20" height="20" alt="${block.name}" onerror="this.style.opacity='0.3'">
+      </button>
+    `;
+  }).join('');
+}
+
+/**
  * 初期化
  */
 export function init(container) {
   currentTab = 'generator';
   currentCommandType = 'set';
+  selectedBlock = 'stone';
+  blockSelectorVisible = false;
+  currentBlockCategory = 'all';
+
+  const version = workspaceStore.get('version') || '1.21';
+
+  // バージョン変更
+  $('#we-version', container)?.addEventListener('change', (e) => {
+    const newVersion = e.target.value;
+    updateForVersion(container, newVersion);
+  });
+
+  // グローバルバージョン変更
+  window.addEventListener('mc-version-change', (e) => {
+    const newVersion = e.detail?.version || workspaceStore.get('version') || '1.21';
+    const versionSelect = $('#we-version', container);
+    if (versionSelect) versionSelect.value = newVersion;
+    updateForVersion(container, newVersion);
+  });
 
   // タブ切り替え
   delegate(container, 'click', '.we-tab', (e, target) => {
@@ -569,7 +1443,8 @@ export function init(container) {
   // コマンドタイプ変更
   $('#we-command-type', container)?.addEventListener('change', (e) => {
     currentCommandType = e.target.value;
-    $('#we-params-area', container).innerHTML = renderParamsForType(currentCommandType);
+    const currentVersion = $('#we-version', container)?.value || '1.21';
+    $('#we-params-area', container).innerHTML = renderParamsForType(currentCommandType, currentVersion);
     bindParamEvents(container);
     updateCommand(container);
     updateVisibility(container);
@@ -621,10 +1496,212 @@ export function init(container) {
     setOutput(fullCmd, 'worldedit', { command: fullCmd });
   });
 
+  // ブロック一覧検索
+  $('#we-block-search', container)?.addEventListener('input', debounce((e) => {
+    const query = e.target.value.toLowerCase();
+    const currentVersion = $('#we-version', container)?.value || '1.21';
+    const category = $('#we-block-category-filter', container)?.value || 'all';
+    filterBlocksGrid(container, currentVersion, category, query);
+  }, 150));
+
+  // ブロック一覧カテゴリフィルター
+  $('#we-block-category-filter', container)?.addEventListener('change', (e) => {
+    const category = e.target.value;
+    const currentVersion = $('#we-version', container)?.value || '1.21';
+    const query = $('#we-block-search', container)?.value || '';
+    filterBlocksGrid(container, currentVersion, category, query);
+  });
+
+  // ブロック一覧アイテムクリック
+  delegate(container, 'click', '.we-block-item', (e, target) => {
+    const blockId = target.dataset.blockId;
+    selectBlock(container, blockId);
+  });
+
+  // ブロックセレクター関連
+  setupBlockSelector(container);
+
   // 初期パラメータイベント
   bindParamEvents(container);
   updateVisibility(container);
   updateCommand(container);
+}
+
+/**
+ * バージョン変更時の更新
+ */
+function updateForVersion(container, version) {
+  // ブロック数を更新
+  const blockCount = $('#we-block-count', container);
+  if (blockCount) {
+    blockCount.textContent = `利用可能ブロック: ${getBlocksForVersion(version).length}個`;
+  }
+
+  // ブロック一覧を更新
+  const blocksGrid = $('#we-blocks-grid', container);
+  if (blocksGrid) {
+    const category = $('#we-block-category-filter', container)?.value || 'all';
+    blocksGrid.innerHTML = renderBlocksGrid(version, category);
+  }
+
+  // クイックブロックを更新
+  const quickBlocks = $('#we-block-quick', container);
+  if (quickBlocks) {
+    quickBlocks.innerHTML = renderQuickBlocks(version);
+  }
+
+  // セレクターグリッドを更新
+  updateBlockSelectorGrid(container);
+
+  updateCommand(container);
+}
+
+/**
+ * ブロックセレクターのセットアップ
+ */
+function setupBlockSelector(container) {
+  // ブロックプレビュークリックでセレクターを開く
+  delegate(container, 'click', '.we-block-preview', (e, target) => {
+    e.preventDefault();
+    openBlockSelector(container, target);
+  });
+
+  // セレクター閉じる
+  $('#we-block-selector-close', container)?.addEventListener('click', () => {
+    closeBlockSelector(container);
+  });
+
+  // セレクター外クリックで閉じる
+  $('#we-block-selector-modal', container)?.addEventListener('click', (e) => {
+    if (e.target.id === 'we-block-selector-modal') {
+      closeBlockSelector(container);
+    }
+  });
+
+  // セレクター検索
+  $('#we-block-selector-search', container)?.addEventListener('input', debounce((e) => {
+    updateBlockSelectorGrid(container);
+  }, 150));
+
+  // セレクターカテゴリ切り替え
+  delegate(container, 'click', '.we-block-cat-btn', (e, target) => {
+    currentBlockCategory = target.dataset.category;
+    $$('.we-block-cat-btn', container).forEach(btn => btn.classList.toggle('active', btn.dataset.category === currentBlockCategory));
+    updateBlockSelectorGrid(container);
+  });
+
+  // セレクターブロック選択
+  delegate(container, 'click', '.we-block-selector-item', (e, target) => {
+    const blockId = target.dataset.blockId;
+    selectBlock(container, blockId);
+    closeBlockSelector(container);
+  });
+}
+
+let currentBlockTarget = null;
+
+/**
+ * ブロックセレクターを開く
+ */
+function openBlockSelector(container, target) {
+  currentBlockTarget = target;
+  const modal = $('#we-block-selector-modal', container);
+  if (modal) {
+    modal.style.display = 'flex';
+    updateBlockSelectorGrid(container);
+    $('#we-block-selector-search', container)?.focus();
+  }
+}
+
+/**
+ * ブロックセレクターを閉じる
+ */
+function closeBlockSelector(container) {
+  const modal = $('#we-block-selector-modal', container);
+  if (modal) {
+    modal.style.display = 'none';
+  }
+  currentBlockTarget = null;
+}
+
+/**
+ * ブロックセレクターグリッドを更新
+ */
+function updateBlockSelectorGrid(container) {
+  const version = $('#we-version', container)?.value || '1.21';
+  const query = $('#we-block-selector-search', container)?.value || '';
+  const grid = $('#we-block-selector-grid', container);
+
+  if (grid) {
+    grid.innerHTML = renderBlockSelectorGrid(version, currentBlockCategory, query);
+  }
+}
+
+/**
+ * ブロックを選択
+ */
+function selectBlock(container, blockId) {
+  selectedBlock = blockId;
+
+  // メインブロック入力を更新
+  const blockInput = $('#we-block', container);
+  if (blockInput) {
+    blockInput.value = blockId;
+  }
+
+  // プレビューを更新
+  const blockPreview = $('#we-block-preview', container);
+  if (blockPreview) {
+    const img = blockPreview.querySelector('img');
+    const name = blockPreview.querySelector('#we-block-name');
+    if (img) img.src = getInviconUrl(blockId);
+    if (name) name.textContent = blockId;
+  }
+
+  // ターゲットがある場合はそれも更新
+  if (currentBlockTarget) {
+    const img = currentBlockTarget.querySelector('img');
+    const span = currentBlockTarget.querySelector('span');
+    if (img) img.src = getInviconUrl(blockId);
+    if (span) span.textContent = blockId;
+
+    // 対応する入力フィールドを更新
+    const inputId = currentBlockTarget.id.replace('-preview', '');
+    const input = $(`#${inputId}`, container);
+    if (input) input.value = blockId;
+  }
+
+  updateCommand(container);
+}
+
+/**
+ * ブロック一覧をフィルタリング
+ */
+function filterBlocksGrid(container, version, category, query) {
+  let blocks = category === 'all' ? getBlocksForVersion(version) : getBlocksByCategory(version, category);
+
+  if (query) {
+    const lowerQuery = query.toLowerCase();
+    blocks = blocks.filter(b =>
+      b.id.toLowerCase().includes(lowerQuery) ||
+      b.name.toLowerCase().includes(lowerQuery)
+    );
+  }
+
+  const grid = $('#we-blocks-grid', container);
+  if (grid) {
+    if (blocks.length === 0) {
+      grid.innerHTML = '<p class="we-no-blocks">該当するブロックがありません</p>';
+    } else {
+      grid.innerHTML = blocks.map(block => `
+        <div class="we-block-item" data-block-id="${block.id}" title="${block.name} (${block.id})">
+          <img src="${getInviconUrl(block.id)}" width="32" height="32" alt="${block.name}" onerror="this.style.opacity='0.3'">
+          <span class="we-block-name">${block.name}</span>
+          <span class="we-block-version">${block.minVersion}+</span>
+        </div>
+      `).join('');
+    }
+  }
 }
 
 /**
@@ -641,12 +1718,54 @@ function bindParamEvents(container) {
   // クイックブロック選択
   delegate(container, 'click', '.we-quick-block', (e, target) => {
     const block = target.dataset.block;
-    const blockInput = $('#we-block', container);
-    if (blockInput) {
-      blockInput.value = block;
+    selectBlock(container, block);
+  });
+
+  // ブロック状態プリセット選択
+  delegate(container, 'click', '.we-state-preset', (e, target) => {
+    const state = target.dataset.state;
+    const stateInput = $('#we-block-state', container);
+    if (stateInput) {
+      // 既存の状態があれば追加、なければセット
+      const currentState = stateInput.value;
+      if (currentState) {
+        // 同じキーがあれば置換、なければ追加
+        const key = state.split('=')[0];
+        const states = currentState.split(',');
+        const existingIndex = states.findIndex(s => s.startsWith(key + '='));
+        if (existingIndex >= 0) {
+          states[existingIndex] = state;
+        } else {
+          states.push(state);
+        }
+        stateInput.value = states.join(',');
+      } else {
+        stateInput.value = state;
+      }
       updateCommand(container);
     }
   });
+
+  // ブロック状態入力の変更
+  delegate(container, 'input', '#we-block-state', () => {
+    updateCommand(container);
+  });
+
+  // ブロック入力フィールドの変更
+  const blockInput = $('#we-block', container);
+  if (blockInput) {
+    blockInput.addEventListener('input', (e) => {
+      selectedBlock = e.target.value;
+      const preview = $('#we-block-preview', container);
+      if (preview) {
+        const img = preview.querySelector('img');
+        const name = preview.querySelector('#we-block-name');
+        if (img) img.src = getInviconUrl(selectedBlock);
+        if (name) name.textContent = selectedBlock;
+      }
+      updateCommand(container);
+    });
+  }
 }
 
 /**
@@ -657,11 +1776,17 @@ function updateVisibility(container) {
 
   // パターンはブロック配置系コマンドでのみ表示
   const showPattern = ['set', 'sphere', 'hsphere', 'cylinder', 'hcyl', 'pyramid', 'walls', 'outline', 'brush-sphere', 'brush-cylinder'].includes(type);
-  $('#we-pattern-group', container).style.display = showPattern ? 'block' : 'none';
+  const patternGroup = $('#we-pattern-group', container);
+  if (patternGroup) patternGroup.style.display = showPattern ? 'block' : 'none';
 
-  // マスクは編集系コマンドでのみ表示
-  const showMask = ['replace', 'move', 'stack'].includes(type);
-  $('#we-mask-group', container).style.display = showMask ? 'block' : 'none';
+  // マスクは編集系コマンドで表示
+  const maskSupportedCmds = [
+    'replace', 'move', 'stack', 'copy', 'cut', 'paste', 'rotate', 'flip',
+    'smooth', 'deform', 'hollow', 'regen', 'overlay', 'naturalize'
+  ];
+  const showMask = maskSupportedCmds.includes(type);
+  const maskGroup = $('#we-mask-group', container);
+  if (maskGroup) maskGroup.style.display = showMask ? 'block' : 'none';
 }
 
 /**
@@ -669,15 +1794,15 @@ function updateVisibility(container) {
  */
 function addPatternItem(container) {
   const patternItems = $('#we-pattern-items', container);
-  const index = patternItems.children.length;
+  if (!patternItems) return;
 
   const item = document.createElement('div');
   item.className = 'we-pattern-item';
   item.innerHTML = `
     <input type="number" class="mc-input we-pattern-percent" value="50" min="1" max="100" style="width: 60px;">
     <span>%</span>
-    <input type="text" class="mc-input we-pattern-block" placeholder="stone" list="we-block-list" style="flex: 1;">
-    <button type="button" class="we-pattern-remove" title="削除">×</button>
+    <input type="text" class="mc-input we-pattern-block" placeholder="stone" style="flex: 1;">
+    <button type="button" class="we-pattern-remove" title="削除">&times;</button>
   `;
   patternItems.appendChild(item);
 
@@ -720,7 +1845,15 @@ function updateCommand(container) {
 
   // パターン使用チェック
   const usePattern = $('#we-use-pattern', container)?.checked;
-  let blockValue = $('#we-block', container)?.value || 'stone';
+  let blockValue = $('#we-block', container)?.value || selectedBlock || 'stone';
+
+  // ブロック状態を追加
+  const blockState = $('#we-block-state', container)?.value || '';
+  if (blockState && !usePattern) {
+    // ブロック状態がある場合は [state] 形式で追加
+    blockValue = `${blockValue}[${blockState}]`;
+  }
+
   if (usePattern) {
     const patternStr = getPatternString(container);
     if (patternStr) blockValue = patternStr;
@@ -780,15 +1913,21 @@ function updateCommand(container) {
       break;
     }
 
-    case 'copy':
-      command = '//copy';
+    case 'copy': {
+      const flags = [];
+      if ($('#we-copy-e', container)?.checked) flags.push('-e');
+      if ($('#we-copy-b', container)?.checked) flags.push('-b');
+      command = '//copy' + (flags.length ? ' ' + flags.join(' ') : '');
       break;
+    }
 
     case 'paste': {
       const flags = [];
       if ($('#we-paste-a', container)?.checked) flags.push('-a');
+      if ($('#we-paste-e', container)?.checked) flags.push('-e');
       if ($('#we-paste-o', container)?.checked) flags.push('-o');
       if ($('#we-paste-s', container)?.checked) flags.push('-s');
+      if ($('#we-paste-n', container)?.checked) flags.push('-n');
       command = '//paste' + (flags.length ? ' ' + flags.join(' ') : '');
       break;
     }
@@ -828,9 +1967,283 @@ function updateCommand(container) {
       break;
     }
 
-    case 'drain': {
+    case 'drain':
+    case 'fixwater':
+    case 'fixlava':
+    case 'snow':
+    case 'thaw':
+    case 'green':
+    case 'extinguish': {
       const radius = $('#we-radius', container)?.value || '10';
-      command = `//drain ${radius}`;
+      const cmdName = type === 'extinguish' ? 'ex' : type;
+      command = `//${cmdName} ${radius}`;
+      break;
+    }
+
+    case 'redo': {
+      const count = $('#we-count', container)?.value || '1';
+      command = count === '1' ? '//redo' : `//redo ${count}`;
+      break;
+    }
+
+    case 'overlay':
+    case 'center':
+      command = `//${type} ${blockValue}`;
+      break;
+
+    case 'hollow': {
+      const thickness = $('#we-thickness', container)?.value || '';
+      command = thickness ? `//hollow ${thickness} ${blockValue}` : `//hollow ${blockValue}`;
+      break;
+    }
+
+    case 'smooth': {
+      const iterations = $('#we-iterations', container)?.value || '1';
+      const maskBlock = $('#we-mask-block', container)?.value || '';
+      command = maskBlock ? `//smooth ${iterations} ${maskBlock}` : `//smooth ${iterations}`;
+      break;
+    }
+
+    case 'naturalize':
+      command = '//naturalize';
+      break;
+
+    case 'line':
+    case 'curve': {
+      const thickness = $('#we-thickness', container)?.value || '';
+      const hollow = $('#we-hollow', container)?.checked ? '-h ' : '';
+      command = thickness ? `//${type} ${hollow}${blockValue} ${thickness}` : `//${type} ${hollow}${blockValue}`;
+      break;
+    }
+
+    case 'deform': {
+      const expression = $('#we-expression', container)?.value || 'y+=0';
+      const flags = [];
+      if ($('#we-deform-r', container)?.checked) flags.push('-r');
+      if ($('#we-deform-o', container)?.checked) flags.push('-o');
+      command = `//deform ${flags.join(' ')} ${expression}`.replace(/  +/g, ' ');
+      break;
+    }
+
+    case 'regen': {
+      const seed = $('#we-seed', container)?.value || '';
+      const biome = $('#we-regen-biome', container)?.checked ? '-b ' : '';
+      command = seed ? `//regen ${biome}${seed}`.trim() : `//regen ${biome}`.trim();
+      break;
+    }
+
+    case 'cut': {
+      const leaveBlock = $('#we-leave-block', container)?.value || 'air';
+      const flags = [];
+      if ($('#we-cut-e', container)?.checked) flags.push('-e');
+      if ($('#we-cut-b', container)?.checked) flags.push('-b');
+      command = `//cut ${flags.join(' ')} ${leaveBlock}`.replace(/  +/g, ' ').trim();
+      break;
+    }
+
+    case 'flip': {
+      const direction = $('#we-direction', container)?.value || 'up';
+      command = `//flip ${direction}`;
+      break;
+    }
+
+    case 'schematic-save': {
+      const filename = $('#we-filename', container)?.value || 'build';
+      const flags = [];
+      if ($('#we-schem-e', container)?.checked) flags.push('-e');
+      if ($('#we-force', container)?.checked) flags.push('-f');
+      const flagStr = flags.length ? flags.join(' ') + ' ' : '';
+      command = `//schematic save ${flagStr}${filename}`;
+      break;
+    }
+
+    case 'schematic-load': {
+      const filename = $('#we-filename', container)?.value || 'build';
+      command = `//schematic load ${filename}`;
+      break;
+    }
+
+    case 'cone': {
+      const radius = $('#we-radius', container)?.value || '5';
+      const height = $('#we-height', container)?.value || '10';
+      const hollow = $('#we-hollow', container)?.checked ? '-h ' : '';
+      command = `//cone ${hollow}${blockValue} ${radius} ${height}`;
+      break;
+    }
+
+    case 'hpyramid': {
+      const size = $('#we-size', container)?.value || '10';
+      command = `//hpyramid ${blockValue} ${size}`;
+      break;
+    }
+
+    case 'generate': {
+      const expression = $('#we-expression', container)?.value || '(x^2+y^2+z^2)^0.5 < 5';
+      const flags = [];
+      if ($('#we-gen-h', container)?.checked) flags.push('-h');
+      if ($('#we-gen-r', container)?.checked) flags.push('-r');
+      if ($('#we-gen-o', container)?.checked) flags.push('-o');
+      if ($('#we-gen-c', container)?.checked) flags.push('-c');
+      command = `//generate ${flags.join(' ')} ${blockValue} ${expression}`.replace(/  +/g, ' ');
+      break;
+    }
+
+    case 'forest': {
+      const treeType = $('#we-tree-type', container)?.value || 'oak';
+      const density = $('#we-density', container)?.value || '5';
+      command = `//forest ${treeType} ${density}`;
+      break;
+    }
+
+    case 'flora': {
+      const density = $('#we-density', container)?.value || '10';
+      command = `//flora ${density}`;
+      break;
+    }
+
+    case 'shift': {
+      const distance = $('#we-distance', container)?.value || '5';
+      const direction = $('#we-direction', container)?.value || 'up';
+      command = `//shift ${distance} ${direction}`;
+      break;
+    }
+
+    case 'outset':
+    case 'inset': {
+      const distance = $('#we-distance', container)?.value || '5';
+      const flags = [];
+      if ($('#we-horizontal', container)?.checked) flags.push('-h');
+      if ($('#we-vertical', container)?.checked) flags.push('-v');
+      command = `//${type} ${flags.join(' ')} ${distance}`.replace(/  +/g, ' ');
+      break;
+    }
+
+    case 'count':
+      command = `//count ${blockValue}`;
+      break;
+
+    case 'fill':
+    case 'fillr': {
+      const radius = $('#we-radius', container)?.value || '10';
+      const depth = $('#we-depth', container)?.value || '10';
+      command = `//${type} ${blockValue} ${radius} ${depth}`;
+      break;
+    }
+
+    case 'removeabove':
+    case 'removebelow': {
+      const size = $('#we-size', container)?.value || '5';
+      const height = $('#we-height', container)?.value || '256';
+      command = `//${type} ${size} ${height}`;
+      break;
+    }
+
+    case 'removenear': {
+      const radius = $('#we-radius', container)?.value || '5';
+      command = `//removenear ${blockValue} ${radius}`;
+      break;
+    }
+
+    case 'butcher': {
+      const radius = $('#we-radius', container)?.value || '50';
+      const flags = [];
+      BUTCHER_FLAGS.forEach(f => {
+        if ($(`#we-butcher-${f.id}`, container)?.checked) flags.push(`-${f.id}`);
+      });
+      command = `//butcher ${flags.join(' ')} ${radius}`.replace(/  +/g, ' ');
+      break;
+    }
+
+    // === ブラシコマンド ===
+    case 'brush-clipboard': {
+      const flags = [];
+      if ($('#we-brush-a', container)?.checked) flags.push('-a');
+      if ($('#we-brush-o', container)?.checked) flags.push('-o');
+      if ($('#we-brush-e', container)?.checked) flags.push('-e');
+      if ($('#we-brush-b', container)?.checked) flags.push('-b');
+      command = `/brush clipboard ${flags.join(' ')}`.trim();
+      break;
+    }
+
+    case 'brush-smooth': {
+      const radius = $('#we-radius', container)?.value || '3';
+      const iterations = $('#we-iterations', container)?.value || '4';
+      command = `/brush smooth ${radius} ${iterations}`;
+      break;
+    }
+
+    case 'brush-gravity': {
+      const radius = $('#we-radius', container)?.value || '3';
+      const height = $('#we-height', container)?.value || '5';
+      command = `/brush gravity ${radius} -h ${height}`;
+      break;
+    }
+
+    case 'brush-forest': {
+      const treeType = $('#we-tree-type', container)?.value || 'oak';
+      const radius = $('#we-radius', container)?.value || '3';
+      const density = $('#we-density', container)?.value || '5';
+      command = `/brush forest sphere ${radius} ${density} ${treeType}`;
+      break;
+    }
+
+    case 'brush-extinguish': {
+      const radius = $('#we-radius', container)?.value || '5';
+      command = `/brush extinguish ${radius}`;
+      break;
+    }
+
+    case 'brush-butcher': {
+      const radius = $('#we-radius', container)?.value || '5';
+      const flags = [];
+      BUTCHER_FLAGS.forEach(f => {
+        if ($(`#we-butcher-${f.id}`, container)?.checked) flags.push(`-${f.id}`);
+      });
+      command = `/brush butcher ${flags.join(' ')} ${radius}`.replace(/  +/g, ' ');
+      break;
+    }
+
+    case 'brush-deform': {
+      const radius = $('#we-radius', container)?.value || '3';
+      const expression = $('#we-expression', container)?.value || 'y-=0.5';
+      command = `/brush deform sphere ${radius} ${expression}`;
+      break;
+    }
+
+    case 'brush-snow': {
+      const radius = $('#we-radius', container)?.value || '3';
+      const stack = $('#we-stack', container)?.checked ? '-s ' : '';
+      command = `/brush snow ${stack}sphere ${radius}`;
+      break;
+    }
+
+    case 'brush-biome': {
+      const biome = $('#we-biome', container)?.value || 'plains';
+      const radius = $('#we-radius', container)?.value || '3';
+      const column = $('#we-column', container)?.checked ? '-c ' : '';
+      command = `/brush biome ${column}sphere ${radius} ${biome}`;
+      break;
+    }
+
+    // === バイオームコマンド ===
+    case 'setbiome': {
+      const biome = $('#we-biome', container)?.value || 'plains';
+      command = `//setbiome ${biome}`;
+      break;
+    }
+
+    case 'replacebiome': {
+      const fromBiome = $('#we-from-biome', container)?.value || 'plains';
+      const toBiome = $('#we-to-biome', container)?.value || 'forest';
+      command = `//replacebiome ${fromBiome} ${toBiome}`;
+      break;
+    }
+
+    // === エンティティコマンド ===
+    case 'remove': {
+      const entityType = $('#we-entity-type', container)?.value || 'items';
+      const radius = $('#we-radius', container)?.value || '50';
+      command = `/remove ${entityType} ${radius}`;
       break;
     }
 
@@ -838,15 +2251,19 @@ function updateCommand(container) {
       command = `// ${type}`;
   }
 
-  // マスク適用
+  // マスク適用（多くのコマンドで -m オプションをサポート）
   const useMask = $('#we-use-mask', container)?.checked;
   if (useMask) {
     const maskType = $('#we-mask-type', container)?.value || 'include';
     const maskBlock = $('#we-mask-block', container)?.value || 'air';
     if (maskBlock) {
       const maskArg = maskType === 'exclude' ? `!${maskBlock}` : maskBlock;
-      // -m オプションをサポートするコマンドのみ
-      if (['move', 'stack'].includes(type)) {
+      // -m オプションをサポートするコマンド
+      const maskSupportedCmds = [
+        'move', 'stack', 'copy', 'cut', 'paste', 'rotate', 'flip',
+        'smooth', 'deform', 'hollow', 'regen', 'overlay', 'naturalize'
+      ];
+      if (maskSupportedCmds.includes(type)) {
         command += ` -m ${maskArg}`;
       }
     }
@@ -885,6 +2302,32 @@ style.textContent = `
     font-size: 0.9rem;
   }
 
+  /* バージョン選択 */
+  .we-version-selector {
+    display: flex;
+    align-items: center;
+    gap: var(--mc-space-md);
+    margin-bottom: var(--mc-space-md);
+    padding: var(--mc-space-sm);
+    background: var(--mc-bg-panel);
+    border-radius: 6px;
+  }
+
+  .we-version-selector label {
+    font-weight: bold;
+    white-space: nowrap;
+  }
+
+  .we-version-selector select {
+    max-width: 120px;
+  }
+
+  .we-block-count {
+    margin-left: auto;
+    font-size: 0.8rem;
+    color: var(--mc-color-grass-main);
+  }
+
   /* タブ */
   .we-tabs {
     display: flex;
@@ -892,6 +2335,7 @@ style.textContent = `
     margin-bottom: var(--mc-space-md);
     border-bottom: 2px solid var(--mc-border-dark);
     padding-bottom: 4px;
+    flex-wrap: wrap;
   }
 
   .we-tab {
@@ -924,7 +2368,35 @@ style.textContent = `
     display: block;
   }
 
-  /* フォーム要素 */
+  /* ブロック入力 */
+  .we-block-input-wrapper {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .we-block-preview {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    background: var(--mc-bg-panel);
+    border: 2px solid var(--mc-border-dark);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+
+  .we-block-preview:hover {
+    border-color: var(--mc-color-grass-main);
+    background: rgba(92, 183, 70, 0.1);
+  }
+
+  .we-block-preview img {
+    image-rendering: pixelated;
+  }
+
   .we-block-quick {
     display: flex;
     gap: 4px;
@@ -944,6 +2416,60 @@ style.textContent = `
   .we-quick-block:hover {
     background: var(--mc-color-grass-main);
     transform: scale(1.1);
+  }
+
+  /* ブロック状態入力 */
+  .we-block-state-details {
+    margin-top: 8px;
+    font-size: 0.85rem;
+  }
+
+  .we-block-state-details summary {
+    cursor: pointer;
+    color: var(--mc-color-diamond);
+    user-select: none;
+  }
+
+  .we-block-state-details summary:hover {
+    text-decoration: underline;
+  }
+
+  .we-block-state-area {
+    margin-top: 8px;
+    padding: 8px;
+    background: var(--mc-bg-panel);
+    border-radius: 4px;
+  }
+
+  .we-state-presets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 8px;
+  }
+
+  .we-state-preset {
+    padding: 2px 6px;
+    background: var(--mc-bg-surface);
+    border: 1px solid var(--mc-border-dark);
+    border-radius: 3px;
+    font-size: 0.75rem;
+    font-family: monospace;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .we-state-preset:hover {
+    background: var(--mc-color-diamond);
+    color: white;
+    border-color: var(--mc-color-diamond);
+  }
+
+  /* Butcherフラグ */
+  .we-butcher-flags {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 4px;
   }
 
   .we-quick-block img {
@@ -1001,6 +2527,7 @@ style.textContent = `
     border: none;
     border-radius: 4px;
     cursor: pointer;
+    font-size: 1rem;
   }
 
   /* マスク */
@@ -1093,6 +2620,193 @@ style.textContent = `
     color: var(--mc-text-secondary);
   }
 
+  /* ブロック一覧 */
+  .we-blocks-header {
+    display: flex;
+    gap: var(--mc-space-md);
+    margin-bottom: var(--mc-space-md);
+    flex-wrap: wrap;
+  }
+
+  .we-blocks-header input {
+    flex: 1;
+    min-width: 200px;
+  }
+
+  .we-blocks-header select {
+    min-width: 150px;
+  }
+
+  .we-blocks-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 8px;
+    max-height: 500px;
+    overflow-y: auto;
+    padding: 4px;
+  }
+
+  .we-block-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 8px;
+    background: var(--mc-bg-panel);
+    border: 1px solid var(--mc-border-dark);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+  }
+
+  .we-block-item:hover {
+    background: rgba(92, 183, 70, 0.2);
+    border-color: var(--mc-color-grass-main);
+    transform: translateY(-2px);
+  }
+
+  .we-block-item img {
+    image-rendering: pixelated;
+    margin-bottom: 4px;
+  }
+
+  .we-block-name {
+    font-size: 0.75rem;
+    color: var(--mc-text-primary);
+    word-break: break-word;
+  }
+
+  .we-block-version {
+    font-size: 0.65rem;
+    color: var(--mc-text-muted);
+    margin-top: 2px;
+  }
+
+  .we-no-blocks {
+    text-align: center;
+    color: var(--mc-text-muted);
+    padding: var(--mc-space-lg);
+  }
+
+  /* ブロックセレクターモーダル */
+  .we-block-selector-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+
+  .we-block-selector-content {
+    background: var(--mc-bg-base);
+    border: 2px solid var(--mc-border-dark);
+    border-radius: 8px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .we-block-selector-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--mc-space-md);
+    border-bottom: 1px solid var(--mc-border-dark);
+  }
+
+  .we-block-selector-header h3 {
+    margin: 0;
+  }
+
+  .we-block-selector-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: var(--mc-text-muted);
+    cursor: pointer;
+    padding: 4px 8px;
+  }
+
+  .we-block-selector-close:hover {
+    color: var(--mc-color-redstone);
+  }
+
+  .we-block-selector-search {
+    padding: var(--mc-space-sm) var(--mc-space-md);
+  }
+
+  .we-block-selector-categories {
+    display: flex;
+    gap: 4px;
+    padding: 0 var(--mc-space-md);
+    flex-wrap: wrap;
+  }
+
+  .we-block-cat-btn {
+    padding: 6px 10px;
+    background: var(--mc-bg-panel);
+    border: 1px solid var(--mc-border-dark);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-size: 0.8rem;
+  }
+
+  .we-block-cat-btn:hover {
+    background: var(--mc-bg-surface);
+  }
+
+  .we-block-cat-btn.active {
+    background: var(--mc-color-grass-main);
+    color: white;
+    border-color: var(--mc-color-grass-dark);
+  }
+
+  .we-block-cat-btn img {
+    display: block;
+    image-rendering: pixelated;
+  }
+
+  .we-block-selector-grid {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--mc-space-md);
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+    gap: 4px;
+    align-content: start;
+  }
+
+  .we-block-selector-item {
+    width: 40px;
+    height: 40px;
+    padding: 4px;
+    background: var(--mc-bg-panel);
+    border: 1px solid var(--mc-border-dark);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .we-block-selector-item:hover {
+    background: var(--mc-color-grass-main);
+    transform: scale(1.1);
+  }
+
+  .we-block-selector-item img {
+    image-rendering: pixelated;
+  }
+
   /* プレビュー */
   .we-preview-section {
     margin-top: var(--mc-space-lg);
@@ -1166,6 +2880,20 @@ style.textContent = `
 
     .we-command-item {
       grid-template-columns: 1fr;
+    }
+
+    .we-version-selector {
+      flex-wrap: wrap;
+    }
+
+    .we-block-count {
+      width: 100%;
+      margin-left: 0;
+      margin-top: var(--mc-space-xs);
+    }
+
+    .we-blocks-grid {
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
     }
   }
 `;

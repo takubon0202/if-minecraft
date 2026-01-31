@@ -16,8 +16,19 @@ Minecraft Java Edition 1.21.11対応のコマンド生成ツールポータル�
 | AI | 担当領域 |
 |----|---------|
 | **Claude Opus 4.5** | 基本構築、App Shell、コア機能、データ層 |
-| **Gemini 3 Pro** | ページデザイン、Google Antigravity演出、UI/UX |
+| **Gemini 3 Pro** | ページデザイン、Google Antigravity演出、UI/UX、リサーチ |
 | **Codex** | コード生成、ツールエンジン、最適化 |
+
+## Gemini使用ルール（重要）
+
+- **使用可能**: `gemini-3-pro-preview`, `gemini-3-flash-preview` のみ
+- **使用禁止**: Gemini 2.5系（gemini-2.5-pro, gemini-2.5-flash等）は絶対に使用しない
+- **リサーチ時**: 必ず「今日は2026年1月31日です」をプロンプトに含める
+
+```bash
+# 正しい使用法
+gemini -m gemini-3-pro-preview "今日は2026年1月31日です。[質問]"
+```
 
 ## ディレクトリ構造
 

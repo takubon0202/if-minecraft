@@ -1,6 +1,6 @@
 # Codex CLI連携スキル
 
-OpenAI Codex CLIを使用してコード生成・エラー解決を行います。
+OpenAI Codex CLIを使用してコード生成・エラー解決・Webリサーチを行います。
 **ChatGPT Plusサブスクリプション**に含まれており、追加費用なしで利用できます。
 
 ## 使用方法
@@ -9,34 +9,51 @@ OpenAI Codex CLIを使用してコード生成・エラー解決を行います�
 /codex タスク内容
 ```
 
-## 実行されるコマンド
+## 実行されるコマンド（重要）
 
-$ARGUMENTS を受け取り、Codex CLIを**非対話モード**で実行します：
+$ARGUMENTS を受け取り、Codex CLIを**非対話モード**で実行します。
 
-```bash
-codex exec "$ARGUMENTS"
-```
-
-> **非対話モード（`codex exec`）を使用する理由:**
-> - Claude Codeからの自動呼び出しに最適（対話入力が不要）
-> - 結果を出力して終了するので、バックグラウンド実行に適している
-> - 入力待ちでハングアップしない
-
-## コマンド例
+**必ずstdin経由でプロンプトを渡してください:**
 
 ```bash
-# 非対話モード（推奨 - Claude Code連携用）
-codex exec "Minecraftのsummonコマンドジェネレーターを作成"
-codex exec "このエラーを修正: TypeError: Cannot read property"
-
-# ヘルパースクリプト経由（非対話モード）
-node scripts/codex-helper.js "タスク内容"
-node scripts/codex-helper.js --error "エラーメッセージ"
-node scripts/codex-helper.js --file path/to/file.js "修正内容"
-
-# 対話モード（手動実行時のみ）
-codex
+echo "今日は2026年1月31日です。$ARGUMENTS" | codex exec - --sandbox read-only
 ```
+
+> **重要: `codex exec -` の形式を使用**
+> - `-` はstdinからプロンプトを読み込む指定
+> - 引数で直接渡すと特殊文字でエラーになる場合がある
+> - `--sandbox read-only` で読み取り専用モード（安全）
+
+## 正しいコマンド例
+
+```bash
+# 読み取り専用（リサーチ用 - 推奨）
+echo "Minecraft 1.21.11の新機能を教えて" | codex exec - --sandbox read-only
+
+# ワークスペース書き込み可能（コード生成用）
+echo "summonコマンドジェネレーターを作成" | codex exec - --sandbox workspace-write
+
+# 日付を含めたリサーチ
+echo "今日は2026年1月31日です。WorldEditの最新機能を調べて" | codex exec - --sandbox read-only
+```
+
+## 間違ったコマンド例（これらは使わない）
+
+```bash
+# NG: 対話モードになりハングする
+codex "質問"
+
+# NG: stdin指定なしだと入力待ちになることがある
+codex exec "質問"
+```
+
+## サンドボックスモード
+
+| モード | 説明 | 用途 |
+|--------|------|------|
+| `read-only` | ファイル読み取りのみ | リサーチ、調査 |
+| `workspace-write` | ワークスペース書き込み可 | コード生成、修正 |
+| `danger-full-access` | 全アクセス（危険） | 使用しない |
 
 ## 自動発動条件
 
@@ -46,21 +63,14 @@ codex
 
 ## このプロジェクトでの主な用途
 
-- Minecraftコマンドパーサー・ジェネレーターの実装
+- Minecraftバージョン情報のリサーチ
+- WorldEditコマンド仕様の調査
 - フロントエンドUIコンポーネントの作成
-- SEO最適化コードの生成
 - バグ修正・エラー解決
 
 ## 使用モデル
 
-- **gpt-5.2-codex-high** - 高性能推論モード
-
-## セットアップ
-
-```bash
-npm install -g @openai/codex
-codex --login
-```
+- **gpt-5.2-codex** - 高性能推論モード（自動選択）
 
 ## 必要なもの
 
