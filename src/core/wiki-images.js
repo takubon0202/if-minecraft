@@ -147,6 +147,55 @@ const ITEM_NAME_MAP = {
   'lapis_lazuli': 'Lapis_Lazuli',
   'quartz': 'Nether_Quartz',
 
+  // === 1.21.9+ 銅時代ブロック（The Copper Age） ===
+  // 銅の鎖
+  'copper_chain': 'Copper_Chain',
+  'exposed_copper_chain': 'Exposed_Copper_Chain',
+  'weathered_copper_chain': 'Weathered_Copper_Chain',
+  'oxidized_copper_chain': 'Oxidized_Copper_Chain',
+  'waxed_copper_chain': 'Waxed_Copper_Chain',
+  'waxed_exposed_copper_chain': 'Waxed_Exposed_Copper_Chain',
+  'waxed_weathered_copper_chain': 'Waxed_Weathered_Copper_Chain',
+  'waxed_oxidized_copper_chain': 'Waxed_Oxidized_Copper_Chain',
+  // 銅の松明
+  'copper_torch': 'Copper_Torch',
+  'exposed_copper_torch': 'Exposed_Copper_Torch',
+  'weathered_copper_torch': 'Weathered_Copper_Torch',
+  'oxidized_copper_torch': 'Oxidized_Copper_Torch',
+  'waxed_copper_torch': 'Waxed_Copper_Torch',
+  'waxed_exposed_copper_torch': 'Waxed_Exposed_Copper_Torch',
+  'waxed_weathered_copper_torch': 'Waxed_Weathered_Copper_Torch',
+  'waxed_oxidized_copper_torch': 'Waxed_Oxidized_Copper_Torch',
+  // 銅のバー
+  'copper_bars': 'Copper_Bars',
+  'exposed_copper_bars': 'Exposed_Copper_Bars',
+  'weathered_copper_bars': 'Weathered_Copper_Bars',
+  'oxidized_copper_bars': 'Oxidized_Copper_Bars',
+  'waxed_copper_bars': 'Waxed_Copper_Bars',
+  'waxed_exposed_copper_bars': 'Waxed_Exposed_Copper_Bars',
+  'waxed_weathered_copper_bars': 'Waxed_Weathered_Copper_Bars',
+  'waxed_oxidized_copper_bars': 'Waxed_Oxidized_Copper_Bars',
+  // 銅のランタン
+  'copper_lantern': 'Copper_Lantern',
+  'exposed_copper_lantern': 'Exposed_Copper_Lantern',
+  'weathered_copper_lantern': 'Weathered_Copper_Lantern',
+  'oxidized_copper_lantern': 'Oxidized_Copper_Lantern',
+  'waxed_copper_lantern': 'Waxed_Copper_Lantern',
+  'waxed_exposed_copper_lantern': 'Waxed_Exposed_Copper_Lantern',
+  'waxed_weathered_copper_lantern': 'Waxed_Weathered_Copper_Lantern',
+  'waxed_oxidized_copper_lantern': 'Waxed_Oxidized_Copper_Lantern',
+  // 銅のチェスト
+  'copper_chest': 'Copper_Chest',
+  'exposed_copper_chest': 'Exposed_Copper_Chest',
+  'weathered_copper_chest': 'Weathered_Copper_Chest',
+  'oxidized_copper_chest': 'Oxidized_Copper_Chest',
+  'waxed_copper_chest': 'Waxed_Copper_Chest',
+  'waxed_exposed_copper_chest': 'Waxed_Exposed_Copper_Chest',
+  'waxed_weathered_copper_chest': 'Waxed_Weathered_Copper_Chest',
+  'waxed_oxidized_copper_chest': 'Waxed_Oxidized_Copper_Chest',
+  // 棚
+  'shelf': 'Shelf',
+
   // === 1.21.5+ ペールガーデン・銅時代ブロック ===
   'pale_oak_log': 'Pale_Oak_Log',
   'pale_oak_wood': 'Pale_Oak_Wood',

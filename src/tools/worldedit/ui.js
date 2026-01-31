@@ -460,7 +460,7 @@ export function render(manifest) {
           <div class="form-group">
             <label for="we-command-type">コマンドタイプ</label>
             <select id="we-command-type" class="mc-select">
-              ${COMMAND_TYPES.map(t => `<option value="${t.id}">${t.name}</option>`).join('')}
+              ${COMMAND_TYPES.map(t => `<option value="${t.id}" ${t.id === 'set' ? 'selected' : ''}>${t.name}</option>`).join('')}
             </select>
           </div>
 
@@ -2298,6 +2298,32 @@ style.textContent = `
     margin-left: auto;
   }
 
+  /* 入力欄とセレクトボックスのコントラスト改善 */
+  .we-generator .mc-input,
+  .we-panel .mc-input,
+  .we-tab-content .mc-input {
+    background: #2a2a40;
+    border: 2px solid #4a4a6a;
+    color: #ffffff;
+    font-size: 0.95rem;
+  }
+
+  .we-generator .mc-input:focus,
+  .we-panel .mc-input:focus,
+  .we-tab-content .mc-input:focus {
+    border-color: #5cb746;
+    background: #2d2d48;
+  }
+
+  .we-generator .mc-select,
+  .we-panel .mc-select,
+  .we-tab-content .mc-select {
+    background: #2a2a40;
+    border: 2px solid #4a4a6a;
+    color: #ffffff;
+    font-size: 0.95rem;
+  }
+
   .we-description {
     color: #c0c0c0;
     margin-bottom: var(--mc-space-md);
@@ -2319,6 +2345,16 @@ style.textContent = `
   .we-version-selector label {
     font-weight: bold;
     white-space: nowrap;
+    color: #e0e0e0;
+  }
+
+  /* フォームラベルのコントラスト改善 */
+  .we-generator .form-group label,
+  .we-panel .form-group label,
+  .we-tab-content .form-group label {
+    color: #e8e8e8;
+    font-weight: bold;
+    font-size: 0.9rem;
   }
 
   .we-version-selector select {
@@ -2383,18 +2419,23 @@ style.textContent = `
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 6px 12px;
-    background: var(--mc-bg-panel);
-    border: 2px solid var(--mc-border-dark);
-    border-radius: 4px;
+    padding: 8px 14px;
+    background: #2d2d44;
+    border: 2px solid #4a4a6a;
+    border-radius: 6px;
     cursor: pointer;
     transition: all 0.15s;
     white-space: nowrap;
+    color: #e8e8e8;
   }
 
   .we-block-preview:hover {
     border-color: var(--mc-color-grass-main);
-    background: rgba(92, 183, 70, 0.1);
+    background: #3d5c3d;
+  }
+
+  .we-block-preview span {
+    color: #ffffff;
   }
 
   .we-block-preview img {
