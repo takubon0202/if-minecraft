@@ -457,6 +457,7 @@ const ITEM_NAME_MAP = {
 
   // === 特殊ブロック ===
   'tnt': 'TNT',  // toPascalCaseは'Tnt'を返すが、WikiはTNT（大文字）
+  'totem_of_undying': 'Totem_of_Undying',  // ofは小文字
   'spawner': 'Monster_Spawner',
   'jack_o_lantern': 'Jack_o%27Lantern',
   'chain': 'Iron_Chain',
