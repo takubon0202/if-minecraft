@@ -1089,7 +1089,8 @@ function updateCommand() {
 
 /**
  * /summon コマンドを生成
- * 1.21+ NBT: エンティティタグはPascalCase, アイテムデータはsnake_case
+ * 1.21.2+ NBT: エンティティタグはPascalCase (CustomName, Attributes, ArmorItems, HandItems)
+ * 属性ID: minecraft:max_health（generic.プレフィックス削除）
  */
 function generateSummonZombieCommand(s) {
   const entityId = `minecraft:${s.zombieType}`;
@@ -1128,6 +1129,10 @@ function generateSummonZombieCommand(s) {
     const attributesNBT = buildAttributesNBT(s.attributes);
     if (attributesNBT) {
       nbtParts.push(attributesNBT);
+    }
+    // max_healthを設定した場合、現在の体力も設定
+    if (s.attributes.max_health) {
+      nbtParts.push(`Health:${s.attributes.max_health}f`);
     }
   }
 
@@ -1228,7 +1233,8 @@ function buildDropChancesNBT(equipment) {
 }
 
 /**
- * 属性NBTを生成（1.21+ attributes小文字、generic.プレフィックス）
+ * 属性NBTを生成（1.21.2+ id/base形式、generic.プレフィックス削除）
+ * 形式: Attributes:[{id:"minecraft:max_health",base:100d}]
  */
 function buildAttributesNBT(attributes) {
   const attrList = [];
@@ -1237,24 +1243,24 @@ function buildAttributesNBT(attributes) {
     const attrInfo = ATTRIBUTES.find(a => a.id === id);
     if (!attrInfo) return;
 
-    // 属性IDのマッピング（1.21+ 形式: minecraft:generic.xxx）
-    const attrId = id === 'max_health' ? 'minecraft:generic.max_health' :
-                   id === 'attack_damage' ? 'minecraft:generic.attack_damage' :
-                   id === 'movement_speed' ? 'minecraft:generic.movement_speed' :
-                   id === 'knockback_resistance' ? 'minecraft:generic.knockback_resistance' :
-                   id === 'armor' ? 'minecraft:generic.armor' :
-                   id === 'armor_toughness' ? 'minecraft:generic.armor_toughness' :
-                   id === 'follow_range' ? 'minecraft:generic.follow_range' :
-                   id === 'spawn_reinforcements' ? 'minecraft:zombie.spawn_reinforcements' :
-                   `minecraft:generic.${id}`;
+    // 属性IDのマッピング（1.21.2+ 形式: minecraft:xxx - generic.プレフィックス削除）
+    const attrId = id === 'max_health' ? 'minecraft:max_health' :
+                   id === 'attack_damage' ? 'minecraft:attack_damage' :
+                   id === 'movement_speed' ? 'minecraft:movement_speed' :
+                   id === 'knockback_resistance' ? 'minecraft:knockback_resistance' :
+                   id === 'armor' ? 'minecraft:armor' :
+                   id === 'armor_toughness' ? 'minecraft:armor_toughness' :
+                   id === 'follow_range' ? 'minecraft:follow_range' :
+                   id === 'spawn_reinforcements' ? 'minecraft:spawn_reinforcements' :
+                   `minecraft:${id}`;
 
-    // 1.21+: attributes配列内はsnake_case (id, base)
+    // 1.21.2+: Attributes配列内はid/base形式
     attrList.push(`{id:"${attrId}",base:${value}d}`);
   });
 
   if (attrList.length === 0) return null;
 
-  // 1.21+: エンティティNBTはPascalCase（Attributes）
+  // エンティティNBTは Attributes（PascalCase）が正しい
   return `Attributes:[${attrList.join(',')}]`;
 }
 
