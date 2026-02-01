@@ -140,120 +140,143 @@ let state = {
  */
 export function render(manifest) {
   return `
-    <div class="tool-panel smithing-panel" id="smithing-panel">
-      <div class="tool-header">
-        <img src="${getInviconUrl(manifest.iconItem || 'smithing_table')}" class="tool-header-icon mc-wiki-image" width="32" height="32" alt="">
-        <h2>${manifest.title}</h2>
+    <div class="tool-panel smithing-tool mc-themed" id="smithing-panel">
+      <!-- ヘッダー -->
+      <div class="tool-header mc-header-banner">
+        <div class="header-content">
+          <img src="${getInviconUrl(manifest.iconItem || 'smithing_table')}" alt="" class="header-icon mc-pixelated">
+          <div class="header-text">
+            <h2>鍛冶台/トリム</h2>
+            <p class="header-subtitle">防具のトリム・アップグレード</p>
+          </div>
+        </div>
+        <span class="version-badge">1.21+</span>
         <button type="button" class="reset-btn" id="smithing-reset-btn" title="設定をリセット">リセット</button>
       </div>
 
-      <form class="tool-form" id="smithing-form">
-        <!-- 検索・プリセット -->
-        <div class="smithing-search-section">
-          <div class="form-group">
-            <label for="smithing-search">パターン検索</label>
-            <input type="text" id="smithing-search" class="mc-input smithing-search-input"
+      <form class="tool-form mc-form" id="smithing-form">
+        <!-- ステップ1: クイック選択・プリセット -->
+        <section class="form-section mc-section">
+          <div class="section-header">
+            <span class="step-number">1</span>
+            <h3>クイック選択</h3>
+          </div>
+
+          <div class="search-input-group">
+            <label>パターン検索</label>
+            <input type="text" id="smithing-search" class="mc-input"
                    placeholder="パターン名で検索..." autocomplete="off">
           </div>
-          <div class="form-group">
-            <label>プリセット</label>
-            <div class="preset-grid" id="preset-grid">
-              ${PRESETS.map((p, i) => `
-                <button type="button" class="preset-btn" data-preset="${i}" title="${p.name}">
-                  <span class="preset-color" style="background: linear-gradient(135deg, ${ARMOR_MATERIALS.find(m => m.id === p.armorMaterial)?.color || '#888'} 50%, ${TRIM_MATERIALS.find(m => m.id === p.trimMaterial)?.color || '#888'} 50%)"></span>
-                  <span class="preset-name">${p.name}</span>
-                </button>
-              `).join('')}
-            </div>
+
+          <div class="preset-cards smithing-presets">
+            ${PRESETS.map((p, i) => `
+              <button type="button" class="preset-card" data-preset="${i}" title="${p.name}">
+                <span class="preset-color-badge" style="background: linear-gradient(135deg, ${ARMOR_MATERIALS.find(m => m.id === p.armorMaterial)?.color || '#888'} 50%, ${TRIM_MATERIALS.find(m => m.id === p.trimMaterial)?.color || '#888'} 50%)"></span>
+                <span class="preset-name">${p.name}</span>
+              </button>
+            `).join('')}
           </div>
-        </div>
+        </section>
 
-        <!-- メインコンテンツ -->
-        <div class="smithing-main-content">
-          <!-- 左：選択パネル -->
-          <div class="smithing-selection-panel">
-            <!-- 防具素材選択 -->
-            <div class="selection-section">
-              <label class="section-label">防具素材</label>
-              <div class="armor-material-grid" id="armor-material-grid">
-                ${ARMOR_MATERIALS.map(m => `
-                  <button type="button" class="armor-material-btn ${m.id === state.armorMaterial ? 'active' : ''}"
-                          data-armor-material="${m.id}" title="${m.name}"
-                          style="--armor-color: ${m.color}">
-                    ${wikiImg(getArmorImageUrl(m.id, 'chestplate'), m.name, 32)}
-                    <span class="material-label">${m.name}</span>
-                  </button>
-                `).join('')}
-              </div>
-            </div>
-
-            <!-- 防具部位選択 -->
-            <div class="selection-section">
-              <label class="section-label">防具部位</label>
-              <div class="armor-type-grid" id="armor-type-grid">
-                ${ARMOR_TYPES.map(t => `
-                  <button type="button" class="armor-type-btn ${t.id === state.armorType ? 'active' : ''}"
-                          data-armor-type="${t.id}" title="${t.name}">
-                    ${wikiImg(getArmorImageUrl(state.armorMaterial, t.id), t.name, 32)}
-                    <span class="armor-label">${t.name}</span>
-                  </button>
-                `).join('')}
-              </div>
-              <label class="fullset-toggle">
-                <input type="checkbox" id="generate-full-set" ${state.fullSet ? 'checked' : ''}>
-                <span>フルセット（4部位）を生成</span>
-              </label>
-            </div>
-
-            <!-- トリムパターン選択 -->
-            <div class="selection-section">
-              <label class="section-label">トリムパターン（全19種）</label>
-              <div class="pattern-grid" id="pattern-grid">
-                ${renderPatternButtons()}
-              </div>
-            </div>
-
-            <!-- トリム素材選択 -->
-            <div class="selection-section">
-              <label class="section-label">トリム素材（全11種）</label>
-              <div class="trim-material-grid" id="trim-material-grid">
-                ${TRIM_MATERIALS.map(m => `
-                  <button type="button" class="trim-material-btn ${m.id === state.trimMaterial ? 'active' : ''}"
-                          data-trim-material="${m.id}" title="${m.name}"
-                          style="--trim-color: ${m.color}">
-                    ${wikiImg(getMaterialImageUrl(m.item), m.name, 32)}
-                    <span class="material-name">${m.name}</span>
-                  </button>
-                `).join('')}
-              </div>
-            </div>
+        <!-- ステップ2: 防具選択 -->
+        <section class="form-section mc-section">
+          <div class="section-header">
+            <span class="step-number">2</span>
+            <h3>防具選択</h3>
           </div>
 
-          <!-- 右：プレビューパネル -->
-          <div class="smithing-preview-panel">
-            <label class="section-label">プレビュー</label>
-            <div class="armor-preview-container" id="armor-preview">
-              ${renderArmorPreview()}
-            </div>
-            <div class="preview-info" id="preview-info">
-              ${renderPreviewInfo()}
-            </div>
-
-            <!-- コマンド出力セクション -->
-            <div class="command-output-section" id="command-output-section">
-              <label class="section-label">生成コマンド</label>
-              <div class="command-output-grid" id="command-output-grid">
-                ${renderCommandOutputs()}
-              </div>
-              <div class="command-actions">
-                <button type="button" class="copy-all-btn" id="copy-all-commands" title="全てのコマンドをコピー">
-                  📋 全てコピー
-                </button>
-              </div>
-            </div>
+          <!-- 防具素材 -->
+          <div class="subsection-label">防具素材</div>
+          <div class="armor-selector-grid" id="armor-material-grid">
+            ${ARMOR_MATERIALS.map(m => `
+              <button type="button" class="armor-option ${m.id === state.armorMaterial ? 'active' : ''}"
+                      data-armor-material="${m.id}" title="${m.name}"
+                      style="--armor-color: ${m.color}">
+                <img src="${getArmorImageUrl(m.id, 'chestplate')}" alt="${m.name}" class="armor-icon mc-pixelated" onerror="this.style.opacity='0.3'">
+                <span class="armor-name">${m.name}</span>
+              </button>
+            `).join('')}
           </div>
-        </div>
+
+          <!-- 防具部位 -->
+          <div class="subsection-label">防具部位</div>
+          <div class="armor-type-selector-grid" id="armor-type-grid">
+            ${ARMOR_TYPES.map(t => `
+              <button type="button" class="armor-type-option ${t.id === state.armorType ? 'active' : ''}"
+                      data-armor-type="${t.id}" title="${t.name}">
+                <img src="${getArmorImageUrl(state.armorMaterial, t.id)}" alt="${t.name}" class="armor-icon mc-pixelated" onerror="this.style.opacity='0.3'">
+                <span class="armor-name">${t.name}</span>
+              </button>
+            `).join('')}
+          </div>
+
+          <label class="fullset-toggle-option">
+            <input type="checkbox" id="generate-full-set" ${state.fullSet ? 'checked' : ''}>
+            <div class="toggle-content">
+              <img src="${getInviconUrl('armor_stand')}" alt="" class="toggle-icon mc-pixelated">
+              <div class="toggle-text">
+                <span class="toggle-name">フルセット生成</span>
+                <span class="toggle-desc">4部位すべてを生成</span>
+              </div>
+            </div>
+          </label>
+        </section>
+
+        <!-- ステップ3: トリムパターン選択 -->
+        <section class="form-section mc-section">
+          <div class="section-header">
+            <span class="step-number">3</span>
+            <h3>トリムパターン <span class="count-badge">${TRIM_PATTERNS.length}種</span></h3>
+          </div>
+
+          <div class="pattern-cards" id="pattern-grid">
+            ${renderPatternButtons()}
+          </div>
+        </section>
+
+        <!-- ステップ4: トリム素材選択 -->
+        <section class="form-section mc-section">
+          <div class="section-header">
+            <span class="step-number">4</span>
+            <h3>トリム素材 <span class="count-badge">${TRIM_MATERIALS.length}種</span></h3>
+          </div>
+
+          <div class="trim-material-cards" id="trim-material-grid">
+            ${TRIM_MATERIALS.map(m => `
+              <button type="button" class="trim-material-card ${m.id === state.trimMaterial ? 'active' : ''}"
+                      data-trim-material="${m.id}" title="${m.name}"
+                      style="--trim-color: ${m.color}">
+                <img src="${getMaterialImageUrl(m.item)}" alt="${m.name}" class="material-icon mc-pixelated" onerror="this.style.opacity='0.3'">
+                <span class="material-name">${m.name}</span>
+              </button>
+            `).join('')}
+          </div>
+        </section>
       </form>
+
+      <!-- プレビューセクション -->
+      <div class="smithing-preview-section">
+        <h3>プレビュー</h3>
+        <div class="armor-preview-container" id="armor-preview">
+          ${renderArmorPreview()}
+        </div>
+        <div class="preview-info" id="preview-info">
+          ${renderPreviewInfo()}
+        </div>
+
+        <!-- コマンド出力セクション -->
+        <div class="command-output-section" id="command-output-section">
+          <div class="command-section-header">生成コマンド</div>
+          <div class="command-output-grid" id="command-output-grid">
+            ${renderCommandOutputs()}
+          </div>
+          <div class="command-actions">
+            <button type="button" class="copy-all-btn mc-btn-primary" id="copy-all-commands" title="全てのコマンドをコピー">
+              全てコピー
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   `;
 }
@@ -275,11 +298,13 @@ function renderPatternButtons(filter = '') {
   }
 
   return filtered.map(p => `
-    <button type="button" class="pattern-btn ${p.id === state.pattern ? 'active' : ''} ${p.category === 'upgrade' ? 'upgrade-pattern' : ''}"
+    <button type="button" class="pattern-card ${p.id === state.pattern ? 'active' : ''} ${p.category === 'upgrade' ? 'upgrade-pattern' : ''}"
             data-pattern="${p.id}" title="${p.name} (${p.en}) - ${p.structure}">
-      ${wikiImg(getTrimTemplateImageUrl(p.id), p.en, 32)}
-      <span class="pattern-name">${p.name}</span>
-      <span class="pattern-en">${p.en}</span>
+      <img src="${getTrimTemplateImageUrl(p.id)}" alt="${p.en}" class="pattern-icon mc-pixelated" onerror="this.style.opacity='0.3'">
+      <div class="pattern-info">
+        <span class="pattern-name">${p.name}</span>
+        <span class="pattern-en">${p.en}</span>
+      </div>
     </button>
   `).join('');
 }
@@ -537,34 +562,34 @@ export function init(container) {
   });
 
   // 防具素材クリック
-  delegate(container, 'click', '.armor-material-btn', (e, target) => {
+  delegate(container, 'click', '.armor-option', (e, target) => {
     state.armorMaterial = target.dataset.armorMaterial;
-    updateActiveButton(container, '.armor-material-btn', 'data-armor-material', state.armorMaterial);
+    updateActiveButton(container, '.armor-option', 'data-armor-material', state.armorMaterial);
     updateArmorTypeGrid(container);
     updatePreview(container);
     updateCommand();
   });
 
   // 防具部位クリック
-  delegate(container, 'click', '.armor-type-btn', (e, target) => {
+  delegate(container, 'click', '.armor-type-option', (e, target) => {
     state.armorType = target.dataset.armorType;
-    updateActiveButton(container, '.armor-type-btn', 'data-armor-type', state.armorType);
+    updateActiveButton(container, '.armor-type-option', 'data-armor-type', state.armorType);
     updatePreview(container);
     updateCommand();
   });
 
   // パターンクリック
-  delegate(container, 'click', '.pattern-btn', (e, target) => {
+  delegate(container, 'click', '.pattern-card', (e, target) => {
     state.pattern = target.dataset.pattern;
-    updateActiveButton(container, '.pattern-btn', 'data-pattern', state.pattern);
+    updateActiveButton(container, '.pattern-card', 'data-pattern', state.pattern);
     updatePreview(container);
     updateCommand();
   });
 
   // トリム素材クリック
-  delegate(container, 'click', '.trim-material-btn', (e, target) => {
+  delegate(container, 'click', '.trim-material-card', (e, target) => {
     state.trimMaterial = target.dataset.trimMaterial;
-    updateActiveButton(container, '.trim-material-btn', 'data-trim-material', state.trimMaterial);
+    updateActiveButton(container, '.trim-material-card', 'data-trim-material', state.trimMaterial);
     updatePreview(container);
     updateCommand();
   });
@@ -675,10 +700,10 @@ function updateArmorTypeGrid(container) {
   const grid = $('#armor-type-grid', container);
   if (grid) {
     grid.innerHTML = ARMOR_TYPES.map(t => `
-      <button type="button" class="armor-type-btn ${t.id === state.armorType ? 'active' : ''}"
+      <button type="button" class="armor-type-option ${t.id === state.armorType ? 'active' : ''}"
               data-armor-type="${t.id}" title="${t.name}">
-        ${wikiImg(getArmorImageUrl(state.armorMaterial, t.id), t.name, 32)}
-        <span class="armor-label">${t.name}</span>
+        <img src="${getArmorImageUrl(state.armorMaterial, t.id)}" alt="${t.name}" class="armor-icon mc-pixelated" onerror="this.style.opacity='0.3'">
+        <span class="armor-name">${t.name}</span>
       </button>
     `).join('');
   }
@@ -704,10 +729,10 @@ function updatePreview(container) {
  * 全UIを更新
  */
 function updateAllUI(container) {
-  updateActiveButton(container, '.armor-material-btn', 'data-armor-material', state.armorMaterial);
+  updateActiveButton(container, '.armor-option', 'data-armor-material', state.armorMaterial);
   updateArmorTypeGrid(container);
-  updateActiveButton(container, '.pattern-btn', 'data-pattern', state.pattern);
-  updateActiveButton(container, '.trim-material-btn', 'data-trim-material', state.trimMaterial);
+  updateActiveButton(container, '.pattern-card', 'data-pattern', state.pattern);
+  updateActiveButton(container, '.trim-material-card', 'data-trim-material', state.trimMaterial);
   updatePreview(container);
 }
 
@@ -761,6 +786,361 @@ function updateCommand() {
 
 const style = document.createElement('style');
 style.textContent = `
+  /* ===== summonツール統一デザイン ===== */
+
+  /* ヘッダー */
+  .smithing-tool .tool-header.mc-header-banner {
+    display: flex;
+    align-items: center;
+    gap: var(--mc-space-md);
+    padding: var(--mc-space-lg);
+    background: linear-gradient(180deg, #b4684d 0%, #8b4513 100%);
+    border-radius: 8px 8px 0 0;
+    margin: calc(-1 * var(--mc-space-lg));
+    margin-bottom: var(--mc-space-lg);
+  }
+
+  .smithing-tool .header-content {
+    display: flex;
+    align-items: center;
+    gap: var(--mc-space-md);
+    flex: 1;
+  }
+
+  .smithing-tool .header-icon {
+    width: 48px;
+    height: 48px;
+  }
+
+  .smithing-tool .header-text h2 {
+    margin: 0;
+    font-size: 1.3rem;
+    color: #ffffff;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+  }
+
+  .smithing-tool .header-subtitle {
+    margin: 4px 0 0 0;
+    font-size: 0.85rem;
+    color: rgba(255,255,255,0.8);
+  }
+
+  /* セクション構造 */
+  .smithing-tool .form-section.mc-section {
+    margin-bottom: var(--mc-space-lg);
+    padding: var(--mc-space-lg);
+    background: linear-gradient(180deg, rgba(60,60,60,0.8) 0%, rgba(40,40,40,0.9) 100%);
+    border: 2px solid #555555;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  }
+
+  .smithing-tool .section-header {
+    display: flex;
+    align-items: center;
+    gap: var(--mc-space-md);
+    margin-bottom: var(--mc-space-lg);
+    padding-bottom: var(--mc-space-sm);
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .smithing-tool .step-number {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: linear-gradient(180deg, #b4684d 0%, #8b4513 100%);
+    color: white;
+    border-radius: 50%;
+    font-weight: bold;
+    font-size: 1rem;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+  }
+
+  .smithing-tool .section-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: #ffffff;
+  }
+
+  .smithing-tool .count-badge {
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 4px;
+    color: #aaaaaa;
+    margin-left: 8px;
+  }
+
+  .smithing-tool .subsection-label {
+    font-size: 0.85rem;
+    color: #aaaaaa;
+    margin-bottom: var(--mc-space-sm);
+    font-weight: bold;
+  }
+
+  /* プリセットカード */
+  .smithing-tool .preset-cards.smithing-presets {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: var(--mc-space-md);
+    margin-bottom: var(--mc-space-md);
+  }
+
+  .smithing-tool .preset-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: var(--mc-space-md);
+    background: linear-gradient(180deg, #4a4a4a 0%, #3a3a3a 100%);
+    border: 2px solid #555555;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .smithing-tool .preset-card:hover {
+    background: linear-gradient(180deg, #b4684d 0%, #8b4513 100%);
+    border-color: #b4684d;
+    transform: translateY(-2px);
+  }
+
+  .smithing-tool .preset-color-badge {
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
+    border: 2px solid rgba(255,255,255,0.3);
+  }
+
+  .smithing-tool .preset-card .preset-name {
+    font-size: 0.8rem;
+    color: #ffffff;
+    text-align: center;
+  }
+
+  /* 防具選択グリッド */
+  .smithing-tool .armor-selector-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+    gap: var(--mc-space-md);
+    margin-bottom: var(--mc-space-lg);
+  }
+
+  .smithing-tool .armor-option {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: var(--mc-space-md);
+    background: linear-gradient(180deg, #4a4a4a 0%, #3a3a3a 100%);
+    border: 2px solid #555555;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .smithing-tool .armor-option:hover {
+    background: linear-gradient(180deg, #5a5a5a 0%, #4a4a4a 100%);
+    border-color: #666666;
+  }
+
+  .smithing-tool .armor-option.active {
+    background: linear-gradient(180deg, rgba(180, 104, 77, 0.3) 0%, rgba(139, 69, 19, 0.3) 100%);
+    border-color: #b4684d;
+  }
+
+  .smithing-tool .armor-option .armor-icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .smithing-tool .armor-option .armor-name {
+    font-size: 0.75rem;
+    color: #ffffff;
+    text-align: center;
+  }
+
+  /* 防具タイプ選択グリッド */
+  .smithing-tool .armor-type-selector-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--mc-space-md);
+    margin-bottom: var(--mc-space-lg);
+  }
+
+  .smithing-tool .armor-type-option {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: var(--mc-space-md);
+    background: linear-gradient(180deg, #4a4a4a 0%, #3a3a3a 100%);
+    border: 2px solid #555555;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .smithing-tool .armor-type-option:hover {
+    background: linear-gradient(180deg, #5a5a5a 0%, #4a4a4a 100%);
+  }
+
+  .smithing-tool .armor-type-option.active {
+    background: linear-gradient(180deg, rgba(180, 104, 77, 0.3) 0%, rgba(139, 69, 19, 0.3) 100%);
+    border-color: #b4684d;
+  }
+
+  /* フルセットトグル */
+  .smithing-tool .fullset-toggle-option {
+    display: flex;
+    align-items: center;
+    gap: var(--mc-space-md);
+    padding: var(--mc-space-md);
+    background: linear-gradient(180deg, #4a4a4a 0%, #3a3a3a 100%);
+    border: 2px solid #555555;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .smithing-tool .fullset-toggle-option:hover {
+    background: linear-gradient(180deg, #5a5a5a 0%, #4a4a4a 100%);
+  }
+
+  .smithing-tool .fullset-toggle-option:has(input:checked) {
+    background: linear-gradient(180deg, rgba(180, 104, 77, 0.3) 0%, rgba(139, 69, 19, 0.3) 100%);
+    border-color: #b4684d;
+  }
+
+  .smithing-tool .toggle-content {
+    display: flex;
+    align-items: center;
+    gap: var(--mc-space-sm);
+  }
+
+  .smithing-tool .toggle-icon {
+    width: 32px;
+    height: 32px;
+  }
+
+  .smithing-tool .toggle-text {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .smithing-tool .toggle-name {
+    font-weight: bold;
+    color: #ffffff;
+  }
+
+  .smithing-tool .toggle-desc {
+    font-size: 0.75rem;
+    color: #aaaaaa;
+  }
+
+  /* パターンカード */
+  .smithing-tool .pattern-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: var(--mc-space-sm);
+    max-height: 300px;
+    overflow-y: auto;
+    padding: var(--mc-space-sm);
+    background: rgba(0,0,0,0.2);
+    border-radius: 4px;
+  }
+
+  /* トリム素材カード */
+  .smithing-tool .trim-material-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: var(--mc-space-md);
+  }
+
+  .smithing-tool .trim-material-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: var(--mc-space-md);
+    background: linear-gradient(180deg, #4a4a4a 0%, #3a3a3a 100%);
+    border: 2px solid #555555;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .smithing-tool .trim-material-card:hover {
+    transform: scale(1.05);
+    z-index: 1;
+  }
+
+  .smithing-tool .trim-material-card.active {
+    border-color: var(--trim-color, #b4684d);
+    box-shadow: 0 0 0 2px var(--trim-color, #b4684d), 0 4px 8px rgba(0,0,0,0.3);
+    transform: scale(1.05);
+    z-index: 2;
+  }
+
+  .smithing-tool .trim-material-card .material-icon {
+    width: 32px;
+    height: 32px;
+  }
+
+  .smithing-tool .trim-material-card .material-name {
+    font-size: 0.7rem;
+    color: #ffffff;
+    text-align: center;
+  }
+
+  /* プレビューセクション */
+  .smithing-tool .smithing-preview-section {
+    margin-top: var(--mc-space-lg);
+    padding: var(--mc-space-lg);
+    background: linear-gradient(180deg, rgba(60,60,60,0.8) 0%, rgba(40,40,40,0.9) 100%);
+    border: 2px solid #555555;
+    border-radius: 8px;
+  }
+
+  .smithing-tool .smithing-preview-section h3 {
+    margin: 0 0 var(--mc-space-md) 0;
+    font-size: 1rem;
+    color: #ffffff;
+  }
+
+  .smithing-tool .command-output-section {
+    margin-top: var(--mc-space-lg);
+    padding: var(--mc-space-md);
+    background: rgba(0,0,0,0.3);
+    border-radius: 4px;
+  }
+
+  .smithing-tool .command-section-header {
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: #aaaaaa;
+    margin-bottom: var(--mc-space-sm);
+  }
+
+  .smithing-tool .copy-all-btn {
+    margin-top: var(--mc-space-md);
+    padding: 8px 16px;
+    background: linear-gradient(180deg, #b4684d 0%, #8b4513 100%);
+    border: 2px solid #8b4513;
+    color: white;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.15s;
+  }
+
+  .smithing-tool .copy-all-btn:hover {
+    background: linear-gradient(180deg, #c4785d 0%, #9b5523 100%);
+    transform: translateY(-1px);
+  }
+
   /* Wiki画像アイコン */
   .mc-wiki-img {
     image-rendering: pixelated;
