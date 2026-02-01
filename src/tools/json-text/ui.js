@@ -1,7 +1,7 @@
 /**
  * JSON Text Generator - UI
  * Minecraft JSON Text Component 生成ツール
- * エンチャント本風の紫/マゼンタ系デザイン
+ * summonデザイン統一（青系グラデーション）
  */
 
 import { $, $$, createElement, debounce, delegate } from '../../core/dom.js';
@@ -33,7 +33,7 @@ export function render(manifest) {
   return `
     <div class="tool-panel json-text-tool mc-themed" id="json-text-panel">
       <!-- ヘッダー -->
-      <div class="tool-header jt-header-banner">
+      <div class="tool-header mc-header-banner">
         <div class="header-content">
           <img src="${getInviconUrl('enchanted_book')}" alt="" class="header-icon mc-pixelated">
           <div class="header-text">
@@ -41,14 +41,15 @@ export function render(manifest) {
             <p class="header-subtitle">リッチなチャットメッセージを作成</p>
           </div>
         </div>
-        <span class="version-badge">1.21.5+</span>
+        <span class="version-badge" id="json-text-version-badge">1.21+</span>
         <button type="button" class="reset-btn" id="json-text-reset-btn" title="設定をリセット">リセット</button>
       </div>
+      <p class="version-note" id="json-text-version-note"></p>
 
-      <form class="tool-form jt-form" id="json-text-form">
+      <form class="tool-form mc-form" id="json-text-form">
 
         <!-- ステップ1: 出力形式選択 -->
-        <section class="form-section jt-section">
+        <section class="form-section mc-section">
           <div class="section-header">
             <span class="step-number">1</span>
             <h3>出力形式</h3>
@@ -79,7 +80,7 @@ export function render(manifest) {
         </section>
 
         <!-- ステップ2: テキストセグメント -->
-        <section class="form-section jt-section">
+        <section class="form-section mc-section">
           <div class="section-header">
             <span class="step-number">2</span>
             <h3>テキスト入力</h3>
@@ -96,7 +97,7 @@ export function render(manifest) {
         </section>
 
         <!-- ステップ3: プレビュー -->
-        <section class="form-section jt-section">
+        <section class="form-section mc-section">
           <div class="section-header">
             <span class="step-number">3</span>
             <h3>プレビュー</h3>

@@ -2241,96 +2241,138 @@ style.textContent = `
 
   /* 属性 */
   .enchant-tool .attributes-section {
-    margin-top: var(--mc-space-sm);
-    padding: var(--mc-space-sm);
-    background: var(--mc-bg-panel);
-    border: 1px solid var(--mc-border-dark);
+    margin-top: var(--mc-space-md);
+    padding: var(--mc-space-md);
+    background: rgba(30,30,30,0.8);
+    border: 2px solid #555555;
+    border-radius: 4px;
   }
 
-  .attribute-row {
+  .enchant-tool .attribute-row {
     display: flex;
     align-items: center;
     gap: var(--mc-space-sm);
-    padding: 4px 0;
+    padding: 6px 0;
+    border-bottom: 1px solid #444444;
   }
 
-  .attribute-row .attr-icon {
-    width: 16px;
-    height: 16px;
+  .enchant-tool .attribute-row:last-child {
+    border-bottom: none;
+  }
+
+  .enchant-tool .attribute-row .attr-icon {
+    width: 20px;
+    height: 20px;
     image-rendering: pixelated;
   }
 
-  .attribute-row .attr-name {
+  .enchant-tool .attribute-row .attr-name {
     flex: 1;
-    font-size: 0.8rem;
-  }
-
-  .attribute-row .attr-value {
-    width: 80px;
-  }
-
-  /* オプション */
-  .options-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--mc-space-md);
-  }
-
-  .option-item {
-    display: flex;
-    align-items: center;
-    gap: 4px;
     font-size: 0.85rem;
-    cursor: pointer;
+    color: #ffffff;
+  }
+
+  .enchant-tool .attribute-row .attr-check {
+    width: 18px;
+    height: 18px;
+    accent-color: #6b4ce8;
+  }
+
+  .enchant-tool .attribute-row .attr-value {
+    width: 80px;
+    background: #2a2a2a;
+    border: 2px solid #555555;
+    color: #ffffff;
   }
 
   /* プリセット */
-  .preset-grid {
+  .enchant-tool .preset-categories {
+    display: flex;
+    flex-direction: column;
+    gap: var(--mc-space-sm);
+  }
+
+  .enchant-tool .preset-category {
+    background: rgba(30,30,30,0.5);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .enchant-tool .preset-category-header {
+    display: flex;
+    align-items: center;
+    gap: var(--mc-space-sm);
+    padding: var(--mc-space-sm) var(--mc-space-md);
+    background: linear-gradient(180deg, #3a3a3a 0%, #2a2a2a 100%);
+    border-left: 4px solid;
+    font-size: 0.85rem;
+    font-weight: bold;
+    color: #ffffff;
+  }
+
+  .enchant-tool .preset-category-buttons {
     display: flex;
     flex-wrap: wrap;
     gap: var(--mc-space-xs);
+    padding: var(--mc-space-sm);
   }
 
-  .preset-btn {
-    padding: var(--mc-space-xs) var(--mc-space-sm);
-    background: var(--mc-bg-surface);
-    border: 1px solid var(--mc-border-dark);
+  .enchant-tool .preset-btn {
+    display: flex;
+    align-items: center;
+    gap: var(--mc-space-xs);
+    padding: 6px 12px;
+    background: linear-gradient(180deg, #4a4a4a 0%, #3a3a3a 100%);
+    border: 2px solid #555555;
+    border-radius: 4px;
     cursor: pointer;
-    font-size: 0.75rem;
+    font-size: 0.8rem;
+    color: #ffffff;
     transition: all 0.15s;
   }
 
-  .preset-btn:hover {
-    background: var(--mc-color-grass-light);
-    border-color: var(--mc-color-grass-main);
+  .enchant-tool .preset-btn:hover {
+    background: linear-gradient(180deg, #6b4ce8 0%, #4a32b3 100%);
+    border-color: #8b6cf8;
   }
 
-  .preset-btn.preset-clear {
-    background: var(--mc-color-redstone);
+  .enchant-tool .preset-btn .preset-btn-icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  .enchant-tool .preset-btn.preset-clear {
+    background: linear-gradient(180deg, #e04040 0%, #c80000 100%);
+    border-color: #a00000;
     color: white;
   }
 
-  /* プレビュー */
-  .enchant-preview-section {
-    margin-top: var(--mc-space-lg);
-    padding: var(--mc-space-md);
-    background: var(--mc-bg-surface);
-    border: 1px solid var(--mc-border-dark);
+  .enchant-tool .preset-btn.preset-clear:hover {
+    background: linear-gradient(180deg, #ff5050 0%, #e00000 100%);
   }
 
-  .enchant-preview-section h3 {
+  /* プレビュー */
+  .enchant-tool .enchant-preview-section {
+    margin-top: var(--mc-space-lg);
+    padding: var(--mc-space-lg);
+    background: linear-gradient(180deg, rgba(60,60,60,0.8) 0%, rgba(40,40,40,0.9) 100%);
+    border: 2px solid #555555;
+    border-radius: 8px;
+  }
+
+  .enchant-tool .enchant-preview-section h3 {
     margin: 0 0 var(--mc-space-md) 0;
     font-size: 0.9rem;
-    color: var(--mc-text-muted);
+    color: #aaaaaa;
   }
 
   /* Minecraft風インベントリプレビュー */
-  .mc-inventory-preview {
+  .enchant-tool .mc-inventory-preview {
     display: flex;
     align-items: flex-start;
     gap: var(--mc-space-md);
     padding: var(--mc-space-md);
-    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    background: linear-gradient(135deg, #0d0d1a 0%, #0a0f1e 100%);
     border: 3px solid #3d3d3d;
     border-radius: 4px;
     box-shadow: inset 0 0 10px rgba(0,0,0,0.5);

@@ -429,11 +429,18 @@ export function render(manifest) {
   const version = workspaceStore.get('version') || '1.21';
 
   return `
-    <div class="tool-panel worldedit-tool" id="worldedit-panel">
-      <div class="tool-header">
-        <img src="${getInviconUrl(manifest.iconItem || 'golden_pickaxe')}" class="tool-header-icon mc-wiki-image" width="32" height="32" alt="">
-        <h2>${manifest.title}</h2>
+    <div class="tool-panel worldedit-tool mc-themed" id="worldedit-panel">
+      <!-- ヘッダー -->
+      <div class="tool-header mc-header-banner worldedit-header">
+        <div class="header-content">
+          <img src="${getInviconUrl(manifest.iconItem || 'golden_pickaxe')}" alt="" class="header-icon mc-pixelated">
+          <div class="header-text">
+            <h2>WorldEdit コマンド</h2>
+            <p class="header-subtitle">ブロック編集を簡単に生成</p>
+          </div>
+        </div>
         <span class="we-badge">Plugin/MOD</span>
+        <button type="button" class="reset-btn" id="we-reset-btn" title="設定をリセット">リセット</button>
       </div>
       <p class="we-description">WorldEditプラグイン/MODのコマンドを簡単に生成できます。初心者でも複雑なコマンドを作成可能！</p>
 
@@ -455,23 +462,37 @@ export function render(manifest) {
 
       <!-- コマンド生成タブ -->
       <div class="we-tab-content active" id="we-generator">
-        <form class="tool-form" id="worldedit-form">
-          <!-- コマンドタイプ選択 -->
-          <div class="form-group">
-            <label for="we-command-type">コマンドタイプ</label>
+        <form class="tool-form mc-form" id="worldedit-form">
+
+          <!-- ステップ1: コマンドタイプ選択 -->
+          <section class="form-section mc-section">
+            <div class="section-header">
+              <span class="step-number">1</span>
+              <h3>コマンドタイプ選択</h3>
+            </div>
             <select id="we-command-type" class="mc-select">
               ${COMMAND_TYPES.map(t => `<option value="${t.id}" ${t.id === 'set' ? 'selected' : ''}>${t.name}</option>`).join('')}
             </select>
-          </div>
+          </section>
 
-          <!-- 動的パラメータエリア -->
-          <div id="we-params-area">
-            ${renderParamsForType('set', version)}
-          </div>
+          <!-- ステップ2: 動的パラメータエリア -->
+          <section class="form-section mc-section">
+            <div class="section-header">
+              <span class="step-number">2</span>
+              <h3>パラメータ設定</h3>
+            </div>
+            <div id="we-params-area">
+              ${renderParamsForType('set', version)}
+            </div>
+          </section>
 
-          <!-- パターン指定（複数ブロック） -->
-          <div class="form-group" id="we-pattern-group">
-            <label>
+          <!-- ステップ3: パターン指定（複数ブロック） -->
+          <section class="form-section mc-section" id="we-pattern-group">
+            <div class="section-header">
+              <span class="step-number">3</span>
+              <h3>高度なオプション <span class="optional-badge">任意</span></h3>
+            </div>
+            <label class="we-checkbox-option">
               <input type="checkbox" id="we-use-pattern"> 複数ブロックをランダム配置（パターン）
             </label>
             <div class="we-pattern-area" id="we-pattern-area" style="display: none;">
@@ -479,29 +500,29 @@ export function render(manifest) {
               <div id="we-pattern-items"></div>
               <button type="button" class="mc-btn mc-btn-secondary" id="we-add-pattern">+ ブロック追加</button>
             </div>
-          </div>
 
-          <!-- マスク指定 -->
-          <div class="form-group" id="we-mask-group" style="display: none;">
-            <label>
-              <input type="checkbox" id="we-use-mask"> マスクを使用（特定ブロックのみ対象）
-            </label>
-            <div class="we-mask-area" id="we-mask-area" style="display: none;">
-              <div class="form-row">
-                <div class="form-group">
-                  <label for="we-mask-type">マスクタイプ</label>
-                  <select id="we-mask-type" class="mc-select">
-                    <option value="include">指定ブロックのみ</option>
-                    <option value="exclude">指定ブロック以外</option>
-                  </select>
-                </div>
-                <div class="form-group">
-                  <label for="we-mask-block">マスクブロック</label>
-                  <input type="text" id="we-mask-block" class="mc-input" placeholder="air">
+            <!-- マスク指定 -->
+            <div id="we-mask-group" style="display: none; margin-top: 16px;">
+              <label class="we-checkbox-option">
+                <input type="checkbox" id="we-use-mask"> マスクを使用（特定ブロックのみ対象）
+              </label>
+              <div class="we-mask-area" id="we-mask-area" style="display: none;">
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="we-mask-type">マスクタイプ</label>
+                    <select id="we-mask-type" class="mc-select">
+                      <option value="include">指定ブロックのみ</option>
+                      <option value="exclude">指定ブロック以外</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="we-mask-block">マスクブロック</label>
+                    <input type="text" id="we-mask-block" class="mc-input" placeholder="air">
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          </section>
         </form>
       </div>
 

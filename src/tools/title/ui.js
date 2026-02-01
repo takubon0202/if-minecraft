@@ -32,10 +32,16 @@ export function render(manifest) {
   });
 
   return `
-    <div class="tool-panel title-tool" id="title-panel">
-      <div class="tool-header">
-        <img src="${getInviconUrl(manifest.iconItem || 'name_tag')}" class="tool-header-icon mc-wiki-image" width="32" height="32" alt="">
-        <h2>${manifest.title}</h2>
+    <div class="tool-panel title-tool mc-themed" id="title-panel">
+      <!-- ヘッダー -->
+      <div class="tool-header mc-header-banner">
+        <div class="header-content">
+          <img src="${getInviconUrl(manifest.iconItem || 'name_tag')}" alt="" class="header-icon mc-pixelated">
+          <div class="header-text">
+            <h2>/title コマンド</h2>
+            <p class="header-subtitle">画面にテキストを表示</p>
+          </div>
+        </div>
         <span class="version-badge" id="title-version-badge">1.21+</span>
         <button type="button" class="reset-btn" id="title-reset-btn" title="設定をリセット">リセット</button>
       </div>
@@ -85,21 +91,27 @@ export function render(manifest) {
         </div>
       </div>
 
-      <form class="tool-form" id="title-form">
-        <!-- ターゲット -->
-        <div class="form-group">
-          <label for="title-target">ターゲット</label>
+      <form class="tool-form mc-form" id="title-form">
+        <!-- ステップ1: ターゲット選択 -->
+        <section class="form-section mc-section">
+          <div class="section-header">
+            <span class="step-number">1</span>
+            <h3>ターゲット選択</h3>
+          </div>
           <select id="title-target" class="mc-select">
             <option value="@a">@a (全プレイヤー)</option>
             <option value="@p">@p (最も近いプレイヤー)</option>
             <option value="@s">@s (自分自身)</option>
             <option value="@r">@r (ランダムなプレイヤー)</option>
           </select>
-        </div>
+        </section>
 
-        <!-- 表示タイプ -->
-        <div class="form-group">
-          <label>表示タイプ</label>
+        <!-- ステップ2: 表示タイプ -->
+        <section class="form-section mc-section">
+          <div class="section-header">
+            <span class="step-number">2</span>
+            <h3>表示タイプ</h3>
+          </div>
           <div class="type-options">
             <label class="option-label">
               <input type="radio" name="title-type" value="title" checked>
@@ -118,23 +130,34 @@ export function render(manifest) {
               タイトル + サブタイトル
             </label>
           </div>
-        </div>
+        </section>
 
-        <!-- タイトルテキスト（高度なエディター） -->
-        <div class="form-group" id="title-text-group">
-          <label>タイトルテキスト（1文字ごとに色・書式を設定可能）</label>
+        <!-- ステップ3: テキスト入力 -->
+        <section class="form-section mc-section" id="title-text-group">
+          <div class="section-header">
+            <span class="step-number">3</span>
+            <h3>タイトルテキスト</h3>
+          </div>
+          <p class="section-hint">1文字ごとに色・書式を設定可能</p>
           ${tempTitleEditor.render()}
-        </div>
+        </section>
 
         <!-- サブタイトルテキスト（高度なエディター） -->
-        <div class="form-group" id="subtitle-text-group" style="display:none">
-          <label>サブタイトルテキスト</label>
+        <section class="form-section mc-section" id="subtitle-text-group" style="display:none">
+          <div class="section-header">
+            <span class="step-number">3b</span>
+            <h3>サブタイトルテキスト</h3>
+          </div>
           ${tempSubtitleEditor.render()}
-        </div>
+        </section>
 
-        <!-- タイミング設定 -->
-        <div class="form-group">
-          <label>表示タイミング（チック = 1/20秒）</label>
+        <!-- ステップ4: タイミング設定 -->
+        <section class="form-section mc-section">
+          <div class="section-header">
+            <span class="step-number">4</span>
+            <h3>タイミング設定 <span class="optional-badge">任意</span></h3>
+          </div>
+          <p class="section-hint">1チック = 1/20秒</p>
           <div class="timing-row">
             <div class="timing-item">
               <label for="title-fadein">フェードイン</label>
@@ -149,25 +172,25 @@ export function render(manifest) {
               <input type="number" id="title-fadeout" class="mc-input" value="20" min="0" max="1000">
             </div>
           </div>
-        </div>
-
-        <!-- タイミングを含めるか -->
-        <div class="form-group">
-          <label class="option-label">
+          <label class="option-label timing-checkbox">
             <input type="checkbox" id="title-include-times" checked>
             タイミング設定を含める
           </label>
-        </div>
-      </form>
+        </section>
 
-      <div class="tool-info">
-        <h4>使い方</h4>
-        <ul>
-          <li>テキストを入力し、範囲選択して色・書式を適用</li>
-          <li>1文字ごとに異なる色・スタイルを設定可能</li>
-          <li>Ctrl+B(太字)、Ctrl+I(斜体)、Ctrl+U(下線)のショートカット対応</li>
-        </ul>
-      </div>
+        <!-- ステップ5: 使い方 -->
+        <section class="form-section mc-section tool-info-section">
+          <div class="section-header">
+            <span class="step-number">?</span>
+            <h3>使い方</h3>
+          </div>
+          <ul class="tool-info-list">
+            <li>テキストを入力し、範囲選択して色・書式を適用</li>
+            <li>1文字ごとに異なる色・スタイルを設定可能</li>
+            <li>Ctrl+B(太字)、Ctrl+I(斜体)、Ctrl+U(下線)のショートカット対応</li>
+          </ul>
+        </section>
+      </form>
     </div>
   `;
 }

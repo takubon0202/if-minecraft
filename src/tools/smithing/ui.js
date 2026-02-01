@@ -825,6 +825,37 @@ style.textContent = `
     color: rgba(255,255,255,0.8);
   }
 
+  .smithing-tool .version-badge {
+    padding: 4px 12px;
+    background: rgba(0,0,0,0.3);
+    border-radius: 4px;
+    font-size: 0.75rem;
+    color: rgba(255,255,255,0.9);
+    margin-left: auto;
+  }
+
+  .smithing-tool .reset-btn {
+    padding: 8px 16px;
+    background: rgba(0,0,0,0.2);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 4px;
+    color: white;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.15s;
+  }
+
+  .smithing-tool .reset-btn:hover {
+    background: rgba(0,0,0,0.4);
+  }
+
+  /* mc-pixelated ピクセル画像レンダリング */
+  .mc-pixelated {
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+  }
+
   /* セクション構造 */
   .smithing-tool .form-section.mc-section {
     margin-bottom: var(--mc-space-lg);
@@ -878,6 +909,34 @@ style.textContent = `
     color: #aaaaaa;
     margin-bottom: var(--mc-space-sm);
     font-weight: bold;
+  }
+
+  /* 検索入力 */
+  .smithing-tool .search-input-group {
+    margin-bottom: var(--mc-space-lg);
+  }
+
+  .smithing-tool .search-input-group label {
+    display: block;
+    color: #cccccc;
+    font-size: 0.9rem;
+    margin-bottom: var(--mc-space-xs);
+  }
+
+  .smithing-tool .search-input-group .mc-input {
+    width: 100%;
+    max-width: 400px;
+    background: #2a2a2a;
+    color: #ffffff;
+    border: 2px solid #555555;
+    border-radius: 4px;
+    padding: 8px 12px;
+  }
+
+  .smithing-tool .search-input-group .mc-input:focus {
+    border-color: #b4684d;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(180, 104, 77, 0.3);
   }
 
   /* プリセットカード */
@@ -1050,6 +1109,74 @@ style.textContent = `
     padding: var(--mc-space-sm);
     background: rgba(0,0,0,0.2);
     border-radius: 4px;
+  }
+
+  .smithing-tool .pattern-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: var(--mc-space-sm);
+    background: linear-gradient(180deg, #4a4a4a 0%, #3a3a3a 100%);
+    border: 2px solid #555555;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .smithing-tool .pattern-card:hover {
+    background: linear-gradient(180deg, #5a5a5a 0%, #4a4a4a 100%);
+    border-color: #666666;
+    transform: translateY(-2px);
+  }
+
+  .smithing-tool .pattern-card.active {
+    background: linear-gradient(180deg, rgba(180, 104, 77, 0.3) 0%, rgba(139, 69, 19, 0.3) 100%);
+    border-color: #b4684d;
+    box-shadow: 0 0 10px rgba(180, 104, 77, 0.4);
+  }
+
+  .smithing-tool .pattern-card.upgrade-pattern {
+    background: linear-gradient(180deg, #4a3b5c 0%, #3a2b4c 100%);
+    border-color: #6b4c8c;
+  }
+
+  .smithing-tool .pattern-card.upgrade-pattern:hover {
+    background: linear-gradient(180deg, #5a4b6c 0%, #4a3b5c 100%);
+  }
+
+  .smithing-tool .pattern-card.upgrade-pattern.active {
+    background: linear-gradient(180deg, rgba(107, 76, 140, 0.4) 0%, rgba(58, 43, 76, 0.4) 100%);
+    border-color: #9b6cbc;
+  }
+
+  .smithing-tool .pattern-card .pattern-icon {
+    width: 32px;
+    height: 32px;
+  }
+
+  .smithing-tool .pattern-card .pattern-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+  }
+
+  .smithing-tool .pattern-card .pattern-name {
+    font-size: 0.75rem;
+    font-weight: bold;
+    color: #ffffff;
+    text-align: center;
+  }
+
+  .smithing-tool .pattern-card .pattern-en {
+    font-size: 0.6rem;
+    color: #aaaaaa;
+    text-align: center;
+  }
+
+  .smithing-tool .pattern-card.active .pattern-en {
+    color: rgba(255,255,255,0.8);
   }
 
   /* トリム素材カード */
@@ -1441,12 +1568,14 @@ style.textContent = `
   }
 
   .armor-preview-container {
-    background-color: var(--mc-bg-panel);
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
     padding: var(--mc-space-lg);
     min-height: 200px;
     display: flex;
     align-items: center;
     justify-content: center;
+    border-radius: 8px;
+    border: 2px solid #3d3d3d;
   }
 
   .armor-display {
@@ -1598,8 +1727,8 @@ style.textContent = `
 
   .command-output-item.active {
     opacity: 1;
-    border-left-color: var(--mc-color-grass-main);
-    background: rgba(92, 183, 70, 0.1);
+    border-left-color: #b4684d;
+    background: rgba(180, 104, 77, 0.1);
   }
 
   .command-item-header {
