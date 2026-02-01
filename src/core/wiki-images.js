@@ -26,6 +26,14 @@ const ITEM_FILE_MAP = {
   'experience_bottle': 'Bottle_o%27_Enchanting.gif',
   // === ネザースター（GIF形式 - アニメーション対応） ===
   'nether_star': 'Nether_Star.gif',
+  // === 光源ブロック系（GIF形式 - アニメーション対応） ===
+  'sea_lantern': 'Sea_Lantern.gif',
+  // === スカルク系（GIF形式 - アニメーション対応） ===
+  'sculk': 'Sculk.gif',
+  'sculk_vein': 'Sculk_Vein.gif',
+  'sculk_sensor': 'Sculk_Sensor.gif',
+  'sculk_shrieker': 'Sculk_Shrieker.gif',
+  'calibrated_sculk_sensor': 'Calibrated_Sculk_Sensor.gif',
   // === ポーション系 - ITEM_NAME_MAPで個別に定義（GIF形式は使用しない） ===
   // 注意: Wikiではポーションは効果ごとに異なる画像があるため、
   // 基本アイテム（Water_Bottle等）はITEM_NAME_MAPで定義
@@ -320,12 +328,8 @@ const ITEM_NAME_MAP = {
   'moss_block': 'Moss_Block',
   'moss_carpet': 'Moss_Carpet',
   'glow_lichen': 'Glow_Lichen',
-  'sculk': 'Sculk',
-  'sculk_vein': 'Sculk_Vein',
-  'sculk_catalyst': 'Sculk_Catalyst',
-  'sculk_shrieker': 'Sculk_Shrieker',
-  'sculk_sensor': 'Sculk_Sensor',
-  'calibrated_sculk_sensor': 'Calibrated_Sculk_Sensor',
+  // sculk系はITEM_FILE_MAPでGIF形式として定義
+  'sculk_catalyst': 'Sculk_Catalyst',  // catalystはPNG形式
   'frogspawn': 'Frogspawn',
   'ochre_froglight': 'Ochre_Froglight',
   'verdant_froglight': 'Verdant_Froglight',
@@ -354,7 +358,7 @@ const ITEM_NAME_MAP = {
   'netherrack': 'Netherrack',
   'end_stone': 'End_Stone',
   'glowstone': 'Glowstone',
-  'sea_lantern': 'Sea_Lantern',
+  // sea_lanternはITEM_FILE_MAPでGIF形式として定義
   'shroomlight': 'Shroomlight',
   'crying_obsidian': 'Crying_Obsidian',
   'respawn_anchor': 'Respawn_Anchor',
