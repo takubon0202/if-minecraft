@@ -26,6 +26,8 @@ const ITEM_FILE_MAP = {
   'experience_bottle': 'Bottle_o%27_Enchanting.gif',
   // === ネザースター（GIF形式 - アニメーション対応） ===
   'nether_star': 'Nether_Star.gif',
+  // === エンチャント金リンゴ（GIF形式 - アニメーション対応） ===
+  'enchanted_golden_apple': 'Enchanted_Golden_Apple.gif',
   // === 光源ブロック系（GIF形式 - アニメーション対応） ===
   'sea_lantern': 'Sea_Lantern.gif',
   // === スカルク系（GIF形式 - アニメーション対応） ===
@@ -75,7 +77,7 @@ const ITEM_NAME_MAP = {
   'turtle_helmet': 'Turtle_Shell',
 
   // === 頭 ===
-  'player_head': 'Steve%27s_Head',
+  'player_head': 'Player_Head',  // Steve%27s_Headは存在しない
   'zombie_head': 'Zombie_Head',
   'skeleton_skull': 'Skeleton_Skull',
   'wither_skeleton_skull': 'Wither_Skeleton_Skull',
@@ -133,7 +135,7 @@ const ITEM_NAME_MAP = {
   'cooked_salmon': 'Cooked_Salmon',
   'baked_potato': 'Baked_Potato',
   'golden_apple': 'Golden_Apple',
-  'enchanted_golden_apple': 'Enchanted_Golden_Apple',
+  // enchanted_golden_appleはITEM_FILE_MAPでGIF形式として定義
 
   // === 鍛冶型テンプレート ===
   'netherite_upgrade_smithing_template': 'Netherite_Upgrade',
