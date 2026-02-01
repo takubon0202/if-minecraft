@@ -85,6 +85,7 @@ const ITEM_NAME_MAP = {
 
   // === 特殊アイテム ===
   'redstone': 'Redstone',  // "Redstone"（Redstone_Dustではない）
+  'redstone_wire': 'Redstone',  // ブロックIDだがInviconはRedstone
   'glowstone_dust': 'Glowstone_Dust',
   'blaze_powder': 'Blaze_Powder',
   'fire_charge': 'Fire_Charge',
