@@ -7,6 +7,7 @@ import { $, $$, debounce, delegate } from '../../core/dom.js';
 import { setOutput } from '../../app/sidepanel.js';
 import { getInviconUrl, getSpawnEggUrl } from '../../core/wiki-images.js';
 import { applyTooltip } from '../../core/mc-tooltip.js';
+import { RichTextEditor, RICH_TEXT_EDITOR_CSS } from '../../core/rich-text-editor.js';
 
 // ゾンビタイプ
 const ZOMBIE_TYPES = [

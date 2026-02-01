@@ -6,7 +6,7 @@
 import { $, $$, debounce } from '../../core/dom.js';
 import { workspaceStore } from '../../core/store.js';
 import { setOutput } from '../../app/sidepanel.js';
-import { AdvancedTextEditor } from '../../components/advanced-text-editor.js';
+import { RichTextEditor, RICH_TEXT_EDITOR_CSS } from '../../core/rich-text-editor.js';
 import { getInviconUrl } from '../../core/wiki-images.js';
 import { compareVersions, getVersionNote } from '../../core/version-compat.js';
 
@@ -17,14 +17,14 @@ let subtitleEditor = null;
  * UIをレンダリング
  */
 export function render(manifest) {
-  const tempTitleEditor = new AdvancedTextEditor('title-editor', {
+  const tempTitleEditor = new RichTextEditor('title-editor', {
     placeholder: 'タイトルを入力...',
     showClickEvent: false,
     showHoverEvent: false,
     showPreview: false,
   });
 
-  const tempSubtitleEditor = new AdvancedTextEditor('subtitle-editor', {
+  const tempSubtitleEditor = new RichTextEditor('subtitle-editor', {
     placeholder: 'サブタイトルを入力...',
     showClickEvent: false,
     showHoverEvent: false,
@@ -32,6 +32,7 @@ export function render(manifest) {
   });
 
   return `
+    <style>${RICH_TEXT_EDITOR_CSS}</style>
     <div class="tool-panel title-tool mc-themed" id="title-panel">
       <!-- ヘッダー -->
       <div class="tool-header mc-header-banner">
@@ -200,7 +201,7 @@ export function render(manifest) {
  */
 export function init(container) {
   // タイトルエディタ初期化
-  titleEditor = new AdvancedTextEditor('title-editor', {
+  titleEditor = new RichTextEditor('title-editor', {
     placeholder: 'タイトルを入力...',
     showClickEvent: false,
     showHoverEvent: false,
@@ -213,7 +214,7 @@ export function init(container) {
   titleEditor.init(container);
 
   // サブタイトルエディタ初期化
-  subtitleEditor = new AdvancedTextEditor('subtitle-editor', {
+  subtitleEditor = new RichTextEditor('subtitle-editor', {
     placeholder: 'サブタイトルを入力...',
     showClickEvent: false,
     showHoverEvent: false,

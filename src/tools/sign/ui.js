@@ -8,6 +8,13 @@ import { $, $$, debounce } from '../../core/dom.js';
 import { setOutput } from '../../app/sidepanel.js';
 import { MC_COLORS } from '../../components/json-text-editor.js';
 import { getInviconUrl } from '../../core/wiki-images.js';
+import { RichTextEditor, RICH_TEXT_EDITOR_CSS } from '../../core/rich-text-editor.js';
+
+// 行ごとのRTEインスタンス
+let line1Editor = null;
+let line2Editor = null;
+let line3Editor = null;
+let line4Editor = null;
 
 // 看板の種類
 const SIGN_TYPES = [
@@ -119,32 +126,30 @@ export function render(manifest) {
           </div>
         </section>
 
-        <!-- ステップ3: テキスト入力 -->
+        <!-- ステップ3: テキスト入力（リッチテキストエディター） -->
         <section class="form-section mc-section">
           <div class="section-header">
             <span class="step-number">3</span>
             <h3>テキスト入力</h3>
           </div>
 
-          <div class="sign-lines">
-            ${[1, 2, 3, 4].map(i => `
-              <div class="sign-line">
-                <label>行 ${i}</label>
-                <div class="line-input">
-                  <input type="text" id="sign-line${i}" class="mc-input" placeholder="テキストを入力...">
-                  <select id="sign-color${i}" class="mc-select sign-color" title="色">
-                    <option value="">デフォルト</option>
-                    ${colorOptions}
-                  </select>
-                  <label class="style-check" title="太字">
-                    <input type="checkbox" id="sign-bold${i}"> <strong>B</strong>
-                  </label>
-                  <label class="style-check" title="斜体">
-                    <input type="checkbox" id="sign-italic${i}"> <em>I</em>
-                  </label>
-                </div>
-              </div>
-            `).join('')}
+          <div class="sign-lines-rte">
+            <div class="sign-line-rte">
+              <label class="sign-line-label">行 1</label>
+              <div id="sign-line1-editor-container"></div>
+            </div>
+            <div class="sign-line-rte">
+              <label class="sign-line-label">行 2</label>
+              <div id="sign-line2-editor-container"></div>
+            </div>
+            <div class="sign-line-rte">
+              <label class="sign-line-label">行 3</label>
+              <div id="sign-line3-editor-container"></div>
+            </div>
+            <div class="sign-line-rte">
+              <label class="sign-line-label">行 4</label>
+              <div id="sign-line4-editor-container"></div>
+            </div>
           </div>
         </section>
 
@@ -231,6 +236,9 @@ export function render(manifest) {
  * 初期化
  */
 export function init(container) {
+  // リッチテキストエディターを初期化
+  initRichTextEditors(container);
+
   // フォーム変更
   container.querySelectorAll('input, select').forEach(el => {
     el.addEventListener('input', debounce(updateCommand, 150));
@@ -259,6 +267,51 @@ export function init(container) {
 }
 
 /**
+ * リッチテキストエディターを初期化
+ */
+function initRichTextEditors(container) {
+  const editorOptions = {
+    placeholder: 'テキストを入力...',
+    showPreview: false,
+    showClickEvent: false,
+    showHoverEvent: false,
+    onChange: () => updateCommand()
+  };
+
+  // 行1のエディター
+  line1Editor = new RichTextEditor('sign-line1-editor', editorOptions);
+  const line1Container = container.querySelector('#sign-line1-editor-container');
+  if (line1Container) {
+    line1Container.innerHTML = line1Editor.render();
+    line1Editor.init(container);
+  }
+
+  // 行2のエディター
+  line2Editor = new RichTextEditor('sign-line2-editor', editorOptions);
+  const line2Container = container.querySelector('#sign-line2-editor-container');
+  if (line2Container) {
+    line2Container.innerHTML = line2Editor.render();
+    line2Editor.init(container);
+  }
+
+  // 行3のエディター
+  line3Editor = new RichTextEditor('sign-line3-editor', editorOptions);
+  const line3Container = container.querySelector('#sign-line3-editor-container');
+  if (line3Container) {
+    line3Container.innerHTML = line3Editor.render();
+    line3Editor.init(container);
+  }
+
+  // 行4のエディター
+  line4Editor = new RichTextEditor('sign-line4-editor', editorOptions);
+  const line4Container = container.querySelector('#sign-line4-editor-container');
+  if (line4Container) {
+    line4Container.innerHTML = line4Editor.render();
+    line4Editor.init(container);
+  }
+}
+
+/**
  * フォームをリセット
  */
 function resetForm(container) {
@@ -279,18 +332,11 @@ function resetForm(container) {
     b.classList.toggle('active', b.dataset.pos === '~ ~ ~');
   });
 
-  // 各行をリセット
-  for (let i = 1; i <= 4; i++) {
-    const lineInput = $(`#sign-line${i}`, container);
-    const colorSelect = $(`#sign-color${i}`, container);
-    const boldCheck = $(`#sign-bold${i}`, container);
-    const italicCheck = $(`#sign-italic${i}`, container);
-
-    if (lineInput) lineInput.value = '';
-    if (colorSelect) colorSelect.value = '';
-    if (boldCheck) boldCheck.checked = false;
-    if (italicCheck) italicCheck.checked = false;
-  }
+  // 各行のRTEをクリア
+  if (line1Editor) line1Editor.clear(container);
+  if (line2Editor) line2Editor.clear(container);
+  if (line3Editor) line3Editor.clear(container);
+  if (line4Editor) line4Editor.clear(container);
 
   // オプションをリセット
   const glowing = $('#sign-glowing', container);

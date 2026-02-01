@@ -6,11 +6,11 @@
 import { $, createElement, debounce } from '../../core/dom.js';
 import { workspaceStore } from '../../core/store.js';
 import { setOutput } from '../../app/sidepanel.js';
-import { AdvancedTextEditor } from '../../components/advanced-text-editor.js';
+import { RichTextEditor, RICH_TEXT_EDITOR_CSS } from '../../core/rich-text-editor.js';
 import { getInviconUrl } from '../../core/wiki-images.js';
 import { compareVersions } from '../../core/version-compat.js';
 
-let pages = []; // 各ページのAdvancedTextEditorインスタンス
+let pages = []; // 各ページのRichTextEditorインスタンス
 let pageData = []; // 各ページのデータ
 let currentPage = 0;
 let currentEditor = null;
@@ -19,15 +19,15 @@ let currentEditor = null;
  * UIをレンダリング
  */
 export function render(manifest) {
-  const tempEditor = new AdvancedTextEditor('book-editor', {
+  const tempEditor = new RichTextEditor('book-page-editor', {
     placeholder: 'ページ内容を入力...',
     showClickEvent: true,
     showHoverEvent: true,
-    showPreview: false,
-    maxLength: 256,
+    showPreview: true,
   });
 
   return `
+    <style>${RICH_TEXT_EDITOR_CSS}</style>
     <div class="tool-panel book-tool mc-themed" id="book-panel">
       <!-- ヘッダー -->
       <div class="tool-header mc-header-banner">
@@ -79,10 +79,10 @@ export function render(manifest) {
             <button type="button" id="book-remove-page" class="mc-btn mc-btn-danger" disabled>ページ削除</button>
           </div>
 
-          <!-- ページエディタ（高度なテキストエディター） -->
+          <!-- ページエディタ（リッチテキストエディター） -->
           <div class="page-editor-wrapper">
-            <label>ページ内容（1文字ごとに色・書式を設定可能、最大256文字）</label>
-            <div id="book-page-editor">
+            <label>ページ内容（1文字ごとに色・書式を設定可能）</label>
+            <div class="book-rte-container">
               ${tempEditor.render()}
             </div>
           </div>
@@ -137,13 +137,12 @@ export function init(container) {
   pageData = [{ groups: [], clickEvent: null, hoverEvent: null }];
   currentPage = 0;
 
-  // Advanced Text Editor初期化
-  currentEditor = new AdvancedTextEditor('book-editor', {
+  // RichTextEditor初期化
+  currentEditor = new RichTextEditor('book-page-editor', {
     placeholder: 'ページ内容を入力...',
     showClickEvent: true,
     showHoverEvent: true,
-    showPreview: false,
-    maxLength: 256,
+    showPreview: true,
     onChange: debounce(() => {
       saveCurrentPage();
       updatePreview();

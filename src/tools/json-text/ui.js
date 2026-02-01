@@ -8,6 +8,7 @@ import { $, $$, createElement, debounce, delegate } from '../../core/dom.js';
 import { setOutput } from '../../app/sidepanel.js';
 import { getInviconUrl } from '../../core/wiki-images.js';
 import { workspaceStore } from '../../core/store.js';
+import { RichTextEditor, RICH_TEXT_EDITOR_CSS } from '../../core/rich-text-editor.js';
 import {
   MC_COLORS,
   CLICK_ACTIONS,
@@ -18,6 +19,9 @@ import {
   generateCommand,
   getColorHex,
 } from './engine.js';
+
+// リッチテキストエディターインスタンス
+let jsonTextEditor = null;
 
 // フォーム状態
 let formState = {
@@ -30,6 +34,15 @@ let formState = {
  * UIをレンダリング
  */
 export function render(manifest) {
+  // リッチテキストエディターのインスタンスを作成
+  jsonTextEditor = new RichTextEditor('json-text-editor', {
+    placeholder: 'メッセージを入力...',
+    showPreview: true,
+    showClickEvent: true,
+    showHoverEvent: true,
+    onChange: () => {}
+  });
+
   return `
     <div class="tool-panel json-text-tool mc-themed" id="json-text-panel">
       <!-- ヘッダー -->
@@ -79,40 +92,19 @@ export function render(manifest) {
           </div>
         </section>
 
-        <!-- ステップ2: テキストセグメント -->
+        <!-- ステップ2: テキスト入力（リッチテキストエディター） -->
         <section class="form-section mc-section">
           <div class="section-header">
             <span class="step-number">2</span>
             <h3>テキスト入力</h3>
           </div>
-
-          <div class="jt-segments-container" id="segments-container">
-            <!-- セグメントはJSで動的生成 -->
-          </div>
-
-          <button type="button" class="jt-add-segment-btn" id="add-segment-btn">
-            <span class="btn-icon">+</span>
-            テキストセグメントを追加
-          </button>
-        </section>
-
-        <!-- ステップ3: プレビュー -->
-        <section class="form-section mc-section">
-          <div class="section-header">
-            <span class="step-number">3</span>
-            <h3>プレビュー</h3>
-          </div>
-
-          <div class="jt-preview-container">
-            <div class="jt-preview-box" id="preview-box">
-              <span class="preview-placeholder">テキストを入力するとプレビューが表示されます</span>
-            </div>
-            <p class="preview-hint">※ 難読化テキストはアニメーション表示されます</p>
-          </div>
+          <p class="section-hint">1文字ごとに色や書式を設定可能。クリック/ホバーイベントも設定できます。</p>
+          ${jsonTextEditor.render()}
         </section>
 
       </form>
     </div>
+    <style>${RICH_TEXT_EDITOR_CSS}</style>
   `;
 }
 

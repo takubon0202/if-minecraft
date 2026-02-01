@@ -6,11 +6,16 @@
 import { $, debounce } from '../../core/dom.js';
 import { workspaceStore } from '../../core/store.js';
 import { setOutput } from '../../app/sidepanel.js';
-import { AdvancedTextEditor } from '../../components/advanced-text-editor.js';
+import { RichTextEditor, RICH_TEXT_EDITOR_CSS } from '../../core/rich-text-editor.js';
 import { getInviconUrl } from '../../core/wiki-images.js';
 import { getVersionNote, compareVersions } from '../../core/version-compat.js';
 
 let editor = null;
+
+// CSSをdocument.headに追加
+const rteStyleElement = document.createElement('style');
+rteStyleElement.textContent = RICH_TEXT_EDITOR_CSS;
+document.head.appendChild(rteStyleElement);
 
 // ターゲットセレクター
 const TARGET_OPTIONS = [
@@ -29,7 +34,7 @@ let formState = {
  * UIをレンダリング
  */
 export function render(manifest) {
-  const tempEditor = new AdvancedTextEditor('tellraw-editor', {
+  const tempEditor = new RichTextEditor('tellraw-editor', {
     placeholder: 'メッセージを入力...',
     showClickEvent: true,
     showHoverEvent: true,
@@ -152,19 +157,21 @@ export function render(manifest) {
  * 初期化
  */
 export function init(container) {
-  // Advanced Text Editor初期化
-  editor = new AdvancedTextEditor('tellraw-editor', {
+  // RichTextEditor初期化
+  editor = new RichTextEditor('tellraw-editor', {
     placeholder: 'メッセージを入力...',
     showClickEvent: true,
     showHoverEvent: true,
     showPreview: false,
-    onChange: debounce(() => {
-      updateGamePreview();
-      updateCommand();
-    }, 100),
   });
 
   editor.init(container);
+
+  // onChangeコールバックを設定
+  editor.options.onChange = debounce(() => {
+    updateGamePreview();
+    updateCommand();
+  }, 100);
 
   // ターゲット選択
   const targetButtons = container.querySelectorAll('.target-option');
@@ -310,8 +317,13 @@ function updateCommand() {
 
   if (!editor) return;
 
-  // バージョンに応じた出力
-  const jsonText = editor.getOutput(globalVersion);
+  // JSON形式で出力（tellrawはJSON Text Component形式を使用）
+  const jsonText = editor.getJSON();
+
+  if (!jsonText) {
+    setOutput(`/tellraw ${target} ""`, 'tellraw', { target, version: globalVersion });
+    return;
+  }
 
   const command = `/tellraw ${target} ${jsonText}`;
 
