@@ -1442,6 +1442,11 @@ export function init(container) {
 
   const version = workspaceStore.get('version') || '1.21';
 
+  // リセットボタン
+  $('#we-reset-btn', container)?.addEventListener('click', () => {
+    resetForm(container);
+  });
+
   // バージョン変更
   $('#we-version', container)?.addEventListener('change', (e) => {
     const newVersion = e.target.value;
@@ -1546,6 +1551,43 @@ export function init(container) {
   setupBlockSelector(container);
 
   // 初期パラメータイベント
+  bindParamEvents(container);
+  updateVisibility(container);
+  updateCommand(container);
+}
+
+/**
+ * フォームをリセット
+ */
+function resetForm(container) {
+  // 状態をリセット
+  currentCommandType = 'set';
+  selectedBlock = 'stone';
+  currentBlockCategory = 'all';
+
+  // コマンドタイプをリセット
+  const commandType = $('#we-command-type', container);
+  if (commandType) commandType.value = 'set';
+
+  // パラメータエリアを再描画
+  const currentVersion = $('#we-version', container)?.value || '1.21';
+  $('#we-params-area', container).innerHTML = renderParamsForType('set', currentVersion);
+
+  // パターンをリセット
+  const usePattern = $('#we-use-pattern', container);
+  if (usePattern) usePattern.checked = false;
+  const patternArea = $('#we-pattern-area', container);
+  if (patternArea) patternArea.style.display = 'none';
+  const patternItems = $('#we-pattern-items', container);
+  if (patternItems) patternItems.innerHTML = '';
+
+  // マスクをリセット
+  const useMask = $('#we-use-mask', container);
+  if (useMask) useMask.checked = false;
+  const maskArea = $('#we-mask-area', container);
+  if (maskArea) maskArea.style.display = 'none';
+
+  // イベントを再バインド
   bindParamEvents(container);
   updateVisibility(container);
   updateCommand(container);

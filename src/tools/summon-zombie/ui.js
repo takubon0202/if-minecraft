@@ -643,18 +643,21 @@ export function render(manifest) {
               </div>
 
               <div class="text-style-btns">
-                <button type="button" class="style-btn" data-style="bold" title="太字">
-                  <strong>B</strong>
-                </button>
-                <button type="button" class="style-btn" data-style="italic" title="斜体">
-                  <em>I</em>
-                </button>
-                <button type="button" class="style-btn" data-style="underlined" title="下線">
-                  <u>U</u>
-                </button>
-                <button type="button" class="style-btn" data-style="obfuscated" title="難読化">
-                  §k
-                </button>
+                <span class="text-style-btns-label">スタイル:</span>
+                <div class="text-style-btns-row">
+                  <button type="button" class="style-btn" data-style="bold" title="太字">
+                    <strong>B</strong>
+                  </button>
+                  <button type="button" class="style-btn" data-style="italic" title="斜体">
+                    <em>I</em>
+                  </button>
+                  <button type="button" class="style-btn" data-style="underlined" title="下線">
+                    <u>U</u>
+                  </button>
+                  <button type="button" class="style-btn" data-style="obfuscated" title="難読化">
+                    §k
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -2152,73 +2155,105 @@ style.textContent = `
     font-weight: 500;
   }
 
-  /* 名前エディター */
-  .name-editor {
+  /* 名前エディター（リッチテキストUI改善） */
+  .summon-zombie-tool .name-editor {
     display: flex;
     flex-direction: column;
     gap: var(--mc-space-md);
   }
 
-  .name-input {
+  .summon-zombie-tool .name-input {
     font-size: 1.1rem;
     padding: var(--mc-space-md);
+    background: #2a2a2a;
+    color: #ffffff;
+    border: 2px solid #444444;
+    border-radius: 4px;
   }
 
-  .name-style-options {
+  .summon-zombie-tool .name-input:focus {
+    border-color: var(--mc-color-grass-main);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(92, 183, 70, 0.3);
+  }
+
+  .summon-zombie-tool .name-input::placeholder {
+    color: #888888;
+  }
+
+  .summon-zombie-tool .name-style-options {
     display: flex;
     flex-wrap: wrap;
-    gap: var(--mc-space-lg);
-    align-items: flex-start;
+    gap: 20px;
+    margin-bottom: 16px;
+    padding: var(--mc-space-md);
+    background: rgba(0,0,0,0.2);
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.1);
   }
 
-  .color-selector {
+  .summon-zombie-tool .color-selector {
     display: flex;
     flex-direction: column;
     gap: var(--mc-space-sm);
   }
 
-  .color-selector label {
-    color: #cccccc;
+  .summon-zombie-tool .color-selector label {
+    color: rgba(255,255,255,0.7);
     font-size: 0.85rem;
+    display: block;
+    margin-bottom: 8px;
   }
 
-  .color-grid {
+  .summon-zombie-tool .color-grid {
     display: grid;
     grid-template-columns: repeat(8, 1fr);
-    gap: 4px;
+    gap: 6px;
   }
 
-  .color-btn {
+  .summon-zombie-tool .color-btn {
     width: 28px;
     height: 28px;
-    border: 2px solid #444444;
-    border-radius: 4px;
+    border: 2px solid rgba(255,255,255,0.2);
     cursor: pointer;
     transition: all 0.15s;
   }
 
-  .color-btn:hover {
-    transform: scale(1.1);
-    border-color: #888888;
+  .summon-zombie-tool .color-btn:hover {
+    transform: scale(1.15);
+    border-color: rgba(255,255,255,0.5);
+    z-index: 1;
   }
 
-  .color-btn.active {
+  .summon-zombie-tool .color-btn.active {
     border-color: #ffffff;
-    box-shadow: 0 0 8px rgba(255,255,255,0.5);
+    box-shadow: 0 0 6px rgba(255,255,255,0.5);
+    transform: scale(1.1);
   }
 
-  .text-style-btns {
+  .summon-zombie-tool .text-style-btns {
     display: flex;
+    flex-direction: column;
     gap: var(--mc-space-sm);
   }
 
-  .style-btn {
+  .summon-zombie-tool .text-style-btns-label {
+    color: rgba(255,255,255,0.7);
+    font-size: 0.85rem;
+    margin-bottom: 4px;
+  }
+
+  .summon-zombie-tool .text-style-btns-row {
+    display: flex;
+    gap: 4px;
+  }
+
+  .summon-zombie-tool .style-btn {
     width: 36px;
     height: 36px;
-    background: linear-gradient(180deg, #4a4a4a 0%, #3a3a3a 100%);
-    border: 2px solid #555555;
-    border-radius: 4px;
-    color: #ffffff;
+    background: rgba(0,0,0,0.3);
+    border: 2px solid rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.7);
     cursor: pointer;
     font-size: 1rem;
     transition: all 0.15s;
@@ -2227,35 +2262,41 @@ style.textContent = `
     justify-content: center;
   }
 
-  .style-btn:hover {
-    background: linear-gradient(180deg, #5a5a5a 0%, #4a4a4a 100%);
-    border-color: #666666;
+  .summon-zombie-tool .style-btn:hover {
+    background: rgba(255,255,255,0.1);
+    border-color: rgba(255,255,255,0.3);
+    color: #ffffff;
   }
 
-  .style-btn.active {
+  .summon-zombie-tool .style-btn.active {
     background: linear-gradient(180deg, #5cb746 0%, #3a8128 100%);
     border-color: var(--mc-color-grass-main);
+    color: #ffffff;
   }
 
-  /* 名前プレビュー */
-  .name-preview {
+  /* 名前プレビュー（Minecraft風デザイン） */
+  .summon-zombie-tool .name-preview {
     display: flex;
     align-items: center;
     gap: var(--mc-space-md);
-    padding: var(--mc-space-md);
-    background: rgba(0,0,0,0.4);
-    border: 2px solid #444444;
+    padding: var(--mc-space-md) var(--mc-space-lg);
+    background: linear-gradient(180deg, #2a2a2a 0%, #1a1a1a 100%);
+    border: 3px solid #444444;
     border-radius: 4px;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
   }
 
-  .preview-label {
+  .summon-zombie-tool .preview-label {
     color: #888888;
     font-size: 0.85rem;
+    font-weight: 500;
   }
 
-  .preview-text {
-    font-size: 1.1rem;
+  .summon-zombie-tool .preview-text {
+    font-size: 1.2rem;
     color: #ffffff;
+    font-family: 'Minecraft', monospace;
+    text-shadow: 2px 2px 0 rgba(0,0,0,0.5);
   }
 
   .preview-text.obfuscated {
