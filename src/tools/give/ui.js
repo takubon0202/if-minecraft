@@ -21,79 +21,128 @@ let formState = {
   rawComponents: '',
 };
 
+// プリセット定義
+const GIVE_PRESETS = [
+  { id: 'max_sword', name: '最強の剣', item: 'netherite_sword', enchants: [{id:'sharpness',level:255},{id:'fire_aspect',level:2},{id:'looting',level:10}], unbreakable: true },
+  { id: 'max_pick', name: '最強ツルハシ', item: 'netherite_pickaxe', enchants: [{id:'efficiency',level:255},{id:'fortune',level:10}], unbreakable: true },
+  { id: 'max_armor', name: '最強チェスト', item: 'netherite_chestplate', enchants: [{id:'protection',level:255}], unbreakable: true },
+  { id: 'god_apple', name: '金リンゴ', item: 'enchanted_golden_apple', enchants: [], unbreakable: false },
+];
+
+// ターゲットセレクター
+const TARGET_OPTIONS = [
+  { id: '@p', name: '最も近いプレイヤー', icon: 'player_head' },
+  { id: '@s', name: '自分自身', icon: 'armor_stand' },
+  { id: '@a', name: '全プレイヤー', icon: 'ender_eye' },
+  { id: '@r', name: 'ランダム', icon: 'experience_bottle' },
+];
+
 /**
  * UIをレンダリング
  */
 export function render(manifest) {
   return `
-    <div class="tool-panel give-tool" id="give-panel">
-      <div class="tool-header">
-        <img src="${getInviconUrl(manifest.iconItem || 'chest')}" class="tool-header-icon mc-wiki-image" width="32" height="32" alt="">
-        <h2>${manifest.title}</h2>
+    <div class="tool-panel give-tool mc-themed" id="give-panel">
+      <!-- ヘッダー -->
+      <div class="tool-header mc-header-banner">
+        <div class="header-content">
+          <img src="${getInviconUrl(manifest.iconItem || 'chest')}" alt="" class="header-icon mc-pixelated">
+          <div class="header-text">
+            <h2>/give コマンド</h2>
+            <p class="header-subtitle">アイテムをプレイヤーに付与</p>
+          </div>
+        </div>
         <span class="version-badge" id="give-version-badge">1.21+</span>
         <button type="button" class="reset-btn" id="give-reset-btn" title="設定をリセット">リセット</button>
       </div>
       <p class="version-note" id="give-version-note"></p>
 
-      <form class="tool-form" id="give-form">
-        <!-- ターゲット -->
-        <div class="form-row">
-          <div class="form-group">
-            <label for="give-target">ターゲット</label>
-            <select id="give-target" class="mc-select">
-              <option value="@p">@p (最も近いプレイヤー)</option>
-              <option value="@s">@s (自分自身)</option>
-              <option value="@a">@a (全プレイヤー)</option>
-              <option value="@r">@r (ランダム)</option>
-            </select>
+      <form class="tool-form mc-form" id="give-form">
+
+        <!-- ステップ1: ターゲット選択 -->
+        <section class="form-section mc-section">
+          <div class="section-header">
+            <span class="step-number">1</span>
+            <h3>ターゲット選択</h3>
           </div>
-          <div class="form-group">
-            <label for="give-count">個数</label>
-            <input type="number" id="give-count" class="mc-input"
-                   value="1" min="1" max="64">
+
+          <div class="target-selector-grid">
+            ${TARGET_OPTIONS.map(t => `
+              <button type="button" class="target-option ${t.id === '@p' ? 'active' : ''}" data-target="${t.id}">
+                <img src="${getInviconUrl(t.icon)}" alt="" class="target-icon mc-pixelated" onerror="this.style.opacity='0.3'">
+                <div class="target-info">
+                  <span class="target-id">${t.id}</span>
+                  <span class="target-desc">${t.name}</span>
+                </div>
+              </button>
+            `).join('')}
           </div>
-        </div>
+        </section>
 
-        <!-- アイテム -->
-        <div class="form-group">
-          <label for="give-item">アイテムID</label>
-          <div class="autocomplete-wrapper">
-            <input type="text" id="give-item" class="mc-input"
-                   value="minecraft:diamond_sword"
-                   placeholder="minecraft:diamond_sword"
-                   autocomplete="off">
-            <div class="autocomplete-list" id="item-suggestions"></div>
+        <!-- ステップ2: アイテム選択 -->
+        <section class="form-section mc-section">
+          <div class="section-header">
+            <span class="step-number">2</span>
+            <h3>アイテム選択</h3>
           </div>
-        </div>
 
-        <!-- カスタム名 -->
-        <div class="form-group">
-          <label for="give-name">カスタム名（任意）</label>
-          <input type="text" id="give-name" class="mc-input"
-                 placeholder="伝説の剣">
-        </div>
-
-        <!-- 説明文 -->
-        <div class="form-group">
-          <label for="give-lore">説明文（任意・改行で複数行）</label>
-          <textarea id="give-lore" class="mc-input" rows="2"
-                    placeholder="古代の力が宿る剣"></textarea>
-        </div>
-
-        <!-- オプション -->
-        <div class="form-group">
-          <label>オプション</label>
-          <div class="options-grid">
-            <label class="option-label">
-              <input type="checkbox" id="give-unbreakable">
-              耐久無限 (Unbreakable)
-            </label>
+          <!-- プリセット -->
+          <div class="preset-cards give-presets">
+            ${GIVE_PRESETS.map(p => `
+              <button type="button" class="preset-card" data-preset="${p.id}">
+                <img src="${getInviconUrl(p.item)}" alt="" class="preset-icon mc-pixelated" onerror="this.style.opacity='0.3'">
+                <span class="preset-name">${p.name}</span>
+              </button>
+            `).join('')}
           </div>
-        </div>
 
-        <!-- エンチャント -->
-        <div class="form-group">
-          <label>エンチャント</label>
+          <div class="item-input-group">
+            <label>アイテムID</label>
+            <div class="autocomplete-wrapper">
+              <input type="text" id="give-item" class="mc-input"
+                     value="minecraft:diamond_sword"
+                     placeholder="minecraft:diamond_sword"
+                     autocomplete="off">
+              <div class="autocomplete-list" id="item-suggestions"></div>
+            </div>
+          </div>
+
+          <div class="count-input-group">
+            <label>個数</label>
+            <div class="count-presets">
+              <button type="button" class="count-btn" data-count="1">1</button>
+              <button type="button" class="count-btn" data-count="16">16</button>
+              <button type="button" class="count-btn active" data-count="64">64</button>
+            </div>
+            <input type="number" id="give-count" class="mc-input count-input" value="1" min="1" max="64">
+          </div>
+        </section>
+
+        <!-- ステップ3: 名前と説明 -->
+        <section class="form-section mc-section">
+          <div class="section-header">
+            <span class="step-number">3</span>
+            <h3>名前・説明 <span class="optional-badge">任意</span></h3>
+          </div>
+
+          <div class="name-editor">
+            <label>カスタム名</label>
+            <input type="text" id="give-name" class="mc-input name-input" placeholder="伝説の剣">
+          </div>
+
+          <div class="lore-editor">
+            <label>説明文（改行で複数行）</label>
+            <textarea id="give-lore" class="mc-input" rows="2" placeholder="古代の力が宿る剣"></textarea>
+          </div>
+        </section>
+
+        <!-- ステップ4: エンチャント -->
+        <section class="form-section mc-section">
+          <div class="section-header">
+            <span class="step-number">4</span>
+            <h3>エンチャント <span class="optional-badge">任意</span></h3>
+          </div>
+
           <div class="enchant-list" id="enchant-list">
             <div class="enchant-item">
               <select class="enchant-select mc-select">
@@ -112,31 +161,46 @@ export function render(manifest) {
               <input type="number" class="enchant-level mc-input" value="1" min="1" max="255">
             </div>
           </div>
-          <button type="button" class="mc-btn" id="add-enchant">+ エンチャント追加</button>
-        </div>
+          <button type="button" class="mc-btn add-enchant-btn" id="add-enchant">+ エンチャント追加</button>
+        </section>
 
-        <!-- Raw Components -->
-        <div class="form-group">
-          <label for="give-raw">
-            Raw Components（上級者向け）
-            <span class="hint">手動でコンポーネントを追加</span>
-          </label>
-          <textarea id="give-raw" class="mc-input mc-code" rows="3"
-                    placeholder='例: damage=100,custom_model_data=1234'></textarea>
-        </div>
+        <!-- ステップ5: オプション -->
+        <section class="form-section mc-section">
+          <div class="section-header">
+            <span class="step-number">5</span>
+            <h3>オプション</h3>
+          </div>
+
+          <div class="behavior-grid">
+            <label class="behavior-option">
+              <input type="checkbox" id="give-unbreakable">
+              <div class="option-content">
+                <img src="${getInviconUrl('anvil')}" alt="" class="option-icon mc-pixelated">
+                <div class="option-text">
+                  <span class="option-name">耐久無限</span>
+                  <span class="option-desc">耐久値が減らない</span>
+                </div>
+              </div>
+            </label>
+          </div>
+
+          <!-- Raw Components -->
+          <div class="raw-components-section">
+            <label>Raw Components <span class="hint">（上級者向け）</span></label>
+            <textarea id="give-raw" class="mc-input mc-code" rows="2" placeholder='例: damage=100,custom_model_data=1234'></textarea>
+          </div>
+        </section>
       </form>
 
-      <!-- Minecraft風ゲーム画面プレビュー -->
+      <!-- プレビュー -->
       <div class="give-preview-section">
         <h3>プレビュー</h3>
         <div class="mc-inventory-preview">
-          <!-- インベントリスロット風表示 -->
           <div class="mc-inv-slot-large" id="give-preview-slot">
             <img class="mc-inv-item-img" id="give-item-icon" src="" alt="">
             <span class="mc-inv-count" id="give-item-count">1</span>
           </div>
 
-          <!-- Minecraft風ツールチップ -->
           <div class="mc-item-tooltip" id="give-item-tooltip">
             <div class="tooltip-name" id="give-item-name">アイテム</div>
             <div class="tooltip-enchants" id="give-preview-enchants">
@@ -149,7 +213,6 @@ export function render(manifest) {
           </div>
         </div>
 
-        <!-- アイテム情報バー -->
         <div class="item-stats-bar">
           <div class="stat-item">
             <span class="stat-label">ターゲット</span>
@@ -175,6 +238,39 @@ export function init(container) {
   form.addEventListener('input', debounce(() => updateCommand(container), 150));
   form.addEventListener('change', () => updateCommand(container));
 
+  // ターゲット選択
+  $$('.target-option', container).forEach(btn => {
+    btn.addEventListener('click', () => {
+      $$('.target-option', container).forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      formState.target = btn.dataset.target;
+      updateCommand(container);
+    });
+  });
+
+  // プリセット選択
+  $$('.preset-card', container).forEach(btn => {
+    btn.addEventListener('click', () => {
+      const presetId = btn.dataset.preset;
+      const preset = GIVE_PRESETS.find(p => p.id === presetId);
+      if (preset) {
+        applyGivePreset(preset, container);
+      }
+    });
+  });
+
+  // 個数プリセット
+  $$('.count-btn', container).forEach(btn => {
+    btn.addEventListener('click', () => {
+      $$('.count-btn', container).forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const count = parseInt(btn.dataset.count);
+      $('#give-count', container).value = count;
+      formState.count = count;
+      updateCommand(container);
+    });
+  });
+
   // アイテムオートコンプリート
   setupAutocomplete(container);
 
@@ -196,6 +292,81 @@ export function init(container) {
 
   // 初期表示
   updateVersionDisplay(container);
+  updateCommand(container);
+}
+
+/**
+ * プリセットを適用
+ */
+function applyGivePreset(preset, container) {
+  // アイテム設定
+  $('#give-item', container).value = `minecraft:${preset.item}`;
+  formState.item = `minecraft:${preset.item}`;
+
+  // 耐久無限
+  $('#give-unbreakable', container).checked = preset.unbreakable;
+  formState.unbreakable = preset.unbreakable;
+
+  // エンチャントリストをクリア
+  const enchantList = $('#enchant-list', container);
+  enchantList.innerHTML = '';
+
+  // エンチャントを追加
+  if (preset.enchants.length > 0) {
+    preset.enchants.forEach((ench, i) => {
+      if (i === 0) {
+        // 最初の行を作成
+        const row = document.createElement('div');
+        row.className = 'enchant-item';
+        row.innerHTML = `
+          <select class="enchant-select mc-select">
+            <option value="">-- 選択 --</option>
+            <option value="sharpness">ダメージ増加 (Sharpness)</option>
+            <option value="smite">アンデッド特効 (Smite)</option>
+            <option value="unbreaking">耐久力 (Unbreaking)</option>
+            <option value="efficiency">効率強化 (Efficiency)</option>
+            <option value="fortune">幸運 (Fortune)</option>
+            <option value="silk_touch">シルクタッチ (Silk Touch)</option>
+            <option value="protection">ダメージ軽減 (Protection)</option>
+            <option value="fire_aspect">火属性 (Fire Aspect)</option>
+            <option value="looting">ドロップ増加 (Looting)</option>
+            <option value="mending">修繕 (Mending)</option>
+          </select>
+          <input type="number" class="enchant-level mc-input" value="${ench.level}" min="1" max="255">
+        `;
+        row.querySelector('.enchant-select').value = ench.id;
+        enchantList.appendChild(row);
+      } else {
+        addEnchantRow(container);
+        const rows = $$('.enchant-item', container);
+        const lastRow = rows[rows.length - 1];
+        lastRow.querySelector('.enchant-select').value = ench.id;
+        lastRow.querySelector('.enchant-level').value = ench.level;
+      }
+    });
+  } else {
+    // エンチャントなしの場合は空の行を1つ
+    const row = document.createElement('div');
+    row.className = 'enchant-item';
+    row.innerHTML = `
+      <select class="enchant-select mc-select">
+        <option value="">-- 選択 --</option>
+        <option value="sharpness">ダメージ増加 (Sharpness)</option>
+        <option value="smite">アンデッド特効 (Smite)</option>
+        <option value="unbreaking">耐久力 (Unbreaking)</option>
+        <option value="efficiency">効率強化 (Efficiency)</option>
+        <option value="fortune">幸運 (Fortune)</option>
+        <option value="silk_touch">シルクタッチ (Silk Touch)</option>
+        <option value="protection">ダメージ軽減 (Protection)</option>
+        <option value="fire_aspect">火属性 (Fire Aspect)</option>
+        <option value="looting">ドロップ増加 (Looting)</option>
+        <option value="mending">修繕 (Mending)</option>
+      </select>
+      <input type="number" class="enchant-level mc-input" value="1" min="1" max="255">
+    `;
+    enchantList.appendChild(row);
+  }
+
   updateCommand(container);
 }
 
@@ -369,8 +540,10 @@ function addEnchantRow(container) {
  */
 function updateCommand(container) {
   // フォーム値を取得
+  // Note: targetはボタン選択なのでformState.targetを維持
+  const currentTarget = formState.target;
   formState = {
-    target: $('#give-target', container).value,
+    target: currentTarget,
     item: $('#give-item', container).value || 'minecraft:stone',
     count: parseInt($('#give-count', container).value) || 1,
     customName: $('#give-name', container).value,
@@ -528,6 +701,331 @@ function updatePreview(container) {
 // スタイル追加
 const style = document.createElement('style');
 style.textContent = `
+  /* ===== summonツール統一デザイン ===== */
+
+  /* セクション構造 */
+  .give-tool .form-section {
+    margin-bottom: var(--mc-space-lg);
+    padding: var(--mc-space-lg);
+    background: linear-gradient(180deg, rgba(60,60,60,0.8) 0%, rgba(40,40,40,0.9) 100%);
+    border: 2px solid #555555;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  }
+
+  .give-tool .section-header {
+    display: flex;
+    align-items: center;
+    gap: var(--mc-space-md);
+    margin-bottom: var(--mc-space-lg);
+    padding-bottom: var(--mc-space-sm);
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .give-tool .step-number {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: linear-gradient(180deg, #5cb746 0%, #3a8128 100%);
+    color: white;
+    border-radius: 50%;
+    font-weight: bold;
+    font-size: 1rem;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+  }
+
+  .give-tool .section-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: #ffffff;
+  }
+
+  .give-tool .optional-badge {
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 4px;
+    color: #aaaaaa;
+    margin-left: 8px;
+  }
+
+  /* ターゲット選択グリッド */
+  .target-selector-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: var(--mc-space-md);
+  }
+
+  .target-option {
+    display: flex;
+    align-items: center;
+    gap: var(--mc-space-md);
+    padding: var(--mc-space-md);
+    background: linear-gradient(180deg, #4a4a4a 0%, #3a3a3a 100%);
+    border: 2px solid #555555;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .target-option:hover {
+    background: linear-gradient(180deg, #5a5a5a 0%, #4a4a4a 100%);
+    border-color: #666666;
+  }
+
+  .target-option.active {
+    background: linear-gradient(180deg, rgba(92, 183, 70, 0.3) 0%, rgba(58, 129, 40, 0.3) 100%);
+    border-color: var(--mc-color-grass-main);
+  }
+
+  .target-option .target-icon {
+    width: 32px;
+    height: 32px;
+  }
+
+  .target-option .target-info {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .target-option .target-id {
+    font-weight: bold;
+    color: #ffffff;
+    font-family: var(--mc-font-mono);
+  }
+
+  .target-option .target-desc {
+    font-size: 0.75rem;
+    color: #aaaaaa;
+  }
+
+  /* プリセットカード */
+  .give-presets {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: var(--mc-space-md);
+    margin-bottom: var(--mc-space-lg);
+  }
+
+  .give-tool .preset-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: var(--mc-space-md);
+    background: linear-gradient(180deg, #4a4a4a 0%, #3a3a3a 100%);
+    border: 2px solid #555555;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .give-tool .preset-card:hover {
+    background: linear-gradient(180deg, #5cb746 0%, #3a8128 100%);
+    border-color: var(--mc-color-grass-main);
+    transform: translateY(-2px);
+  }
+
+  .give-tool .preset-card .preset-icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .give-tool .preset-card .preset-name {
+    font-size: 0.8rem;
+    color: #ffffff;
+    text-align: center;
+  }
+
+  /* アイテム入力 */
+  .item-input-group,
+  .count-input-group {
+    margin-bottom: var(--mc-space-md);
+  }
+
+  .item-input-group label,
+  .count-input-group label {
+    display: block;
+    color: #cccccc;
+    font-size: 0.9rem;
+    margin-bottom: var(--mc-space-xs);
+  }
+
+  /* 個数プリセット */
+  .count-presets {
+    display: flex;
+    gap: var(--mc-space-sm);
+    margin-bottom: var(--mc-space-sm);
+  }
+
+  .count-btn {
+    padding: 6px 16px;
+    background: linear-gradient(180deg, #4a4a4a 0%, #3a3a3a 100%);
+    border: 2px solid #555555;
+    border-radius: 4px;
+    color: #ffffff;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .count-btn:hover {
+    background: linear-gradient(180deg, #5a5a5a 0%, #4a4a4a 100%);
+  }
+
+  .count-btn.active {
+    background: linear-gradient(180deg, #5cb746 0%, #3a8128 100%);
+    border-color: var(--mc-color-grass-main);
+  }
+
+  .count-input {
+    width: 80px;
+  }
+
+  /* 名前・説明エディター */
+  .name-editor,
+  .lore-editor {
+    margin-bottom: var(--mc-space-md);
+  }
+
+  .name-editor label,
+  .lore-editor label {
+    display: block;
+    color: #cccccc;
+    font-size: 0.9rem;
+    margin-bottom: var(--mc-space-xs);
+  }
+
+  /* behavior-grid */
+  .give-tool .behavior-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: var(--mc-space-md);
+    margin-bottom: var(--mc-space-md);
+  }
+
+  .give-tool .behavior-option {
+    display: flex;
+    align-items: center;
+    gap: var(--mc-space-md);
+    padding: var(--mc-space-md);
+    background: linear-gradient(180deg, #4a4a4a 0%, #3a3a3a 100%);
+    border: 2px solid #555555;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .give-tool .behavior-option:hover {
+    background: linear-gradient(180deg, #5a5a5a 0%, #4a4a4a 100%);
+  }
+
+  .give-tool .behavior-option:has(input:checked) {
+    background: linear-gradient(180deg, rgba(92, 183, 70, 0.3) 0%, rgba(58, 129, 40, 0.3) 100%);
+    border-color: var(--mc-color-grass-main);
+  }
+
+  .give-tool .behavior-option input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    accent-color: var(--mc-color-grass-main);
+  }
+
+  .give-tool .option-content {
+    display: flex;
+    align-items: center;
+    gap: var(--mc-space-sm);
+    flex: 1;
+  }
+
+  .give-tool .option-icon {
+    width: 32px;
+    height: 32px;
+  }
+
+  .give-tool .option-text {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .give-tool .option-name {
+    font-weight: bold;
+    color: #ffffff;
+    font-size: 0.9rem;
+  }
+
+  .give-tool .option-desc {
+    font-size: 0.75rem;
+    color: #aaaaaa;
+  }
+
+  /* Raw Components */
+  .raw-components-section {
+    margin-top: var(--mc-space-md);
+  }
+
+  .raw-components-section label {
+    display: block;
+    color: #cccccc;
+    font-size: 0.9rem;
+    margin-bottom: var(--mc-space-xs);
+  }
+
+  /* ヘッダー */
+  .give-tool .tool-header {
+    display: flex;
+    align-items: center;
+    gap: var(--mc-space-md);
+    padding: var(--mc-space-lg);
+    background: linear-gradient(180deg, #5cb746 0%, #3a8128 100%);
+    border-radius: 8px 8px 0 0;
+    margin: calc(-1 * var(--mc-space-lg));
+    margin-bottom: var(--mc-space-lg);
+  }
+
+  .give-tool .header-content {
+    display: flex;
+    align-items: center;
+    gap: var(--mc-space-md);
+  }
+
+  .give-tool .header-icon {
+    width: 48px;
+    height: 48px;
+  }
+
+  .give-tool .header-text h2 {
+    margin: 0;
+    font-size: 1.3rem;
+    color: #ffffff;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+  }
+
+  .give-tool .header-subtitle {
+    margin: 4px 0 0 0;
+    font-size: 0.85rem;
+    color: rgba(255,255,255,0.8);
+  }
+
+  /* エンチャント追加ボタン */
+  .add-enchant-btn {
+    background: linear-gradient(180deg, #6b4ce8 0%, #4a32b3 100%);
+    border: 2px solid #3d2694;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.15s;
+  }
+
+  .add-enchant-btn:hover {
+    background: linear-gradient(180deg, #7d5ef5 0%, #5a42c3 100%);
+    transform: translateY(-1px);
+  }
+
+  /* 既存スタイルを維持 */
   .autocomplete-wrapper {
     position: relative;
   }
@@ -537,8 +1035,9 @@ style.textContent = `
     top: 100%;
     left: 0;
     right: 0;
-    background-color: var(--mc-bg-panel);
-    border: 1px solid var(--mc-border-dark);
+    background-color: #2a2a2a;
+    border: 2px solid #555555;
+    border-radius: 0 0 4px 4px;
     max-height: 200px;
     overflow-y: auto;
     z-index: 100;
@@ -550,6 +1049,7 @@ style.textContent = `
     cursor: pointer;
     font-family: var(--mc-font-mono);
     font-size: 0.8rem;
+    color: #ffffff;
   }
 
   .suggestion-item:hover {
@@ -561,7 +1061,7 @@ style.textContent = `
     display: flex;
     flex-direction: column;
     gap: var(--mc-space-sm);
-    margin-bottom: var(--mc-space-sm);
+    margin-bottom: var(--mc-space-md);
   }
 
   .enchant-item {
@@ -572,25 +1072,42 @@ style.textContent = `
 
   .enchant-select {
     flex: 1;
+    background: #2a2a2a;
+    color: #ffffff;
+    border: 2px solid #444444;
+    border-radius: 4px;
+    padding: 8px 12px;
   }
 
   .enchant-level {
     width: 80px;
+    background: #2a2a2a;
+    color: #ffffff;
+    border: 2px solid #444444;
+    border-radius: 4px;
+    padding: 8px 12px;
+    text-align: center;
   }
 
   .remove-enchant {
-    background: none;
-    border: none;
-    color: var(--mc-color-redstone);
+    background: linear-gradient(180deg, #e04040 0%, #c80000 100%);
+    border: 2px solid #a00000;
+    color: #ffffff;
     cursor: pointer;
-    font-size: 1.25rem;
-    padding: 0 var(--mc-space-sm);
+    font-size: 1rem;
+    padding: 6px 12px;
+    border-radius: 4px;
+    transition: all 0.15s;
+  }
+
+  .remove-enchant:hover {
+    background: linear-gradient(180deg, #ff5050 0%, #e00000 100%);
   }
 
   .hint {
     font-weight: normal;
     font-size: 0.75rem;
-    color: var(--mc-text-muted);
+    color: #888888;
     margin-left: var(--mc-space-sm);
   }
 
