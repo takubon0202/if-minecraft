@@ -516,19 +516,40 @@ export function render(manifest) {
 
   return `
     <style>${RICH_TEXT_EDITOR_CSS}</style>
-    <div class="tool-panel enchant-tool" id="enchant-panel">
-      <div class="tool-header">
-        <img src="${getInviconUrl(manifest.iconItem || 'enchanted_book')}" class="tool-header-icon mc-wiki-image" width="32" height="32" alt="">
-        <h2>${manifest.title}</h2>
+    <div class="tool-panel enchant-tool mc-themed" id="enchant-panel">
+      <!-- ヘッダー -->
+      <div class="tool-header mc-header-banner">
+        <div class="header-content">
+          <img src="${getInviconUrl(manifest.iconItem || 'enchanted_book')}" alt="" class="header-icon mc-pixelated">
+          <div class="header-text">
+            <h2>エンチャントコマンド</h2>
+            <p class="header-subtitle">最大レベル255対応</p>
+          </div>
+        </div>
         <span class="version-badge" id="enchant-version-badge">1.21+</span>
         <button type="button" class="reset-btn" id="enchant-reset-btn" title="設定をリセット">リセット</button>
       </div>
       <p class="version-note" id="enchant-version-note"></p>
 
-      <form class="tool-form" id="enchant-form">
-        <!-- アイテム選択 -->
-        <div class="form-group">
-          <label>アイテムを選択</label>
+      <form class="tool-form mc-form" id="enchant-form">
+
+        <!-- ステップ1: アイテム選択 -->
+        <section class="form-section mc-section">
+          <div class="section-header">
+            <span class="step-number">1</span>
+            <h3>アイテム選択</h3>
+          </div>
+
+          <!-- プリセット -->
+          <div class="preset-cards">
+            ${PRESETS.slice(0, 6).map(p => `
+              <button type="button" class="preset-card" data-preset="${p.id}">
+                <img src="${getInviconUrl(p.item)}" alt="" class="preset-icon mc-pixelated" onerror="this.style.opacity='0.3'">
+                <span class="preset-name">${p.name}</span>
+              </button>
+            `).join('')}
+          </div>
+
           <div class="item-selector">
             <select id="item-category" class="mc-select">
               ${Object.entries(ITEM_CATEGORIES).map(([id, cat]) =>
@@ -547,25 +568,26 @@ export function render(manifest) {
             </label>
             <input type="text" id="custom-item-id" class="mc-input" placeholder="minecraft:diamond_sword" disabled>
           </div>
-        </div>
+        </section>
 
-        <!-- エンチャント検索 -->
-        <div class="form-group">
-          <label>エンチャントを追加</label>
-          <input type="text" id="enchant-search" class="mc-input" placeholder="エンチャント名で検索...">
-        </div>
+        <!-- ステップ2: エンチャント追加 -->
+        <section class="form-section mc-section">
+          <div class="section-header">
+            <span class="step-number">2</span>
+            <h3>エンチャント追加</h3>
+          </div>
 
-        <!-- エンチャントカテゴリ（アコーディオン） -->
-        <div class="form-group">
+          <input type="text" id="enchant-search" class="mc-input" placeholder="エンチャント名で検索..." style="margin-bottom: var(--mc-space-md);">
+
           <div class="enchant-info-hint">
-            <img src="${getInviconUrl('experience_bottle')}" class="hint-icon mc-wiki-image" width="16" height="16" alt="">
+            <img src="${getInviconUrl('experience_bottle')}" class="hint-icon mc-pixelated" width="16" height="16" alt="">
             <span>通常の最大レベルはバニラの値です。コマンドでは最大255まで設定可能</span>
           </div>
           <div class="enchant-categories" id="enchant-categories">
             ${Object.entries(ENCHANT_CATEGORIES).map(([catId, cat]) => `
               <div class="enchant-category" data-category="${catId}">
                 <button type="button" class="category-header">
-                  <img class="cat-icon-img" src="${getInviconUrl(cat.iconItem)}" alt="${cat.name}" data-mc-tooltip="${cat.iconItem}" onerror="this.style.opacity='0.3'">
+                  <img class="cat-icon-img mc-pixelated" src="${getInviconUrl(cat.iconItem)}" alt="${cat.name}" data-mc-tooltip="${cat.iconItem}" onerror="this.style.opacity='0.3'">
                   <span class="cat-name">${cat.name}</span>
                   <span class="cat-count">(${cat.enchants.length})</span>
                   <span class="cat-arrow">▶</span>
@@ -598,25 +620,41 @@ export function render(manifest) {
               </div>
             `).join('')}
           </div>
-        </div>
+        </section>
 
-        <!-- 選択されたエンチャント -->
-        <div class="form-group">
-          <label>選択中のエンチャント <span id="enchant-count">(0)</span></label>
+        <!-- ステップ3: 選択中のエンチャント -->
+        <section class="form-section mc-section">
+          <div class="section-header">
+            <span class="step-number">3</span>
+            <h3>選択中のエンチャント <span id="enchant-count">(0)</span></h3>
+          </div>
           <div class="selected-enchants" id="selected-enchants">
             <p class="empty-message">上のカテゴリからエンチャントをクリックして追加</p>
           </div>
-        </div>
+        </section>
 
-        <!-- 属性 -->
-        <div class="form-group">
-          <label>
-            <input type="checkbox" id="use-attributes"> 属性を追加
-          </label>
+        <!-- ステップ4: 属性 -->
+        <section class="form-section mc-section">
+          <div class="section-header">
+            <span class="step-number">4</span>
+            <h3>属性 <span class="optional-badge">任意</span></h3>
+          </div>
+          <div class="behavior-grid">
+            <label class="behavior-option">
+              <input type="checkbox" id="use-attributes">
+              <div class="option-content">
+                <img src="${getInviconUrl('golden_apple')}" alt="" class="option-icon mc-pixelated">
+                <div class="option-text">
+                  <span class="option-name">属性を追加</span>
+                  <span class="option-desc">体力・攻撃力などを変更</span>
+                </div>
+              </div>
+            </label>
+          </div>
           <div class="attributes-section" id="attributes-section" style="display: none;">
             ${ATTRIBUTES.map(attr => `
               <div class="attribute-row">
-                <img src="${getInviconUrl(attr.iconItem)}" class="attr-icon mc-wiki-image" width="16" height="16" alt="">
+                <img src="${getInviconUrl(attr.iconItem)}" class="attr-icon mc-pixelated" width="16" height="16" alt="">
                 <span class="attr-name">${attr.name}</span>
                 <input type="checkbox" class="attr-check" data-attr="${attr.id}">
                 <input type="number" class="attr-value mc-input" data-attr="${attr.id}"
@@ -624,52 +662,86 @@ export function render(manifest) {
               </div>
             `).join('')}
           </div>
-        </div>
+        </section>
 
-        <!-- オプション -->
-        <div class="form-group options-row">
-          <label class="option-item">
-            <input type="checkbox" id="opt-unbreakable">
-            <span>耐久無限</span>
-          </label>
-          <label class="option-item">
-            <input type="checkbox" id="opt-hide-enchants">
-            <span>エンチャント非表示</span>
-          </label>
-          <label class="option-item">
-            <input type="checkbox" id="opt-hide-unbreakable">
-            <span>耐久無限非表示</span>
-          </label>
-        </div>
-
-        <!-- 個数 -->
-        <div class="form-row">
-          <div class="form-group">
-            <label for="item-count">個数</label>
-            <input type="number" id="item-count" class="mc-input" value="1" min="1" max="64">
+        <!-- ステップ5: オプション -->
+        <section class="form-section mc-section">
+          <div class="section-header">
+            <span class="step-number">5</span>
+            <h3>オプション</h3>
           </div>
-        </div>
 
-        <!-- カスタム名（リッチテキストエディター） -->
-        <div class="form-group">
-          <label>カスタム名 <small style="color: var(--mc-text-muted);">（1文字ごとに色や書式を設定可能）</small></label>
+          <div class="behavior-grid">
+            <label class="behavior-option">
+              <input type="checkbox" id="opt-unbreakable">
+              <div class="option-content">
+                <img src="${getInviconUrl('anvil')}" alt="" class="option-icon mc-pixelated">
+                <div class="option-text">
+                  <span class="option-name">耐久無限</span>
+                  <span class="option-desc">耐久値が減らない</span>
+                </div>
+              </div>
+            </label>
+            <label class="behavior-option">
+              <input type="checkbox" id="opt-hide-enchants">
+              <div class="option-content">
+                <img src="${getInviconUrl('enchanted_book')}" alt="" class="option-icon mc-pixelated">
+                <div class="option-text">
+                  <span class="option-name">エンチャント非表示</span>
+                  <span class="option-desc">ツールチップに表示しない</span>
+                </div>
+              </div>
+            </label>
+            <label class="behavior-option">
+              <input type="checkbox" id="opt-hide-unbreakable">
+              <div class="option-content">
+                <img src="${getInviconUrl('barrier')}" alt="" class="option-icon mc-pixelated">
+                <div class="option-text">
+                  <span class="option-name">耐久無限非表示</span>
+                  <span class="option-desc">耐久無限を非表示に</span>
+                </div>
+              </div>
+            </label>
+          </div>
+
+          <div class="count-input-group" style="margin-top: var(--mc-space-md);">
+            <label>個数</label>
+            <div class="count-presets">
+              <button type="button" class="count-btn active" data-count="1">1</button>
+              <button type="button" class="count-btn" data-count="16">16</button>
+              <button type="button" class="count-btn" data-count="64">64</button>
+            </div>
+            <input type="number" id="item-count" class="mc-input count-input" value="1" min="1" max="64">
+          </div>
+        </section>
+
+        <!-- ステップ6: カスタム名 -->
+        <section class="form-section mc-section">
+          <div class="section-header">
+            <span class="step-number">6</span>
+            <h3>カスタム名 <span class="optional-badge">任意</span></h3>
+          </div>
+          <p class="section-hint">1文字ごとに色や書式を設定可能</p>
           ${enchantCustomNameEditor.render()}
-        </div>
+        </section>
 
-        <!-- プリセット（カテゴリ別） -->
-        <div class="form-group">
-          <label>プリセット</label>
+        <!-- ステップ7: その他プリセット -->
+        <section class="form-section mc-section">
+          <div class="section-header">
+            <span class="step-number">7</span>
+            <h3>その他のプリセット <span class="optional-badge">任意</span></h3>
+          </div>
           <div class="preset-categories">
             ${Object.entries(PRESET_CATEGORIES).map(([catId, cat]) => `
               <div class="preset-category" data-category="${catId}">
                 <div class="preset-category-header" style="border-left-color: ${cat.color};">
-                  <img src="${getInviconUrl(cat.icon)}" class="preset-category-icon mc-wiki-image" width="16" height="16" alt="">
+                  <img src="${getInviconUrl(cat.icon)}" class="preset-category-icon mc-pixelated" width="16" height="16" alt="">
                   <span>${cat.name}</span>
                 </div>
                 <div class="preset-category-buttons">
                   ${PRESETS.filter(p => p.category === catId).map(p => `
                     <button type="button" class="preset-btn" data-preset="${p.id}" title="${p.desc || p.enchants.map(e => findEnchantInfo(e.id)?.name).join(', ')}">
-                      <img src="${getInviconUrl(p.item)}" class="preset-btn-icon mc-wiki-image" width="16" height="16" alt="">
+                      <img src="${getInviconUrl(p.item)}" class="preset-btn-icon mc-pixelated" width="16" height="16" alt="">
                       <span>${p.name}</span>
                     </button>
                   `).join('')}
@@ -680,7 +752,7 @@ export function render(manifest) {
           <button type="button" class="preset-btn preset-clear" data-preset="clear" style="margin-top: 8px;">
             クリア
           </button>
-        </div>
+        </section>
       </form>
 
       <!-- Minecraft風ゲーム画面プレビュー -->
@@ -879,15 +951,35 @@ export function init(container) {
     updateCommand(container);
   }, 100));
 
-  // プリセット
+  // プリセット（ボタン）
   delegate(container, 'click', '.preset-btn', (e, target) => {
     applyPreset(target.dataset.preset, container);
+  });
+
+  // プリセットカード（上部）
+  $$('.preset-card', container).forEach(btn => {
+    btn.addEventListener('click', () => {
+      const presetId = btn.dataset.preset;
+      applyPreset(presetId, container);
+    });
   });
 
   // オプション変更
   ['#opt-unbreakable', '#opt-hide-enchants', '#opt-hide-unbreakable', '#custom-name'].forEach(sel => {
     $(sel, container)?.addEventListener('change', () => updateCommand(container));
     $(sel, container)?.addEventListener('input', debounce(() => updateCommand(container), 150));
+  });
+
+  // 個数プリセット
+  $$('.count-btn', container).forEach(btn => {
+    btn.addEventListener('click', () => {
+      $$('.count-btn', container).forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const count = parseInt(btn.dataset.count);
+      $('#item-count', container).value = count;
+      updatePreview(container);
+      updateCommand(container);
+    });
   });
 
   // 個数変更（プレビューも更新）
@@ -1474,128 +1566,381 @@ function toRoman(num) {
 // スタイル追加
 const style = document.createElement('style');
 style.textContent = `
+  /* ===== summonツール統一デザイン ===== */
+
+  /* ヘッダー */
+  .enchant-tool .tool-header {
+    display: flex;
+    align-items: center;
+    gap: var(--mc-space-md);
+    padding: var(--mc-space-lg);
+    background: linear-gradient(180deg, #6b4ce8 0%, #4a32b3 100%);
+    border-radius: 8px 8px 0 0;
+    margin: calc(-1 * var(--mc-space-lg));
+    margin-bottom: var(--mc-space-lg);
+  }
+
+  .enchant-tool .header-content {
+    display: flex;
+    align-items: center;
+    gap: var(--mc-space-md);
+  }
+
+  .enchant-tool .header-icon {
+    width: 48px;
+    height: 48px;
+  }
+
+  .enchant-tool .header-text h2 {
+    margin: 0;
+    font-size: 1.3rem;
+    color: #ffffff;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+  }
+
+  .enchant-tool .header-subtitle {
+    margin: 4px 0 0 0;
+    font-size: 0.85rem;
+    color: rgba(255,255,255,0.8);
+  }
+
   .enchant-tool .version-badge {
-    background: var(--mc-color-grass-main);
+    background: rgba(255,255,255,0.2);
     color: white;
-    padding: 2px 8px;
+    padding: 4px 12px;
     border-radius: 4px;
-    font-size: 0.7rem;
+    font-size: 0.75rem;
     margin-left: auto;
   }
 
-  .item-selector {
+  .enchant-tool .reset-btn {
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.3);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: all 0.15s;
+  }
+
+  .enchant-tool .reset-btn:hover {
+    background: rgba(255,255,255,0.25);
+    border-color: rgba(255,255,255,0.5);
+  }
+
+  /* セクション構造 */
+  .enchant-tool .form-section {
+    margin-bottom: var(--mc-space-lg);
+    padding: var(--mc-space-lg);
+    background: linear-gradient(180deg, rgba(60,60,60,0.8) 0%, rgba(40,40,40,0.9) 100%);
+    border: 2px solid #555555;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  }
+
+  .enchant-tool .section-header {
+    display: flex;
+    align-items: center;
+    gap: var(--mc-space-md);
+    margin-bottom: var(--mc-space-lg);
+    padding-bottom: var(--mc-space-sm);
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .enchant-tool .step-number {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: linear-gradient(180deg, #6b4ce8 0%, #4a32b3 100%);
+    color: white;
+    border-radius: 50%;
+    font-weight: bold;
+    font-size: 1rem;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+  }
+
+  .enchant-tool .section-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: #ffffff;
+  }
+
+  .enchant-tool .optional-badge {
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 4px;
+    color: #aaaaaa;
+    margin-left: 8px;
+  }
+
+  .enchant-tool .section-hint {
+    font-size: 0.8rem;
+    color: #aaaaaa;
+    margin: 0 0 var(--mc-space-md) 0;
+  }
+
+  /* プリセットカード */
+  .enchant-tool .preset-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: var(--mc-space-md);
+    margin-bottom: var(--mc-space-lg);
+  }
+
+  .enchant-tool .preset-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: var(--mc-space-md);
+    background: linear-gradient(180deg, #4a4a4a 0%, #3a3a3a 100%);
+    border: 2px solid #555555;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .enchant-tool .preset-card:hover {
+    background: linear-gradient(180deg, #6b4ce8 0%, #4a32b3 100%);
+    border-color: #8b6cf8;
+    transform: translateY(-2px);
+  }
+
+  .enchant-tool .preset-card .preset-icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .enchant-tool .preset-card .preset-name {
+    font-size: 0.8rem;
+    color: #ffffff;
+    text-align: center;
+  }
+
+  /* behavior-grid */
+  .enchant-tool .behavior-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: var(--mc-space-md);
+    margin-bottom: var(--mc-space-md);
+  }
+
+  .enchant-tool .behavior-option {
+    display: flex;
+    align-items: center;
+    gap: var(--mc-space-md);
+    padding: var(--mc-space-md);
+    background: linear-gradient(180deg, #4a4a4a 0%, #3a3a3a 100%);
+    border: 2px solid #555555;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .enchant-tool .behavior-option:hover {
+    background: linear-gradient(180deg, #5a5a5a 0%, #4a4a4a 100%);
+  }
+
+  .enchant-tool .behavior-option:has(input:checked) {
+    background: linear-gradient(180deg, rgba(107, 76, 232, 0.3) 0%, rgba(74, 50, 179, 0.3) 100%);
+    border-color: #6b4ce8;
+  }
+
+  .enchant-tool .behavior-option input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    accent-color: #6b4ce8;
+  }
+
+  .enchant-tool .option-content {
+    display: flex;
+    align-items: center;
+    gap: var(--mc-space-sm);
+    flex: 1;
+  }
+
+  .enchant-tool .option-icon {
+    width: 32px;
+    height: 32px;
+  }
+
+  .enchant-tool .option-text {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .enchant-tool .option-name {
+    font-weight: bold;
+    color: #ffffff;
+    font-size: 0.9rem;
+  }
+
+  .enchant-tool .option-desc {
+    font-size: 0.75rem;
+    color: #aaaaaa;
+  }
+
+  /* 個数プリセット */
+  .enchant-tool .count-input-group label {
+    display: block;
+    color: #cccccc;
+    font-size: 0.9rem;
+    margin-bottom: var(--mc-space-xs);
+  }
+
+  .enchant-tool .count-presets {
+    display: flex;
+    gap: var(--mc-space-sm);
+    margin-bottom: var(--mc-space-sm);
+  }
+
+  .enchant-tool .count-btn {
+    padding: 6px 16px;
+    background: linear-gradient(180deg, #4a4a4a 0%, #3a3a3a 100%);
+    border: 2px solid #555555;
+    border-radius: 4px;
+    color: #ffffff;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .enchant-tool .count-btn:hover {
+    background: linear-gradient(180deg, #5a5a5a 0%, #4a4a4a 100%);
+  }
+
+  .enchant-tool .count-btn.active {
+    background: linear-gradient(180deg, #6b4ce8 0%, #4a32b3 100%);
+    border-color: #8b6cf8;
+  }
+
+  .enchant-tool .count-input {
+    width: 80px;
+  }
+
+  /* アイテムセレクター */
+  .enchant-tool .item-selector {
     display: grid;
     grid-template-columns: 1fr 2fr;
     gap: var(--mc-space-sm);
+    margin-bottom: var(--mc-space-sm);
   }
 
-  .custom-item-row {
+  .enchant-tool .custom-item-row {
     display: flex;
     align-items: center;
     gap: var(--mc-space-sm);
     margin-top: var(--mc-space-sm);
+    color: #cccccc;
   }
 
-  .custom-item-row input[type="text"] {
+  .enchant-tool .custom-item-row input[type="text"] {
     flex: 1;
   }
 
   /* エンチャントカテゴリ */
-  .enchant-categories {
+  .enchant-tool .enchant-categories {
     max-height: 400px;
     overflow-y: auto;
-    border: 1px solid var(--mc-border-dark);
+    border: 2px solid #555555;
+    border-radius: 4px;
   }
 
-  .enchant-category {
-    border-bottom: 1px solid var(--mc-border-dark);
+  .enchant-tool .enchant-category {
+    border-bottom: 1px solid #555555;
   }
 
-  .enchant-category:last-child {
+  .enchant-tool .enchant-category:last-child {
     border-bottom: none;
   }
 
-  .category-header {
+  .enchant-tool .category-header {
     width: 100%;
     display: flex;
     align-items: center;
     gap: var(--mc-space-sm);
     padding: var(--mc-space-sm) var(--mc-space-md);
-    background: var(--mc-bg-surface);
+    background: linear-gradient(180deg, #4a4a4a 0%, #3a3a3a 100%);
     border: none;
     cursor: pointer;
     text-align: left;
     font-size: 0.85rem;
+    color: #ffffff;
   }
 
-  .category-header:hover {
-    background: var(--mc-color-stone-300);
+  .enchant-tool .category-header:hover {
+    background: linear-gradient(180deg, #5a5a5a 0%, #4a4a4a 100%);
   }
 
-  .cat-icon-img {
+  .enchant-tool .cat-icon-img {
     width: 24px;
     height: 24px;
     image-rendering: pixelated;
     flex-shrink: 0;
   }
 
-  .cat-name {
+  .enchant-tool .cat-name {
     flex: 1;
+    color: #ffffff;
   }
 
-  .cat-count {
-    color: var(--mc-text-muted);
+  .enchant-tool .cat-count {
+    color: #aaaaaa;
     font-size: 0.75rem;
   }
 
-  .cat-arrow {
-    color: var(--mc-text-muted);
+  .enchant-tool .cat-arrow {
+    color: #aaaaaa;
     font-size: 0.7rem;
   }
 
-  .category-enchants {
+  .enchant-tool .category-enchants {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
     gap: 6px;
     padding: var(--mc-space-sm);
-    background: var(--mc-bg-panel);
+    background: rgba(30,30,30,0.8);
   }
 
-  .enchant-item {
+  .enchant-tool .enchant-item {
     display: flex;
     flex-direction: column;
     gap: 6px;
     padding: 10px;
-    background: var(--mc-bg-surface);
-    border: 2px solid transparent;
+    background: linear-gradient(180deg, #3a3a3a 0%, #2a2a2a 100%);
+    border: 2px solid #444444;
     border-radius: 4px;
     transition: all 0.15s;
   }
 
-  .enchant-item:hover {
-    background: var(--mc-color-stone-300);
+  .enchant-tool .enchant-item:hover {
+    background: linear-gradient(180deg, #4a4a4a 0%, #3a3a3a 100%);
+    border-color: #6b4ce8;
   }
 
-  .enchant-item.selected {
-    background: rgba(92, 183, 70, 0.2);
-    border-color: var(--mc-color-grass-main);
+  .enchant-tool .enchant-item.selected {
+    background: linear-gradient(180deg, rgba(107, 76, 232, 0.3) 0%, rgba(74, 50, 179, 0.3) 100%);
+    border-color: #6b4ce8;
   }
 
-  .enchant-item .enchant-item-header {
+  .enchant-tool .enchant-item .enchant-item-header {
     display: flex;
     flex-direction: column;
     gap: 2px;
   }
 
-  .enchant-item .enchant-name {
+  .enchant-tool .enchant-item .enchant-name {
     font-size: 0.85rem;
     font-weight: bold;
-    color: var(--mc-text-primary);
+    color: #ffffff;
   }
 
-  .enchant-item .enchant-en {
+  .enchant-tool .enchant-item .enchant-en {
     font-size: 0.65rem;
-    color: var(--mc-text-muted);
+    color: #aaaaaa;
   }
 
   /* レベル選択UI */
