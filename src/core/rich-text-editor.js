@@ -77,16 +77,19 @@ export class RichTextEditor {
       <div class="rich-text-editor" id="${this.containerId}">
         <!-- ツールバー -->
         <div class="rte-toolbar">
-          <!-- 書式ボタン -->
-          <div class="rte-format-buttons">
-            ${FORMAT_OPTIONS.map(fmt => `
-              <button type="button" class="rte-btn rte-format-btn" data-format="${fmt.id}" title="${fmt.name} (${fmt.shortcut})">
-                <span class="rte-btn-icon">${fmt.icon}</span>
-              </button>
-            `).join('')}
+          <!-- 上段: 書式ボタン -->
+          <div class="rte-toolbar-row">
+            <span class="rte-color-label">文字色</span>
+            <div class="rte-format-buttons">
+              ${FORMAT_OPTIONS.map(fmt => `
+                <button type="button" class="rte-btn rte-format-btn" data-format="${fmt.id}" title="${fmt.name} (${fmt.shortcut})">
+                  ${fmt.icon}
+                </button>
+              `).join('')}
+            </div>
           </div>
 
-          <!-- カラーパレット -->
+          <!-- 下段: カラーパレット（2行×8列グリッド） -->
           <div class="rte-color-section">
             <div class="rte-color-palette">
               ${MC_COLORS.map(c => `
@@ -98,7 +101,7 @@ export class RichTextEditor {
             </div>
             <div class="rte-custom-color">
               <input type="color" class="rte-color-picker" id="${this.containerId}-color-picker" value="#FFFFFF">
-              <span class="rte-color-label">RGB</span>
+              <span class="rte-color-label">カスタムRGB</span>
             </div>
           </div>
         </div>
@@ -555,11 +558,18 @@ export const RICH_TEXT_EDITOR_CSS = `
 
   .rte-toolbar {
     display: flex;
-    flex-wrap: wrap;
+    flex-direction: column;
     gap: 8px;
-    padding: 8px;
+    padding: 12px;
     background: var(--mc-bg-panel, #1a1a1a);
     border-bottom: 1px solid var(--mc-border-dark, #333);
+  }
+
+  .rte-toolbar-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
   }
 
   .rte-format-buttons {
@@ -568,18 +578,25 @@ export const RICH_TEXT_EDITOR_CSS = `
   }
 
   .rte-btn {
-    padding: 6px 10px;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     background: var(--mc-bg-surface, #3a3a3a);
-    border: 1px solid var(--mc-border-dark, #555);
+    border: 2px solid var(--mc-border-dark, #555);
     border-radius: 4px;
     color: var(--mc-text-primary, #fff);
     cursor: pointer;
     font-weight: bold;
+    font-size: 0.9rem;
     transition: all 0.15s;
   }
 
   .rte-btn:hover {
     background: var(--mc-bg-hover, #4a4a4a);
+    transform: translateY(-1px);
   }
 
   .rte-btn.active {
@@ -590,53 +607,77 @@ export const RICH_TEXT_EDITOR_CSS = `
 
   .rte-color-section {
     display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .rte-color-label-row {
+    display: flex;
     align-items: center;
     gap: 8px;
-    margin-left: auto;
+    font-size: 0.8rem;
+    color: var(--mc-text-muted, #aaa);
   }
 
   .rte-color-palette {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 2px;
-    max-width: 200px;
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 4px;
+    width: 100%;
+    max-width: 280px;
   }
 
   .rte-color-btn {
-    width: 20px;
-    height: 20px;
-    border: 2px solid transparent;
-    border-radius: 3px;
+    width: 100%;
+    aspect-ratio: 1;
+    min-width: 28px;
+    max-width: 32px;
+    border: 2px solid rgba(255,255,255,0.1);
+    border-radius: 4px;
     cursor: pointer;
     transition: all 0.15s;
   }
 
   .rte-color-btn:hover {
-    transform: scale(1.1);
+    transform: scale(1.15);
     z-index: 1;
+    border-color: rgba(255,255,255,0.5);
   }
 
   .rte-color-btn.active {
     border-color: white;
-    box-shadow: 0 0 4px rgba(255,255,255,0.5);
+    box-shadow: 0 0 8px rgba(255,255,255,0.6);
+    transform: scale(1.1);
   }
 
   .rte-custom-color {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 8px;
+    margin-top: 4px;
   }
 
   .rte-color-picker {
-    width: 30px;
-    height: 24px;
-    border: none;
-    border-radius: 3px;
+    width: 40px;
+    height: 28px;
+    border: 2px solid var(--mc-border-dark, #555);
+    border-radius: 4px;
     cursor: pointer;
+    background: transparent;
+  }
+
+  .rte-color-picker::-webkit-color-swatch-wrapper {
+    padding: 2px;
+  }
+
+  .rte-color-picker::-webkit-color-swatch {
+    border-radius: 2px;
+    border: none;
   }
 
   .rte-color-label {
-    font-size: 0.7rem;
+    font-size: 0.75rem;
     color: var(--mc-text-muted, #888);
   }
 
