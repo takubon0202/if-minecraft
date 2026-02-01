@@ -1095,14 +1095,11 @@ function generateSummonZombieCommand(s) {
   const entityId = `minecraft:${s.zombieType}`;
   const nbtParts = [];
 
-  // カスタム名（1.21+ エンティティタグはPascalCase、RTE出力を使用）
-  if (s.customName && s.customNameSNBT) {
-    // RTEからのSNBT形式を使用
-    nbtParts.push(`CustomName:'${s.customNameSNBT}'`);
-  } else if (s.customName) {
-    // フォールバック: プレーンテキストのみ
-    const escapedName = s.customName.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
-    nbtParts.push(`CustomName:'{"text":"${escapedName}","italic":false}'`);
+  // カスタム名（1.21+ CustomNameはJSON Text形式の文字列）
+  if (s.customName) {
+    // RTEからJSON形式を生成
+    const jsonName = generateCustomNameJSON(s);
+    nbtParts.push(`CustomName:'${jsonName}'`);
   }
 
   // オプション（1.21+ エンティティタグはPascalCase）
@@ -1189,15 +1186,16 @@ function buildEquipmentNBT(equipment) {
 }
 
 /**
- * アイテムNBTを生成（1.21+ アイテムデータはsnake_case）
+ * アイテムNBTを生成（1.21+ アイテムコンポーネント形式）
  */
 function buildItemNBT(itemId, enchants) {
   const components = [];
 
   // エンチャント（1.21+ コンポーネント形式）
+  // 形式: "minecraft:enchantments":{"levels":{"minecraft:sharpness":5}}
   if (enchants && enchants.length > 0) {
     const enchantLevels = enchants.map(e => `"minecraft:${e.id}":${e.level}`).join(',');
-    components.push(`"minecraft:enchantments":{levels:{${enchantLevels}}}`);
+    components.push(`"minecraft:enchantments":{"levels":{${enchantLevels}}}`);
   }
 
   if (components.length > 0) {
@@ -1256,7 +1254,67 @@ function buildAttributesNBT(attributes) {
 
   if (attrList.length === 0) return null;
 
-  return `attributes:[${attrList.join(',')}]`;
+  // 1.21+: エンティティNBTはPascalCase（Attributes）
+  return `Attributes:[${attrList.join(',')}]`;
+}
+
+/**
+ * カスタム名のJSON Text Componentを生成
+ * CustomNameはJSON形式の文字列（SNBTではない）
+ */
+function generateCustomNameJSON(s) {
+  // RTEのcharactersがあればそれを使用
+  if (typeof zombieNameEditor !== 'undefined' && zombieNameEditor && zombieNameEditor.characters && zombieNameEditor.characters.length > 0) {
+    const groups = zombieNameEditor.getFormattedGroups();
+    if (groups.length === 0) {
+      return `{"text":"${escapeJSON(s.customName)}","italic":false}`;
+    }
+
+    if (groups.length === 1) {
+      return formatGroupToJSON(groups[0]);
+    }
+
+    // 複数グループの場合は配列形式
+    const components = groups.map(g => formatGroupToJSON(g));
+    return `[${components.join(',')}]`;
+  }
+
+  // フォールバック: プレーンテキスト
+  return `{"text":"${escapeJSON(s.customName)}","italic":false}`;
+}
+
+/**
+ * グループをJSON形式に変換
+ */
+function formatGroupToJSON(group) {
+  const parts = [`"text":"${escapeJSON(group.text)}"`];
+  parts.push(`"italic":false`);
+
+  if (group.color && group.color !== 'white') {
+    parts.push(`"color":"${group.color}"`);
+  }
+  if (group.bold) parts.push(`"bold":true`);
+  if (group.italic) {
+    // italic:falseを上書き
+    const idx = parts.indexOf(`"italic":false`);
+    if (idx !== -1) parts[idx] = `"italic":true`;
+  }
+  if (group.underlined) parts.push(`"underlined":true`);
+  if (group.strikethrough) parts.push(`"strikethrough":true`);
+  if (group.obfuscated) parts.push(`"obfuscated":true`);
+
+  return `{${parts.join(',')}}`;
+}
+
+/**
+ * JSON文字列をエスケープ
+ */
+function escapeJSON(str) {
+  if (!str) return '';
+  return str
+    .replace(/\\/g, '\\\\')
+    .replace(/"/g, '\\"')
+    .replace(/\n/g, '\\n');
 }
 
 // スタイル追加
