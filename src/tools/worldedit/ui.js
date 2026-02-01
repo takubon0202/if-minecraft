@@ -2306,8 +2306,140 @@ function updateCommand(container) {
 // スタイル
 const style = document.createElement('style');
 style.textContent = `
-  .worldedit-tool {
+  /* ===== WorldEdit統一デザイン（summonスタイル準拠） ===== */
+
+  /* Minecraft風テーマ */
+  .worldedit-tool.mc-themed {
+    background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+    border-radius: 0;
+    border: 4px solid #0f0f23;
+    box-shadow:
+      inset 2px 2px 0 rgba(255,255,255,0.1),
+      inset -2px -2px 0 rgba(0,0,0,0.3),
+      0 8px 32px rgba(0,0,0,0.5);
     max-width: 900px;
+  }
+
+  .worldedit-tool .mc-pixelated {
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+  }
+
+  /* ヘッダー（青系グラデーション - ツール系） */
+  .worldedit-tool .mc-header-banner.worldedit-header {
+    background: linear-gradient(90deg, #1a4480 0%, #2563eb 50%, #1a4480 100%);
+    padding: 20px 24px;
+    margin: -16px -16px 24px -16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 4px solid #0d2a52;
+    position: relative;
+  }
+
+  .worldedit-tool .mc-header-banner.worldedit-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url("data:image/svg+xml,%3Csvg width='16' height='16' viewBox='0 0 16 16' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='16' height='16' fill='%23000' opacity='0.1'/%3E%3C/svg%3E");
+    pointer-events: none;
+  }
+
+  .worldedit-tool .header-content {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .worldedit-tool .header-icon {
+    width: 48px;
+    height: 48px;
+    filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.5));
+  }
+
+  .worldedit-tool .header-text h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: #ffffff;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+  }
+
+  .worldedit-tool .header-subtitle {
+    margin: 4px 0 0 0;
+    font-size: 0.9rem;
+    color: rgba(255,255,255,0.8);
+  }
+
+  .worldedit-tool .reset-btn {
+    padding: 8px 16px;
+    background: linear-gradient(180deg, #e04040 0%, #c80000 100%);
+    border: 2px solid #a00000;
+    border-radius: 4px;
+    color: #ffffff;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.15s;
+    position: relative;
+    z-index: 1;
+  }
+
+  .worldedit-tool .reset-btn:hover {
+    background: linear-gradient(180deg, #ff5050 0%, #e00000 100%);
+    transform: translateY(-1px);
+  }
+
+  /* セクション構造 */
+  .worldedit-tool .form-section {
+    margin-bottom: var(--mc-space-lg);
+    padding: var(--mc-space-lg);
+    background: linear-gradient(180deg, rgba(60,60,60,0.8) 0%, rgba(40,40,40,0.9) 100%);
+    border: 2px solid #555555;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  }
+
+  .worldedit-tool .section-header {
+    display: flex;
+    align-items: center;
+    gap: var(--mc-space-md);
+    margin-bottom: var(--mc-space-lg);
+    padding-bottom: var(--mc-space-sm);
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .worldedit-tool .step-number {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: linear-gradient(180deg, #2563eb 0%, #1a4480 100%);
+    color: white;
+    border-radius: 50%;
+    font-weight: bold;
+    font-size: 1rem;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+  }
+
+  .worldedit-tool .section-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: #ffffff;
+  }
+
+  .worldedit-tool .optional-badge {
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 4px;
+    color: #aaaaaa;
+    margin-left: 8px;
   }
 
   .we-badge {
@@ -2317,7 +2449,8 @@ style.textContent = `
     border-radius: 12px;
     font-size: 0.7rem;
     font-weight: bold;
-    margin-left: auto;
+    position: relative;
+    z-index: 1;
   }
 
   /* 入力欄とセレクトボックスのコントラスト改善 */
@@ -2333,7 +2466,7 @@ style.textContent = `
   .we-generator .mc-input:focus,
   .we-panel .mc-input:focus,
   .we-tab-content .mc-input:focus {
-    border-color: #5cb746;
+    border-color: #2563eb;
     background: #2d2d48;
   }
 
@@ -2351,6 +2484,36 @@ style.textContent = `
     margin-bottom: var(--mc-space-md);
     font-size: 0.95rem;
     line-height: 1.5;
+  }
+
+  /* チェックボックスオプション */
+  .we-checkbox-option {
+    display: flex;
+    align-items: center;
+    gap: var(--mc-space-sm);
+    padding: var(--mc-space-sm) var(--mc-space-md);
+    background: linear-gradient(180deg, #4a4a4a 0%, #3a3a3a 100%);
+    border: 2px solid #555555;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s;
+    margin-bottom: var(--mc-space-sm);
+  }
+
+  .we-checkbox-option:hover {
+    background: linear-gradient(180deg, #5a5a5a 0%, #4a4a4a 100%);
+    border-color: #666666;
+  }
+
+  .we-checkbox-option:has(input:checked) {
+    background: linear-gradient(180deg, rgba(37, 99, 235, 0.3) 0%, rgba(26, 68, 128, 0.3) 100%);
+    border-color: #2563eb;
+  }
+
+  .we-checkbox-option input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: #2563eb;
   }
 
   /* バージョン選択 */
