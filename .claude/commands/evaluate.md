@@ -93,12 +93,18 @@
 # 特定ファイルを評価
 /evaluate index.html
 
-# URLを評価
-/evaluate http://localhost:3000
+# 本番サイトを評価
+/evaluate https://takubon0202.github.io/if-minecraft/
 
 # プロジェクト全体を評価
 /evaluate
 ```
+
+## 注意事項
+
+- **ローカルサーバー禁止**: `localhost`でのテストは行わない
+- **ビルド禁止**: `npm run build`はローカルで実行しない
+- 動作確認は本番サイト（GitHub Pages）で行う
 
 ## 自動修正モード
 

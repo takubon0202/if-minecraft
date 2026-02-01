@@ -67,3 +67,18 @@ npm run mc:data:validate # データ検証
 - 外部サイトのコード・デザインはコピーしない
 - 機能パリティのみ参考にし、オリジナル実装
 - フッターに "Not affiliated with Mojang/Microsoft" を明記
+
+## 禁止事項（重要）
+
+- **ローカルビルド禁止**: `npm run build` をローカルで実行しない（Google Drive同期の問題でタイムアウトする）
+- **ブラウザテスト禁止**: ブラウザを起動してテストしない
+- **デプロイ**: ビルドとデプロイはGitHub Actionsに任せる。プッシュすれば自動デプロイされる
+- **動作確認**: 本番サイト（GitHub Pages）で確認する
+
+## ビルド・デプロイフロー
+
+```
+コード変更 → git commit → git push → GitHub Actions自動ビルド → GitHub Pages自動デプロイ
+```
+
+GitHub Actionsの状況は https://github.com/takubon0202/if-minecraft/actions で確認

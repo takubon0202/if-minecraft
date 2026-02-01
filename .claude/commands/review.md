@@ -129,15 +129,21 @@
 ## 使用例
 
 ```bash
-# 開発中のページを総合レビュー
-/review src/pages/index.html
+# ソースファイルを総合レビュー
+/review src/index.html
 
-# 本番公開前の最終チェック
-/review --auto-fix dist/index.html
+# 本番サイトを評価
+/review https://takubon0202.github.io/if-minecraft/
 
 # 全ページの一括レビュー
-/review --all src/pages/
+/review --all src/tools/
 ```
+
+## 注意事項
+
+- **ローカルビルド禁止**: `npm run build`は実行しない（GitHub Actionsで自動実行）
+- **ブラウザテスト禁止**: ローカルサーバーでのテストは行わない
+- 動作確認は本番サイト（GitHub Pages）で行う
 
 ## 関連スキル
 
