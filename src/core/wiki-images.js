@@ -39,6 +39,12 @@ const ITEM_FILE_MAP = {
   'warped_stem': 'Warped_Stem.gif',
   'crimson_hyphae': 'Crimson_Hyphae.gif',
   'warped_hyphae': 'Warped_Hyphae.gif',
+  // === プリズマリン系（GIF形式） ===
+  'prismarine': 'Prismarine.gif',
+  // === マグマブロック（GIF形式） ===
+  'magma_block': 'Magma_Block.gif',
+  // === 石切台（GIF形式） ===
+  'stonecutter': 'Stonecutter.gif',
   // === ポーション系 - ITEM_NAME_MAPで個別に定義（GIF形式は使用しない） ===
   // 注意: Wikiではポーションは効果ごとに異なる画像があるため、
   // 基本アイテム（Water_Bottle等）はITEM_NAME_MAPで定義
@@ -161,51 +167,51 @@ const ITEM_NAME_MAP = {
   'quartz': 'Nether_Quartz',
 
   // === 1.21.9+ 銅時代ブロック（The Copper Age） ===
-  // 銅の鎖
+  // 銅の鎖（Waxed版はWikiに画像なし、非Waxed版で代用）
   'copper_chain': 'Copper_Chain',
   'exposed_copper_chain': 'Exposed_Copper_Chain',
   'weathered_copper_chain': 'Weathered_Copper_Chain',
   'oxidized_copper_chain': 'Oxidized_Copper_Chain',
-  'waxed_copper_chain': 'Waxed_Copper_Chain',
-  'waxed_exposed_copper_chain': 'Waxed_Exposed_Copper_Chain',
-  'waxed_weathered_copper_chain': 'Waxed_Weathered_Copper_Chain',
-  'waxed_oxidized_copper_chain': 'Waxed_Oxidized_Copper_Chain',
+  'waxed_copper_chain': 'Copper_Chain',
+  'waxed_exposed_copper_chain': 'Exposed_Copper_Chain',
+  'waxed_weathered_copper_chain': 'Weathered_Copper_Chain',
+  'waxed_oxidized_copper_chain': 'Oxidized_Copper_Chain',
   // 銅の松明（JE2_BE2形式 - バージョン依存のため）
   'copper_torch': 'Copper_Torch_JE2_BE2',
-  'exposed_copper_torch': 'Copper_Torch_JE2_BE2',    // バリエーションは未登録、基本で代用
-  'weathered_copper_torch': 'Copper_Torch_JE2_BE2',  // バリエーションは未登録、基本で代用
-  'oxidized_copper_torch': 'Copper_Torch_JE2_BE2',   // バリエーションは未登録、基本で代用
+  'exposed_copper_torch': 'Copper_Torch_JE2_BE2',
+  'weathered_copper_torch': 'Copper_Torch_JE2_BE2',
+  'oxidized_copper_torch': 'Copper_Torch_JE2_BE2',
   'waxed_copper_torch': 'Copper_Torch_JE2_BE2',
   'waxed_exposed_copper_torch': 'Copper_Torch_JE2_BE2',
   'waxed_weathered_copper_torch': 'Copper_Torch_JE2_BE2',
   'waxed_oxidized_copper_torch': 'Copper_Torch_JE2_BE2',
-  // 銅のバー
+  // 銅のバー（Waxed版はWikiに画像なし、非Waxed版で代用）
   'copper_bars': 'Copper_Bars',
   'exposed_copper_bars': 'Exposed_Copper_Bars',
   'weathered_copper_bars': 'Weathered_Copper_Bars',
   'oxidized_copper_bars': 'Oxidized_Copper_Bars',
-  'waxed_copper_bars': 'Waxed_Copper_Bars',
-  'waxed_exposed_copper_bars': 'Waxed_Exposed_Copper_Bars',
-  'waxed_weathered_copper_bars': 'Waxed_Weathered_Copper_Bars',
-  'waxed_oxidized_copper_bars': 'Waxed_Oxidized_Copper_Bars',
-  // 銅のランタン
+  'waxed_copper_bars': 'Copper_Bars',
+  'waxed_exposed_copper_bars': 'Exposed_Copper_Bars',
+  'waxed_weathered_copper_bars': 'Weathered_Copper_Bars',
+  'waxed_oxidized_copper_bars': 'Oxidized_Copper_Bars',
+  // 銅のランタン（Waxed版はWikiに画像なし、非Waxed版で代用）
   'copper_lantern': 'Copper_Lantern',
   'exposed_copper_lantern': 'Exposed_Copper_Lantern',
   'weathered_copper_lantern': 'Weathered_Copper_Lantern',
   'oxidized_copper_lantern': 'Oxidized_Copper_Lantern',
-  'waxed_copper_lantern': 'Waxed_Copper_Lantern',
-  'waxed_exposed_copper_lantern': 'Waxed_Exposed_Copper_Lantern',
-  'waxed_weathered_copper_lantern': 'Waxed_Weathered_Copper_Lantern',
-  'waxed_oxidized_copper_lantern': 'Waxed_Oxidized_Copper_Lantern',
-  // 銅のチェスト
+  'waxed_copper_lantern': 'Copper_Lantern',
+  'waxed_exposed_copper_lantern': 'Exposed_Copper_Lantern',
+  'waxed_weathered_copper_lantern': 'Weathered_Copper_Lantern',
+  'waxed_oxidized_copper_lantern': 'Oxidized_Copper_Lantern',
+  // 銅のチェスト（Waxed版はWikiに画像なし、非Waxed版で代用）
   'copper_chest': 'Copper_Chest',
   'exposed_copper_chest': 'Exposed_Copper_Chest',
   'weathered_copper_chest': 'Weathered_Copper_Chest',
   'oxidized_copper_chest': 'Oxidized_Copper_Chest',
-  'waxed_copper_chest': 'Waxed_Copper_Chest',
-  'waxed_exposed_copper_chest': 'Waxed_Exposed_Copper_Chest',
-  'waxed_weathered_copper_chest': 'Waxed_Weathered_Copper_Chest',
-  'waxed_oxidized_copper_chest': 'Waxed_Oxidized_Copper_Chest',
+  'waxed_copper_chest': 'Copper_Chest',
+  'waxed_exposed_copper_chest': 'Exposed_Copper_Chest',
+  'waxed_weathered_copper_chest': 'Weathered_Copper_Chest',
+  'waxed_oxidized_copper_chest': 'Oxidized_Copper_Chest',
   // 棚
   'shelf': 'Shelf',
 
@@ -243,44 +249,44 @@ const ITEM_NAME_MAP = {
   'resin_clump': 'Resin_Clump',
   'firefly_bush': 'Firefly_Bush',
   'bush': 'Bush',
-  'short_dry_grass': 'Short_Dry_Grass',
-  'tall_dry_grass': 'Tall_Dry_Grass',
-  'cactus_flower': 'Cactus_Flower',
+  'short_dry_grass': 'Dead_Bush',  // Wikiに画像なし、Dead_Bushで代用
+  'tall_dry_grass': 'Dead_Bush',   // Wikiに画像なし、Dead_Bushで代用
+  'cactus_flower': 'Cactus',       // Wikiに画像なし、Cactusで代用
   'leaf_litter': 'Leaf_Litter',
   'wildflowers': 'Wildflowers',
-  // 銅ブロック系
+  // 銅ブロック系（Waxed版はWikiに画像なし、非Waxed版で代用）
   'copper_grate': 'Copper_Grate',
   'exposed_copper_grate': 'Exposed_Copper_Grate',
   'weathered_copper_grate': 'Weathered_Copper_Grate',
   'oxidized_copper_grate': 'Oxidized_Copper_Grate',
-  'waxed_copper_grate': 'Waxed_Copper_Grate',
-  'waxed_exposed_copper_grate': 'Waxed_Exposed_Copper_Grate',
-  'waxed_weathered_copper_grate': 'Waxed_Weathered_Copper_Grate',
-  'waxed_oxidized_copper_grate': 'Waxed_Oxidized_Copper_Grate',
+  'waxed_copper_grate': 'Copper_Grate',
+  'waxed_exposed_copper_grate': 'Exposed_Copper_Grate',
+  'waxed_weathered_copper_grate': 'Weathered_Copper_Grate',
+  'waxed_oxidized_copper_grate': 'Oxidized_Copper_Grate',
   'copper_bulb': 'Copper_Bulb',
   'exposed_copper_bulb': 'Exposed_Copper_Bulb',
   'weathered_copper_bulb': 'Weathered_Copper_Bulb',
   'oxidized_copper_bulb': 'Oxidized_Copper_Bulb',
-  'waxed_copper_bulb': 'Waxed_Copper_Bulb',
-  'waxed_exposed_copper_bulb': 'Waxed_Exposed_Copper_Bulb',
-  'waxed_weathered_copper_bulb': 'Waxed_Weathered_Copper_Bulb',
-  'waxed_oxidized_copper_bulb': 'Waxed_Oxidized_Copper_Bulb',
+  'waxed_copper_bulb': 'Copper_Bulb',
+  'waxed_exposed_copper_bulb': 'Exposed_Copper_Bulb',
+  'waxed_weathered_copper_bulb': 'Weathered_Copper_Bulb',
+  'waxed_oxidized_copper_bulb': 'Oxidized_Copper_Bulb',
   'copper_door': 'Copper_Door',
   'exposed_copper_door': 'Exposed_Copper_Door',
   'weathered_copper_door': 'Weathered_Copper_Door',
   'oxidized_copper_door': 'Oxidized_Copper_Door',
-  'waxed_copper_door': 'Waxed_Copper_Door',
-  'waxed_exposed_copper_door': 'Waxed_Exposed_Copper_Door',
-  'waxed_weathered_copper_door': 'Waxed_Weathered_Copper_Door',
-  'waxed_oxidized_copper_door': 'Waxed_Oxidized_Copper_Door',
+  'waxed_copper_door': 'Copper_Door',
+  'waxed_exposed_copper_door': 'Exposed_Copper_Door',
+  'waxed_weathered_copper_door': 'Weathered_Copper_Door',
+  'waxed_oxidized_copper_door': 'Oxidized_Copper_Door',
   'copper_trapdoor': 'Copper_Trapdoor',
   'exposed_copper_trapdoor': 'Exposed_Copper_Trapdoor',
   'weathered_copper_trapdoor': 'Weathered_Copper_Trapdoor',
   'oxidized_copper_trapdoor': 'Oxidized_Copper_Trapdoor',
-  'waxed_copper_trapdoor': 'Waxed_Copper_Trapdoor',
-  'waxed_exposed_copper_trapdoor': 'Waxed_Exposed_Copper_Trapdoor',
-  'waxed_weathered_copper_trapdoor': 'Waxed_Weathered_Copper_Trapdoor',
-  'waxed_oxidized_copper_trapdoor': 'Waxed_Oxidized_Copper_Trapdoor',
+  'waxed_copper_trapdoor': 'Copper_Trapdoor',
+  'waxed_exposed_copper_trapdoor': 'Exposed_Copper_Trapdoor',
+  'waxed_weathered_copper_trapdoor': 'Weathered_Copper_Trapdoor',
+  'waxed_oxidized_copper_trapdoor': 'Oxidized_Copper_Trapdoor',
   // トライアルチャンバー系
   'trial_spawner': 'Trial_Spawner',
   'vault': 'Vault',
@@ -299,14 +305,15 @@ const ITEM_NAME_MAP = {
   'tuff_brick_wall': 'Tuff_Brick_Wall',
   'chiseled_tuff': 'Chiseled_Tuff',
   'chiseled_tuff_bricks': 'Chiseled_Tuff_Bricks',
+  // Chiseled Copper（Waxed版はWikiに画像なし、非Waxed版で代用）
   'chiseled_copper': 'Chiseled_Copper',
   'exposed_chiseled_copper': 'Exposed_Chiseled_Copper',
   'weathered_chiseled_copper': 'Weathered_Chiseled_Copper',
   'oxidized_chiseled_copper': 'Oxidized_Chiseled_Copper',
-  'waxed_chiseled_copper': 'Waxed_Chiseled_Copper',
-  'waxed_exposed_chiseled_copper': 'Waxed_Exposed_Chiseled_Copper',
-  'waxed_weathered_chiseled_copper': 'Waxed_Weathered_Chiseled_Copper',
-  'waxed_oxidized_chiseled_copper': 'Waxed_Oxidized_Chiseled_Copper',
+  'waxed_chiseled_copper': 'Chiseled_Copper',
+  'waxed_exposed_chiseled_copper': 'Exposed_Chiseled_Copper',
+  'waxed_weathered_chiseled_copper': 'Weathered_Chiseled_Copper',
+  'waxed_oxidized_chiseled_copper': 'Oxidized_Chiseled_Copper',
 
   // === 植物・装飾ブロック（特殊名称） ===
   'grass': 'Short_Grass',  // 1.20.3以降 grass → short_grass に変更
@@ -384,38 +391,51 @@ const ITEM_NAME_MAP = {
   'emerald_block': 'Block_of_Emerald',
   'quartz_block': 'Block_of_Quartz',
 
+  // === 鉱石ブロック ===
+  'lapis_ore': 'Lapis_Lazuli_Ore',
+  'deepslate_lapis_ore': 'Deepslate_Lapis_Lazuli_Ore',
+
+  // === 農業・植物ブロック ===
+  'hay_block': 'Hay_Bale',
+  'sweet_berry_bush': 'Sweet_Berries',  // ブッシュはアイテム無し、ベリーで代用
+  'nether_portal': 'Obsidian',  // ポータルはアイテム無し、黒曜石で代用
+
+  // === ライトブロック ===
+  'light': 'Light_15',  // Light Block (レベル15)
+
   // === 銅ブロック各状態 ===
   'exposed_copper': 'Exposed_Copper',
   'weathered_copper': 'Weathered_Copper',
   'oxidized_copper': 'Oxidized_Copper',
-  'waxed_copper_block': 'Waxed_Block_of_Copper',
-  'waxed_exposed_copper': 'Waxed_Exposed_Copper',
-  'waxed_weathered_copper': 'Waxed_Weathered_Copper',
-  'waxed_oxidized_copper': 'Waxed_Oxidized_Copper',
+  // Waxed銅ブロック（Wikiに画像なし、非Waxed版で代用）
+  'waxed_copper_block': 'Block_of_Copper',
+  'waxed_exposed_copper': 'Exposed_Copper',
+  'waxed_weathered_copper': 'Weathered_Copper',
+  'waxed_oxidized_copper': 'Oxidized_Copper',
   'cut_copper': 'Cut_Copper',
   'exposed_cut_copper': 'Exposed_Cut_Copper',
   'weathered_cut_copper': 'Weathered_Cut_Copper',
   'oxidized_cut_copper': 'Oxidized_Cut_Copper',
-  'waxed_cut_copper': 'Waxed_Cut_Copper',
-  'waxed_exposed_cut_copper': 'Waxed_Exposed_Cut_Copper',
-  'waxed_weathered_cut_copper': 'Waxed_Weathered_Cut_Copper',
-  'waxed_oxidized_cut_copper': 'Waxed_Oxidized_Cut_Copper',
+  'waxed_cut_copper': 'Cut_Copper',
+  'waxed_exposed_cut_copper': 'Exposed_Cut_Copper',
+  'waxed_weathered_cut_copper': 'Weathered_Cut_Copper',
+  'waxed_oxidized_cut_copper': 'Oxidized_Cut_Copper',
   'cut_copper_stairs': 'Cut_Copper_Stairs',
   'exposed_cut_copper_stairs': 'Exposed_Cut_Copper_Stairs',
   'weathered_cut_copper_stairs': 'Weathered_Cut_Copper_Stairs',
   'oxidized_cut_copper_stairs': 'Oxidized_Cut_Copper_Stairs',
-  'waxed_cut_copper_stairs': 'Waxed_Cut_Copper_Stairs',
-  'waxed_exposed_cut_copper_stairs': 'Waxed_Exposed_Cut_Copper_Stairs',
-  'waxed_weathered_cut_copper_stairs': 'Waxed_Weathered_Cut_Copper_Stairs',
-  'waxed_oxidized_cut_copper_stairs': 'Waxed_Oxidized_Cut_Copper_Stairs',
+  'waxed_cut_copper_stairs': 'Cut_Copper_Stairs',
+  'waxed_exposed_cut_copper_stairs': 'Exposed_Cut_Copper_Stairs',
+  'waxed_weathered_cut_copper_stairs': 'Weathered_Cut_Copper_Stairs',
+  'waxed_oxidized_cut_copper_stairs': 'Oxidized_Cut_Copper_Stairs',
   'cut_copper_slab': 'Cut_Copper_Slab',
   'exposed_cut_copper_slab': 'Exposed_Cut_Copper_Slab',
   'weathered_cut_copper_slab': 'Weathered_Cut_Copper_Slab',
   'oxidized_cut_copper_slab': 'Oxidized_Cut_Copper_Slab',
-  'waxed_cut_copper_slab': 'Waxed_Cut_Copper_Slab',
-  'waxed_exposed_cut_copper_slab': 'Waxed_Exposed_Cut_Copper_Slab',
-  'waxed_weathered_cut_copper_slab': 'Waxed_Weathered_Cut_Copper_Slab',
-  'waxed_oxidized_cut_copper_slab': 'Waxed_Oxidized_Cut_Copper_Slab',
+  'waxed_cut_copper_slab': 'Cut_Copper_Slab',
+  'waxed_exposed_cut_copper_slab': 'Exposed_Cut_Copper_Slab',
+  'waxed_weathered_cut_copper_slab': 'Weathered_Cut_Copper_Slab',
+  'waxed_oxidized_cut_copper_slab': 'Oxidized_Cut_Copper_Slab',
 
   // === 特殊ブロック ===
   'spawner': 'Monster_Spawner',
