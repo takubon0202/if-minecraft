@@ -1842,8 +1842,6 @@ function updateVisibility(container) {
 
   // パターンはブロック配置系コマンドでのみ表示
   const showPattern = ['set', 'sphere', 'hsphere', 'cylinder', 'hcyl', 'pyramid', 'walls', 'outline', 'brush-sphere', 'brush-cylinder'].includes(type);
-  const patternGroup = $('#we-pattern-group', container);
-  if (patternGroup) patternGroup.style.display = showPattern ? 'block' : 'none';
 
   // マスクは編集系コマンドで表示
   const maskSupportedCmds = [
@@ -1851,8 +1849,24 @@ function updateVisibility(container) {
     'smooth', 'deform', 'hollow', 'regen', 'overlay', 'naturalize'
   ];
   const showMask = maskSupportedCmds.includes(type);
+
+  // 高度なオプションセクション（ステップ3）は、パターンまたはマスクが使用可能な場合に表示
+  const patternGroup = $('#we-pattern-group', container);
+  if (patternGroup) {
+    patternGroup.style.display = (showPattern || showMask) ? 'block' : 'none';
+  }
+
+  // マスクグループはマスク対応コマンドでのみ表示
   const maskGroup = $('#we-mask-group', container);
-  if (maskGroup) maskGroup.style.display = showMask ? 'block' : 'none';
+  if (maskGroup) {
+    maskGroup.style.display = showMask ? 'block' : 'none';
+  }
+
+  // パターンチェックボックスオプションの表示制御
+  const patternCheckbox = container.querySelector('.we-checkbox-option:has(#we-use-pattern)');
+  if (patternCheckbox) {
+    patternCheckbox.style.display = showPattern ? 'flex' : 'none';
+  }
 }
 
 /**

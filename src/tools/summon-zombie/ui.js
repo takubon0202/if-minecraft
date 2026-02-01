@@ -1867,54 +1867,49 @@ style.textContent = `
 
   /* ===== 新UI要素（summonツール統一デザイン） ===== */
 
-  /* セクション構造 */
-  .summon-zombie-tool .form-section {
-    margin-bottom: var(--mc-space-lg);
-    padding: var(--mc-space-lg);
-    background: linear-gradient(180deg, rgba(60,60,60,0.8) 0%, rgba(40,40,40,0.9) 100%);
-    border: 2px solid #555555;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  /* セクション構造（summonツール統一） */
+  .summon-zombie-tool .form-section.mc-section {
+    background: rgba(255,255,255,0.05);
+    border: 2px solid rgba(255,255,255,0.1);
+    border-radius: 4px;
+    padding: 20px;
+    margin-bottom: 20px;
   }
 
   .summon-zombie-tool .section-header {
     display: flex;
     align-items: center;
-    gap: var(--mc-space-md);
-    margin-bottom: var(--mc-space-lg);
-    padding-bottom: var(--mc-space-sm);
-    border-bottom: 1px solid rgba(255,255,255,0.1);
+    gap: 12px;
+    margin-bottom: 16px;
   }
 
   .summon-zombie-tool .step-number {
-    display: flex;
-    align-items: center;
-    justify-content: center;
     width: 32px;
     height: 32px;
     background: linear-gradient(180deg, #5cb746 0%, #3a8128 100%);
     color: white;
-    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     font-weight: bold;
     font-size: 1rem;
-    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    border: 2px solid #2d5016;
   }
 
   .summon-zombie-tool .section-header h3 {
     margin: 0;
-    font-size: 1.1rem;
     color: #ffffff;
-    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+    font-size: 1.1rem;
+    flex: 1;
   }
 
   .summon-zombie-tool .optional-badge {
     font-size: 0.7rem;
     padding: 2px 8px;
-    background: rgba(255,255,255,0.15);
-    border-radius: 4px;
-    color: #aaaaaa;
-    margin-left: 8px;
+    border-radius: 3px;
+    font-weight: normal;
+    background: rgba(77, 236, 242, 0.2);
+    color: #4decf2;
   }
 
   /* プリセットカード */
@@ -2386,24 +2381,43 @@ style.textContent = `
   }
 
   @media (max-width: 600px) {
-    .zombie-type-selector {
+    .summon-zombie-tool .zombie-type-selector {
       justify-content: center;
     }
 
-    .equipment-grid {
+    .summon-zombie-tool .equipment-grid {
       grid-template-columns: 1fr;
     }
 
-    .behavior-grid {
+    .summon-zombie-tool .behavior-grid {
       grid-template-columns: 1fr;
     }
 
-    .preset-cards {
+    .summon-zombie-tool .preset-cards {
       grid-template-columns: repeat(2, 1fr);
     }
 
-    .color-grid {
+    .summon-zombie-tool .color-grid {
       grid-template-columns: repeat(4, 1fr);
+    }
+
+    .summon-zombie-tool .name-style-options {
+      flex-direction: column;
+      gap: var(--mc-space-md);
+    }
+
+    .summon-zombie-tool .text-style-btns {
+      width: 100%;
+    }
+
+    .summon-zombie-tool .text-style-btns-row {
+      justify-content: flex-start;
+    }
+
+    .summon-zombie-tool .header-actions {
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 8px;
     }
   }
 
@@ -2468,6 +2482,26 @@ style.textContent = `
 
     .summon-zombie-tool .mc-btn:hover {
       background: linear-gradient(180deg, #6dc756 0%, #4a9138 100%);
+    }
+
+    /* リッチテキストエディターのダークモード */
+    .summon-zombie-tool .name-style-options {
+      background: rgba(0,0,0,0.3);
+      border-color: rgba(255,255,255,0.05);
+    }
+
+    .summon-zombie-tool .color-selector label,
+    .summon-zombie-tool .text-style-btns-label {
+      color: #c0c0c0;
+    }
+
+    .summon-zombie-tool .name-preview {
+      background: linear-gradient(180deg, #1a1a1a 0%, #0d0d0d 100%);
+      border-color: #333;
+    }
+
+    .summon-zombie-tool .preview-label {
+      color: #a0a0a0;
     }
   }
 `;
