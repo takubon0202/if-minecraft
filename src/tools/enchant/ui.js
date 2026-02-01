@@ -296,16 +296,53 @@ const ITEM_CATEGORIES = {
   },
 };
 
-// 属性
+// 属性（1.21+対応 - slot必須）
 const ATTRIBUTES = [
-  { id: 'generic.max_health', name: '最大体力', iconItem: 'golden_apple', default: 20 },
-  { id: 'generic.movement_speed', name: '移動速度', iconItem: 'sugar', default: 0.1 },
-  { id: 'generic.attack_damage', name: '攻撃力', iconItem: 'netherite_sword', default: 1 },
-  { id: 'generic.attack_speed', name: '攻撃速度', iconItem: 'clock', default: 4 },
-  { id: 'generic.armor', name: '防御力', iconItem: 'shield', default: 0 },
-  { id: 'generic.armor_toughness', name: '防具強度', iconItem: 'diamond', default: 0 },
-  { id: 'generic.knockback_resistance', name: 'ノックバック耐性', iconItem: 'netherite_boots', default: 0 },
-  { id: 'generic.luck', name: '幸運', iconItem: 'rabbit_foot', default: 0 },
+  { id: 'generic.max_health', name: '最大体力', iconItem: 'golden_apple', default: 20, defaultSlot: 'any', step: 1 },
+  { id: 'generic.movement_speed', name: '移動速度', iconItem: 'sugar', default: 0.1, defaultSlot: 'feet', step: 0.01 },
+  { id: 'generic.attack_damage', name: '攻撃力', iconItem: 'netherite_sword', default: 10, defaultSlot: 'mainhand', step: 1 },
+  { id: 'generic.attack_speed', name: '攻撃速度', iconItem: 'clock', default: 4, defaultSlot: 'mainhand', step: 0.1 },
+  { id: 'generic.armor', name: '防御力', iconItem: 'shield', default: 10, defaultSlot: 'chest', step: 1 },
+  { id: 'generic.armor_toughness', name: '防具強度', iconItem: 'diamond', default: 5, defaultSlot: 'chest', step: 1 },
+  { id: 'generic.knockback_resistance', name: 'ノックバック耐性', iconItem: 'netherite_boots', default: 1, defaultSlot: 'chest', step: 0.1 },
+  { id: 'generic.luck', name: '幸運', iconItem: 'rabbit_foot', default: 5, defaultSlot: 'mainhand', step: 1 },
+  { id: 'generic.attack_knockback', name: '攻撃ノックバック', iconItem: 'slime_ball', default: 5, defaultSlot: 'mainhand', step: 0.5 },
+  { id: 'generic.flying_speed', name: '飛行速度', iconItem: 'elytra', default: 0.4, defaultSlot: 'chest', step: 0.01 },
+  { id: 'generic.follow_range', name: '追跡距離', iconItem: 'ender_eye', default: 32, defaultSlot: 'any', step: 1 },
+  { id: 'generic.block_interaction_range', name: 'ブロック操作範囲', iconItem: 'stick', default: 6, defaultSlot: 'mainhand', step: 0.5 },
+  { id: 'generic.entity_interaction_range', name: 'エンティティ操作範囲', iconItem: 'lead', default: 6, defaultSlot: 'mainhand', step: 0.5 },
+  { id: 'generic.block_break_speed', name: 'ブロック破壊速度', iconItem: 'netherite_pickaxe', default: 2, defaultSlot: 'mainhand', step: 0.1 },
+  { id: 'generic.gravity', name: '重力', iconItem: 'anvil', default: 0.08, defaultSlot: 'any', step: 0.01 },
+  { id: 'generic.safe_fall_distance', name: '安全落下距離', iconItem: 'feather', default: 10, defaultSlot: 'feet', step: 1 },
+  { id: 'generic.fall_damage_multiplier', name: '落下ダメージ倍率', iconItem: 'leather_boots', default: 0, defaultSlot: 'feet', step: 0.1 },
+  { id: 'generic.scale', name: 'スケール', iconItem: 'potion', default: 1, defaultSlot: 'any', step: 0.1 },
+  { id: 'generic.step_height', name: 'ステップ高さ', iconItem: 'oak_stairs', default: 1, defaultSlot: 'feet', step: 0.5 },
+  { id: 'generic.jump_strength', name: 'ジャンプ力', iconItem: 'rabbit_hide', default: 0.5, defaultSlot: 'feet', step: 0.1 },
+  { id: 'generic.burning_time', name: '燃焼時間倍率', iconItem: 'blaze_powder', default: 0, defaultSlot: 'any', step: 0.1 },
+  { id: 'generic.explosion_knockback_resistance', name: '爆発ノックバック耐性', iconItem: 'tnt', default: 1, defaultSlot: 'chest', step: 0.1 },
+  { id: 'generic.oxygen_bonus', name: '酸素ボーナス', iconItem: 'turtle_helmet', default: 10, defaultSlot: 'head', step: 1 },
+  { id: 'generic.water_movement_efficiency', name: '水中移動効率', iconItem: 'heart_of_the_sea', default: 0.5, defaultSlot: 'feet', step: 0.1 },
+  { id: 'generic.submerged_mining_speed', name: '水中採掘速度', iconItem: 'prismarine_shard', default: 5, defaultSlot: 'head', step: 0.1 },
+  { id: 'generic.sneaking_speed', name: 'スニーク速度', iconItem: 'leather_leggings', default: 0.3, defaultSlot: 'legs', step: 0.01 },
+];
+
+// スロット選択肢（1.21+）
+const ATTRIBUTE_SLOTS = [
+  { id: 'any', name: 'すべて' },
+  { id: 'mainhand', name: 'メインハンド' },
+  { id: 'offhand', name: 'オフハンド' },
+  { id: 'head', name: '頭' },
+  { id: 'chest', name: '胴体' },
+  { id: 'legs', name: '脚' },
+  { id: 'feet', name: '足' },
+  { id: 'body', name: 'ボディ(動物)' },
+];
+
+// 演算方式（1.21+）
+const ATTRIBUTE_OPERATIONS = [
+  { id: 'add_value', name: '加算', desc: '+X' },
+  { id: 'add_multiplied_base', name: '基本乗算', desc: '+X%（基本値）' },
+  { id: 'add_multiplied_total', name: '最終乗算', desc: '+X%（最終値）' },
 ];
 
 // Minecraft 標準16色（JSON Text Component用）
@@ -652,22 +689,81 @@ export function render(manifest) {
             </label>
           </div>
           <div class="attributes-section" id="attributes-section" style="display: none;">
+            <div class="attr-grid-header">
+              <span class="attr-col-icon"></span>
+              <span class="attr-col-name">属性</span>
+              <span class="attr-col-check">有効</span>
+              <span class="attr-col-value">値</span>
+              <span class="attr-col-slot">スロット</span>
+              <span class="attr-col-op">演算</span>
+            </div>
             ${ATTRIBUTES.map(attr => `
-              <div class="attribute-row">
-                <img src="${getInviconUrl(attr.iconItem)}" class="attr-icon mc-pixelated" width="16" height="16" alt="">
+              <div class="attribute-row" data-attr="${attr.id}">
+                <img src="${getInviconUrl(attr.iconItem)}" class="attr-icon mc-pixelated" width="20" height="20" alt="">
                 <span class="attr-name">${attr.name}</span>
                 <input type="checkbox" class="attr-check" data-attr="${attr.id}">
                 <input type="number" class="attr-value mc-input" data-attr="${attr.id}"
-                       value="${attr.default}" step="0.1" disabled>
+                       value="${attr.default}" step="${attr.step || 0.1}" disabled>
+                <select class="attr-slot mc-select" data-attr="${attr.id}" disabled>
+                  ${ATTRIBUTE_SLOTS.map(slot => `
+                    <option value="${slot.id}" ${slot.id === attr.defaultSlot ? 'selected' : ''}>${slot.name}</option>
+                  `).join('')}
+                </select>
+                <select class="attr-operation mc-select" data-attr="${attr.id}" disabled>
+                  ${ATTRIBUTE_OPERATIONS.map(op => `
+                    <option value="${op.id}" title="${op.desc}">${op.name}</option>
+                  `).join('')}
+                </select>
               </div>
             `).join('')}
           </div>
         </section>
 
-        <!-- ステップ5: オプション -->
+        <!-- ステップ5: 耐久力設定 -->
         <section class="form-section mc-section">
           <div class="section-header">
             <span class="step-number">5</span>
+            <h3>耐久力 <span class="optional-badge">任意</span></h3>
+          </div>
+          <div class="behavior-grid">
+            <label class="behavior-option">
+              <input type="checkbox" id="use-durability">
+              <div class="option-content">
+                <img src="${getInviconUrl('anvil')}" alt="" class="option-icon mc-pixelated">
+                <div class="option-text">
+                  <span class="option-name">耐久力をカスタム</span>
+                  <span class="option-desc">現在/最大耐久力を設定</span>
+                </div>
+              </div>
+            </label>
+          </div>
+          <div class="durability-section" id="durability-section" style="display: none;">
+            <div class="durability-row">
+              <div class="durability-item">
+                <label>現在の耐久消費 (damage)</label>
+                <input type="number" id="durability-damage" class="mc-input" value="0" min="0" step="1">
+                <span class="durability-hint">0 = フル耐久</span>
+              </div>
+              <div class="durability-item">
+                <label>最大耐久値 (max_damage)</label>
+                <input type="number" id="durability-max" class="mc-input" value="" min="1" step="1" placeholder="デフォルト">
+                <span class="durability-hint">空欄 = アイテムのデフォルト値</span>
+              </div>
+            </div>
+            <div class="durability-presets">
+              <span class="preset-label">プリセット:</span>
+              <button type="button" class="durability-preset-btn" data-damage="0" data-max="">フル耐久</button>
+              <button type="button" class="durability-preset-btn" data-damage="100" data-max="">少し消耗</button>
+              <button type="button" class="durability-preset-btn" data-damage="0" data-max="10000">超高耐久</button>
+              <button type="button" class="durability-preset-btn" data-damage="0" data-max="1">1回で壊れる</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ステップ6: オプション -->
+        <section class="form-section mc-section">
+          <div class="section-header">
+            <span class="step-number">6</span>
             <h3>オプション</h3>
           </div>
 
@@ -715,20 +811,20 @@ export function render(manifest) {
           </div>
         </section>
 
-        <!-- ステップ6: カスタム名 -->
+        <!-- ステップ7: カスタム名 -->
         <section class="form-section mc-section">
           <div class="section-header">
-            <span class="step-number">6</span>
+            <span class="step-number">7</span>
             <h3>カスタム名 <span class="optional-badge">任意</span></h3>
           </div>
           <p class="section-hint">1文字ごとに色や書式を設定可能</p>
           ${enchantCustomNameEditor.render()}
         </section>
 
-        <!-- ステップ7: その他プリセット -->
+        <!-- ステップ8: その他プリセット -->
         <section class="form-section mc-section">
           <div class="section-header">
-            <span class="step-number">7</span>
+            <span class="step-number">8</span>
             <h3>その他のプリセット <span class="optional-badge">任意</span></h3>
           </div>
           <div class="preset-categories">
@@ -943,13 +1039,42 @@ export function init(container) {
   delegate(container, 'change', '.attr-check', (e, target) => {
     const attrId = target.dataset.attr;
     const valueInput = $(`.attr-value[data-attr="${attrId}"]`, container);
+    const slotSelect = $(`.attr-slot[data-attr="${attrId}"]`, container);
+    const opSelect = $(`.attr-operation[data-attr="${attrId}"]`, container);
     if (valueInput) valueInput.disabled = !target.checked;
+    if (slotSelect) slotSelect.disabled = !target.checked;
+    if (opSelect) opSelect.disabled = !target.checked;
     updateCommand(container);
   });
 
   delegate(container, 'input', '.attr-value', debounce(() => {
     updateCommand(container);
   }, 100));
+
+  delegate(container, 'change', '.attr-slot', () => updateCommand(container));
+  delegate(container, 'change', '.attr-operation', () => updateCommand(container));
+
+  // 耐久力設定トグル
+  $('#use-durability', container)?.addEventListener('change', (e) => {
+    const section = $('#durability-section', container);
+    if (section) section.style.display = e.target.checked ? 'block' : 'none';
+    updateCommand(container);
+  });
+
+  // 耐久力入力
+  delegate(container, 'input', '#durability-damage', debounce(() => updateCommand(container), 100));
+  delegate(container, 'input', '#durability-max', debounce(() => updateCommand(container), 100));
+
+  // 耐久力プリセット
+  delegate(container, 'click', '.durability-preset-btn', (e, target) => {
+    const damage = target.dataset.damage;
+    const max = target.dataset.max;
+    const damageInput = $('#durability-damage', container);
+    const maxInput = $('#durability-max', container);
+    if (damageInput) damageInput.value = damage;
+    if (maxInput) maxInput.value = max;
+    updateCommand(container);
+  });
 
   // プリセット（ボタン）
   delegate(container, 'click', '.preset-btn', (e, target) => {
@@ -1319,6 +1444,28 @@ function applyPreset(presetId, container) {
   if (presetId === 'clear') {
     selectedEnchants = [];
     $$('.enchant-item.selected', container).forEach(el => el.classList.remove('selected'));
+    // 属性もリセット
+    $$('.attr-check', container).forEach(el => {
+      el.checked = false;
+      const attrId = el.dataset.attr;
+      const valueInput = $(`.attr-value[data-attr="${attrId}"]`, container);
+      const slotSelect = $(`.attr-slot[data-attr="${attrId}"]`, container);
+      const opSelect = $(`.attr-operation[data-attr="${attrId}"]`, container);
+      if (valueInput) valueInput.disabled = true;
+      if (slotSelect) slotSelect.disabled = true;
+      if (opSelect) opSelect.disabled = true;
+    });
+    // 耐久力もリセット
+    const durabilityCheck = $('#use-durability', container);
+    if (durabilityCheck) {
+      durabilityCheck.checked = false;
+      const durabilitySection = $('#durability-section', container);
+      if (durabilitySection) durabilitySection.style.display = 'none';
+    }
+    const durabilityDamage = $('#durability-damage', container);
+    const durabilityMax = $('#durability-max', container);
+    if (durabilityDamage) durabilityDamage.value = '0';
+    if (durabilityMax) durabilityMax.value = '';
   } else {
     const preset = PRESETS.find(p => p.id === presetId);
     if (preset) {
@@ -1460,10 +1607,27 @@ function generateComponentCommand(item, count, customName, useSNBT, unbreakable,
     $$('.attr-check:checked', container).forEach(check => {
       const attrId = check.dataset.attr;
       const value = parseFloat($(`.attr-value[data-attr="${attrId}"]`, container)?.value) || 0;
-      attrs.push(`{type:"${attrId}",amount:${value},operation:"add_value",id:"${attrId.replace('.', '_')}"}`);
+      const slot = $(`.attr-slot[data-attr="${attrId}"]`, container)?.value || 'mainhand';
+      const operation = $(`.attr-operation[data-attr="${attrId}"]`, container)?.value || 'add_value';
+      // 1.21+ attribute_modifiers 正式構文: type, amount, operation, slot, id
+      const attrIdSafe = attrId.replace(/\./g, '_');
+      attrs.push(`{type:"minecraft:${attrId}",amount:${value},operation:"${operation}",slot:"${slot}",id:"minecraft:${attrIdSafe}"}`);
     });
     if (attrs.length > 0) {
       components.push(`attribute_modifiers={modifiers:[${attrs.join(',')}]}`);
+    }
+  }
+
+  // 耐久力設定（1.20.5+）
+  const useDurability = $('#use-durability', container)?.checked;
+  if (useDurability) {
+    const damage = parseInt($('#durability-damage', container)?.value) || 0;
+    const maxDamage = $('#durability-max', container)?.value;
+    if (damage > 0) {
+      components.push(`damage=${damage}`);
+    }
+    if (maxDamage && parseInt(maxDamage) > 0) {
+      components.push(`max_damage=${parseInt(maxDamage)}`);
     }
   }
 
@@ -2246,14 +2410,34 @@ style.textContent = `
     background: rgba(30,30,30,0.8);
     border: 2px solid #555555;
     border-radius: 4px;
+    overflow-x: auto;
+  }
+
+  .enchant-tool .attr-grid-header {
+    display: grid;
+    grid-template-columns: 24px 1fr 50px 90px 120px 100px;
+    gap: var(--mc-space-sm);
+    padding: 8px 0;
+    border-bottom: 2px solid #555555;
+    font-size: 0.7rem;
+    color: #888888;
+    font-weight: bold;
+    min-width: 550px;
   }
 
   .enchant-tool .attribute-row {
-    display: flex;
+    display: grid;
+    grid-template-columns: 24px 1fr 50px 90px 120px 100px;
     align-items: center;
     gap: var(--mc-space-sm);
     padding: 6px 0;
     border-bottom: 1px solid #444444;
+    min-width: 550px;
+    transition: background 0.15s;
+  }
+
+  .enchant-tool .attribute-row:hover {
+    background: rgba(107, 76, 232, 0.1);
   }
 
   .enchant-tool .attribute-row:last-child {
@@ -2267,22 +2451,117 @@ style.textContent = `
   }
 
   .enchant-tool .attribute-row .attr-name {
-    flex: 1;
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     color: #ffffff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .enchant-tool .attribute-row .attr-check {
     width: 18px;
     height: 18px;
     accent-color: #6b4ce8;
+    justify-self: center;
   }
 
   .enchant-tool .attribute-row .attr-value {
-    width: 80px;
+    width: 100%;
     background: #2a2a2a;
     border: 2px solid #555555;
     color: #ffffff;
+    padding: 4px 6px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+  }
+
+  .enchant-tool .attribute-row .attr-slot,
+  .enchant-tool .attribute-row .attr-operation {
+    width: 100%;
+    background: #2a2a2a;
+    border: 2px solid #555555;
+    color: #ffffff;
+    padding: 4px 4px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    cursor: pointer;
+  }
+
+  .enchant-tool .attribute-row .attr-slot:disabled,
+  .enchant-tool .attribute-row .attr-operation:disabled,
+  .enchant-tool .attribute-row .attr-value:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  /* 耐久力セクション */
+  .enchant-tool .durability-section {
+    margin-top: var(--mc-space-md);
+    padding: var(--mc-space-md);
+    background: rgba(30,30,30,0.8);
+    border: 2px solid #555555;
+    border-radius: 4px;
+  }
+
+  .enchant-tool .durability-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--mc-space-lg);
+    margin-bottom: var(--mc-space-md);
+  }
+
+  .enchant-tool .durability-item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--mc-space-xs);
+  }
+
+  .enchant-tool .durability-item label {
+    font-size: 0.85rem;
+    color: #cccccc;
+    font-weight: bold;
+  }
+
+  .enchant-tool .durability-item input {
+    background: #1a1a1a;
+    border: 2px solid #555555;
+    color: #ffffff;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 0.9rem;
+  }
+
+  .enchant-tool .durability-hint {
+    font-size: 0.7rem;
+    color: #888888;
+  }
+
+  .enchant-tool .durability-presets {
+    display: flex;
+    align-items: center;
+    gap: var(--mc-space-sm);
+    flex-wrap: wrap;
+  }
+
+  .enchant-tool .durability-presets .preset-label {
+    font-size: 0.8rem;
+    color: #888888;
+  }
+
+  .enchant-tool .durability-preset-btn {
+    background: linear-gradient(180deg, #4a4a4a 0%, #3a3a3a 100%);
+    border: 2px solid #555555;
+    color: #ffffff;
+    padding: 4px 12px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .enchant-tool .durability-preset-btn:hover {
+    background: linear-gradient(180deg, #6b4ce8 0%, #4a32b3 100%);
+    border-color: #8b6cf8;
   }
 
   /* プリセット */

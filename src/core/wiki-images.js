@@ -128,6 +128,10 @@ const ITEM_NAME_MAP = {
   // === ウサギ関連 ===
   'rabbit_foot': 'Rabbit%27s_Foot',  // アポストロフィ付き
 
+  // === その他アイテム（属性アイコン用） ===
+  'slime_ball': 'Slimeball',  // アンダースコアなし
+  'ender_eye': 'Eye_of_Ender',  // 名前が異なる
+
   // === 食料 ===
   'cooked_beef': 'Steak',
   'cooked_porkchop': 'Cooked_Porkchop',
