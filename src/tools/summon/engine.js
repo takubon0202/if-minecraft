@@ -47,12 +47,12 @@ export function generateSummonCommand(state) {
   if (invulnerable) nbtParts.push('Invulnerable:1b');
   if (persistenceRequired) nbtParts.push('PersistenceRequired:1b');
 
-  // エフェクト（1.21+ ActiveEffects PascalCase）
+  // エフェクト（1.20.5+ active_effects snake_case形式）
   if (effects.length > 0) {
     const effectsNBT = effects.map(e => {
       return `{id:"minecraft:${e.id}",amplifier:${e.amplifier}b,duration:${e.duration}}`;
     }).join(',');
-    nbtParts.push(`ActiveEffects:[${effectsNBT}]`);
+    nbtParts.push(`active_effects:[${effectsNBT}]`);
   }
 
   // Raw NBT
