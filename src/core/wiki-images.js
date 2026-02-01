@@ -212,8 +212,26 @@ const ITEM_NAME_MAP = {
   'waxed_exposed_copper_chest': 'Exposed_Copper_Chest',
   'waxed_weathered_copper_chest': 'Weathered_Copper_Chest',
   'waxed_oxidized_copper_chest': 'Oxidized_Copper_Chest',
-  // 棚
-  'shelf': 'Shelf',
+  // 棚（木材別）
+  'shelf': 'Oak_Shelf',  // 汎用はOakで代用
+  'oak_shelf': 'Oak_Shelf',
+  'spruce_shelf': 'Spruce_Shelf',
+  'birch_shelf': 'Birch_Shelf',
+  'jungle_shelf': 'Jungle_Shelf',
+  'acacia_shelf': 'Acacia_Shelf',
+  'dark_oak_shelf': 'Dark_Oak_Shelf',
+  'mangrove_shelf': 'Mangrove_Shelf',
+  'cherry_shelf': 'Cherry_Shelf',
+  'bamboo_shelf': 'Bamboo_Shelf',
+  'crimson_shelf': 'Crimson_Shelf',
+  'warped_shelf': 'Warped_Shelf',
+  'pale_oak_shelf': 'Pale_Oak_Shelf',
+
+  // 乾燥したガストブロック
+  'dried_ghast_block': 'Dried_Ghast',
+
+  // カエルライト（汎用はOchreで代用）
+  'froglight': 'Ochre_Froglight',
 
   // === 1.21.5+ ペールガーデン・銅時代ブロック ===
   'pale_oak_log': 'Pale_Oak_Log',
