@@ -5,6 +5,7 @@
 
 /**
  * /summon コマンドを生成
+ * 1.21+ NBT: エンティティタグはPascalCase, アイテムデータはsnake_case
  * @param {Object} state - フォーム状態
  * @returns {string} - 生成されたコマンド
  */
@@ -24,27 +25,34 @@ export function generateSummonCommand(state) {
   // エンティティID
   const entityId = entity.includes(':') ? entity : `minecraft:${entity}`;
 
-  // NBTタグを構築（1.21.5+ スネークケース形式）
+  // NBTタグを構築（1.21+ エンティティタグはPascalCase）
   const nbtParts = [];
 
-  // カスタム名
+  // カスタム名（JSON text componentを直接使用可能にする）
   if (customName) {
-    const escapedName = escapeJsonString(customName);
-    nbtParts.push(`custom_name:'{"text":"${escapedName}"}'`);
+    // JSONかどうかを判定（{で始まる場合はJSON text component）
+    if (customName.trim().startsWith('{')) {
+      // JSON text componentとしてそのまま使用
+      nbtParts.push(`CustomName:'${customName}'`);
+    } else {
+      // 単純なテキストの場合はJSON形式に変換
+      const escapedName = escapeJsonString(customName);
+      nbtParts.push(`CustomName:'{"text":"${escapedName}"}'`);
+    }
   }
 
-  // オプション（1.21.5+ はスネークケース）
-  if (noAI) nbtParts.push('no_ai:true');
-  if (silent) nbtParts.push('silent:true');
-  if (invulnerable) nbtParts.push('invulnerable:true');
-  if (persistenceRequired) nbtParts.push('persistence_required:true');
+  // オプション（1.21+ エンティティタグはPascalCase）
+  if (noAI) nbtParts.push('NoAI:1b');
+  if (silent) nbtParts.push('Silent:1b');
+  if (invulnerable) nbtParts.push('Invulnerable:1b');
+  if (persistenceRequired) nbtParts.push('PersistenceRequired:1b');
 
-  // エフェクト
+  // エフェクト（1.21+ ActiveEffects PascalCase）
   if (effects.length > 0) {
     const effectsNBT = effects.map(e => {
-      return `{id:"minecraft:${e.id}",amplifier:${e.amplifier},duration:${e.duration}}`;
+      return `{id:"minecraft:${e.id}",amplifier:${e.amplifier}b,duration:${e.duration}}`;
     }).join(',');
-    nbtParts.push(`active_effects:[${effectsNBT}]`);
+    nbtParts.push(`ActiveEffects:[${effectsNBT}]`);
   }
 
   // Raw NBT
