@@ -385,7 +385,7 @@ let currentEditSlot = null;
 export function render(manifest) {
   return `
     <div class="tool-panel summon-zombie-tool mc-themed" id="summon-zombie-panel">
-      <!-- ヘッダー -->
+      <!-- ヘッダー（summonツール統一デザイン） -->
       <div class="tool-header mc-header-banner">
         <div class="header-content">
           <img src="${getInviconUrl(manifest.iconItem || 'zombie_head')}" alt="" class="header-icon mc-pixelated">
@@ -394,8 +394,10 @@ export function render(manifest) {
             <p class="header-subtitle">装備・属性をカスタマイズしたゾンビを召喚</p>
           </div>
         </div>
-        <span class="version-badge" id="zombie-version-badge">1.21+</span>
-        <button type="button" class="reset-btn" id="summon-zombie-reset-btn" title="設定をリセット">リセット</button>
+        <div class="header-actions">
+          <span class="version-badge" id="zombie-version-badge">1.21+</span>
+          <button type="button" class="reset-btn" id="summon-zombie-reset-btn" title="設定をリセット">リセット</button>
+        </div>
       </div>
 
       <form class="tool-form mc-form" id="summon-zombie-form">
@@ -1370,12 +1372,14 @@ style.textContent = `
   }
 
   .summon-zombie-tool .version-badge {
-    background: var(--mc-color-grass-main);
-    color: white;
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-size: 0.7rem;
-    margin-left: auto;
+    background: linear-gradient(180deg, #f2c13d 0%, #d4a12a 100%);
+    color: #1a1a2e;
+    padding: 6px 12px;
+    font-weight: bold;
+    font-size: 0.8rem;
+    border: 2px solid #8b6914;
+    position: relative;
+    z-index: 1;
   }
 
   /* フォームラベル */
@@ -2264,40 +2268,80 @@ style.textContent = `
     100% { content: '▒░▓▒░▓'; }
   }
 
-  /* ヘッダー改善 */
-  .summon-zombie-tool .tool-header {
+  /* ヘッダー（summonツール統一 - mc-header-banner） */
+  .summon-zombie-tool .mc-header-banner {
+    background: linear-gradient(90deg, #2d5016 0%, #3a6b1e 50%, #2d5016 100%);
+    padding: 20px 24px;
+    margin: -16px -16px 24px -16px;
     display: flex;
     align-items: center;
-    gap: var(--mc-space-md);
-    padding: var(--mc-space-lg);
-    background: linear-gradient(180deg, #5cb746 0%, #3a8128 100%);
-    border-radius: 8px 8px 0 0;
-    margin: calc(-1 * var(--mc-space-lg));
-    margin-bottom: var(--mc-space-lg);
+    justify-content: space-between;
+    border-bottom: 4px solid #1a3009;
+    position: relative;
+  }
+
+  .summon-zombie-tool .mc-header-banner::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url("data:image/svg+xml,%3Csvg width='16' height='16' viewBox='0 0 16 16' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='16' height='16' fill='%23000' opacity='0.1'/%3E%3C/svg%3E");
+    pointer-events: none;
   }
 
   .summon-zombie-tool .header-content {
     display: flex;
     align-items: center;
-    gap: var(--mc-space-md);
+    gap: 16px;
+    position: relative;
+    z-index: 1;
   }
 
   .summon-zombie-tool .header-icon {
     width: 48px;
     height: 48px;
+    filter: drop-shadow(2px 2px 0 rgba(0,0,0,0.5));
   }
 
   .summon-zombie-tool .header-text h2 {
     margin: 0;
-    font-size: 1.3rem;
     color: #ffffff;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    font-size: 1.5rem;
+    font-weight: bold;
+    text-shadow: 2px 2px 0 #1a3009;
   }
 
   .summon-zombie-tool .header-subtitle {
     margin: 4px 0 0 0;
-    font-size: 0.85rem;
     color: rgba(255,255,255,0.8);
+    font-size: 0.85rem;
+  }
+
+  .summon-zombie-tool .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .summon-zombie-tool .reset-btn {
+    background: linear-gradient(180deg, #e04040 0%, #c80000 100%);
+    color: white;
+    border: 2px solid #a00000;
+    padding: 8px 16px;
+    font-weight: bold;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .summon-zombie-tool .reset-btn:hover {
+    background: linear-gradient(180deg, #ff5050 0%, #e00000 100%);
+    border-color: #c80000;
+    transform: translateY(-1px);
   }
 
   @media (max-width: 600px) {
