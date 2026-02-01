@@ -34,6 +34,11 @@ const ITEM_FILE_MAP = {
   'sculk_sensor': 'Sculk_Sensor.gif',
   'sculk_shrieker': 'Sculk_Shrieker.gif',
   'calibrated_sculk_sensor': 'Calibrated_Sculk_Sensor.gif',
+  // === ネザー木材系（GIF形式 - アニメーション対応） ===
+  'crimson_stem': 'Crimson_Stem.gif',
+  'warped_stem': 'Warped_Stem.gif',
+  'crimson_hyphae': 'Crimson_Hyphae.gif',
+  'warped_hyphae': 'Warped_Hyphae.gif',
   // === ポーション系 - ITEM_NAME_MAPで個別に定義（GIF形式は使用しない） ===
   // 注意: Wikiではポーションは効果ごとに異なる画像があるため、
   // 基本アイテム（Water_Bottle等）はITEM_NAME_MAPで定義
@@ -444,13 +449,10 @@ const ITEM_NAME_MAP = {
   // === 木材・ネザー材 ===
   'bamboo_block': 'Block_of_Bamboo',
   'stripped_bamboo_block': 'Block_of_Stripped_Bamboo',
-  'crimson_stem': 'Crimson_Stem',
+  // crimson_stem, warped_stem, crimson_hyphae, warped_hyphaeはITEM_FILE_MAPでGIF形式として定義
   'stripped_crimson_stem': 'Stripped_Crimson_Stem',
-  'crimson_hyphae': 'Crimson_Hyphae',
   'stripped_crimson_hyphae': 'Stripped_Crimson_Hyphae',
-  'warped_stem': 'Warped_Stem',
   'stripped_warped_stem': 'Stripped_Warped_Stem',
-  'warped_hyphae': 'Warped_Hyphae',
   'stripped_warped_hyphae': 'Stripped_Warped_Hyphae',
 
   // === レッドストーン関連 ===
