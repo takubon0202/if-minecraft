@@ -456,6 +456,7 @@ const ITEM_NAME_MAP = {
   'waxed_oxidized_cut_copper_slab': 'Oxidized_Cut_Copper_Slab',
 
   // === 特殊ブロック ===
+  'tnt': 'TNT',  // toPascalCaseは'Tnt'を返すが、WikiはTNT（大文字）
   'spawner': 'Monster_Spawner',
   'jack_o_lantern': 'Jack_o%27Lantern',
   'chain': 'Iron_Chain',

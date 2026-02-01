@@ -328,6 +328,26 @@ const PRESETS = [
   },
 ];
 
+// JSONテキストの色（summonツールと統一）
+const TEXT_COLORS = [
+  { id: 'black', name: '黒', hex: '#000000' },
+  { id: 'dark_blue', name: '紺', hex: '#0000AA' },
+  { id: 'dark_green', name: '緑', hex: '#00AA00' },
+  { id: 'dark_aqua', name: '青緑', hex: '#00AAAA' },
+  { id: 'dark_red', name: '暗赤', hex: '#AA0000' },
+  { id: 'dark_purple', name: '紫', hex: '#AA00AA' },
+  { id: 'gold', name: '金', hex: '#FFAA00' },
+  { id: 'gray', name: '灰', hex: '#AAAAAA' },
+  { id: 'dark_gray', name: '暗灰', hex: '#555555' },
+  { id: 'blue', name: '青', hex: '#5555FF' },
+  { id: 'green', name: '黄緑', hex: '#55FF55' },
+  { id: 'aqua', name: '水色', hex: '#55FFFF' },
+  { id: 'red', name: '赤', hex: '#FF5555' },
+  { id: 'light_purple', name: 'ピンク', hex: '#FF55FF' },
+  { id: 'yellow', name: '黄', hex: '#FFFF55' },
+  { id: 'white', name: '白', hex: '#FFFFFF' },
+];
+
 // 状態管理
 let state = {
   zombieType: 'zombie',
@@ -342,6 +362,11 @@ let state = {
   },
   attributes: {},
   customName: '',
+  nameColor: 'white',
+  nameBold: false,
+  nameItalic: false,
+  nameUnderlined: false,
+  nameObfuscated: false,
   glowing: false,
   noAI: false,
   silent: false,
@@ -359,59 +384,107 @@ let currentEditSlot = null;
  */
 export function render(manifest) {
   return `
-    <div class="tool-panel summon-zombie-tool" id="summon-zombie-panel">
-      <div class="tool-header">
-        <img src="${getInviconUrl(manifest.iconItem || 'zombie_head')}" class="tool-header-icon mc-wiki-image" width="32" height="32" alt="">
-        <h2>${manifest.title}</h2>
-        <span class="version-badge">1.21.5+</span>
+    <div class="tool-panel summon-zombie-tool mc-themed" id="summon-zombie-panel">
+      <!-- ヘッダー -->
+      <div class="tool-header mc-header-banner">
+        <div class="header-content">
+          <img src="${getInviconUrl(manifest.iconItem || 'zombie_head')}" alt="" class="header-icon mc-pixelated">
+          <div class="header-text">
+            <h2>最強ゾンビ召喚</h2>
+            <p class="header-subtitle">装備・属性をカスタマイズしたゾンビを召喚</p>
+          </div>
+        </div>
+        <span class="version-badge" id="zombie-version-badge">1.21+</span>
         <button type="button" class="reset-btn" id="summon-zombie-reset-btn" title="設定をリセット">リセット</button>
       </div>
 
-      <form class="tool-form" id="summon-zombie-form">
-        <!-- プリセット -->
-        <div class="form-group">
-          <label>プリセット</label>
-          <div class="preset-grid" id="preset-grid">
+      <form class="tool-form mc-form" id="summon-zombie-form">
+
+        <!-- ステップ1: プリセット＆ゾンビタイプ -->
+        <section class="form-section mc-section">
+          <div class="section-header">
+            <span class="step-number">1</span>
+            <h3>ゾンビタイプ選択</h3>
+          </div>
+
+          <!-- プリセットカード -->
+          <div class="preset-cards" id="preset-grid">
             ${PRESETS.map(p => `
-              <button type="button" class="preset-btn" data-preset="${p.id}" title="${p.desc}">
-                ${p.name}
+              <button type="button" class="preset-card" data-preset="${p.id}" title="${p.desc}">
+                <img src="${getSpawnEggUrl(p.config.zombieType)}" alt="" class="preset-icon mc-pixelated" onerror="this.style.opacity='0.3'">
+                <span class="preset-name">${p.name}</span>
+                <span class="preset-desc">${p.desc}</span>
               </button>
             `).join('')}
-            <button type="button" class="preset-btn preset-clear" data-preset="clear">クリア</button>
+            <button type="button" class="preset-card preset-clear" data-preset="clear">
+              <img src="${getInviconUrl('barrier')}" alt="" class="preset-icon mc-pixelated">
+              <span class="preset-name">クリア</span>
+              <span class="preset-desc">設定をリセット</span>
+            </button>
           </div>
-        </div>
 
-        <!-- ゾンビタイプ選択 -->
-        <div class="form-group">
-          <label>ゾンビタイプ</label>
+          <!-- ゾンビタイプ選択 -->
           <div class="zombie-type-selector" id="zombie-type-selector">
             ${ZOMBIE_TYPES.map(z => `
               <button type="button" class="zombie-type-btn ${z.id === 'zombie' ? 'active' : ''}" data-type="${z.id}">
-                <img src="${getSpawnEggUrl(z.id)}" alt="${z.name}" class="type-icon mc-wiki-image" width="32" height="32" onerror="this.style.opacity='0.3'">
+                <img src="${getSpawnEggUrl(z.id)}" alt="${z.name}" class="type-icon mc-pixelated" width="40" height="40" onerror="this.style.opacity='0.3'">
                 <span class="type-name">${z.name}</span>
               </button>
             `).join('')}
           </div>
-        </div>
 
-        <!-- 座標 -->
-        <div class="form-group">
-          <label for="zombie-pos">座標</label>
-          <input type="text" id="zombie-pos" class="mc-input" value="~ ~ ~" placeholder="~ ~ ~ または 100 64 200">
-        </div>
+          <!-- 選択中のゾンビ表示 -->
+          <div class="selected-entity-display" id="selected-zombie-display">
+            <img src="${getSpawnEggUrl('zombie')}" alt="" class="selected-entity-icon mc-pixelated" id="selected-zombie-icon">
+            <div class="selected-entity-info">
+              <span class="selected-entity-name" id="selected-zombie-name">ゾンビ</span>
+              <code class="selected-entity-id" id="selected-zombie-id">minecraft:zombie</code>
+            </div>
+          </div>
+        </section>
 
-        <!-- 装備設定 -->
-        <div class="form-group">
-          <label>装備設定</label>
+        <!-- ステップ2: 座標設定 -->
+        <section class="form-section mc-section">
+          <div class="section-header">
+            <span class="step-number">2</span>
+            <h3>召喚位置</h3>
+          </div>
+
+          <div class="coordinate-input">
+            <div class="coord-preset-btns">
+              <button type="button" class="coord-preset active" data-pos="~ ~ ~">
+                現在地 <code>~ ~ ~</code>
+              </button>
+              <button type="button" class="coord-preset" data-pos="~ ~1 ~">
+                1ブロック上 <code>~ ~1 ~</code>
+              </button>
+              <button type="button" class="coord-preset" data-pos="~ ~ ~5">
+                前方5m <code>~ ~ ~5</code>
+              </button>
+            </div>
+            <div class="coord-custom">
+              <label>カスタム座標:</label>
+              <input type="text" id="zombie-pos" class="mc-input coord-input" value="~ ~ ~" placeholder="X Y Z">
+            </div>
+          </div>
+        </section>
+
+        <!-- ステップ3: 装備設定 -->
+        <section class="form-section mc-section">
+          <div class="section-header">
+            <span class="step-number">3</span>
+            <h3>装備設定</h3>
+          </div>
+
           <div class="equipment-grid" id="equipment-grid">
             ${EQUIPMENT_SLOTS.map(slot => `
               <div class="equipment-slot" data-slot="${slot.id}">
                 <div class="slot-header">
-                  <img src="${slot.image}" alt="${slot.name}" class="slot-icon mc-wiki-image" width="24" height="24" data-mc-tooltip="${slot.itemId}" onerror="this.style.opacity='0.3'">
+                  <img src="${slot.image}" alt="${slot.name}" class="slot-icon mc-pixelated" width="24" height="24" data-mc-tooltip="${slot.itemId}" onerror="this.style.opacity='0.3'">
                   <span class="slot-name">${slot.name}</span>
                 </div>
                 <div class="equipment-select-wrapper">
-                  <img src="" alt="" class="selected-item-image mc-wiki-image" data-slot="${slot.id}" width="24" height="24" style="display: none;" onerror="this.style.opacity='0.3'">
+                  <img src="" alt="" class="selected-item-image mc-pixelated" data-slot="${slot.id}" width="24" height="24" style="display: none;" onerror="this.style.opacity='0.3'">
                   <select class="equipment-select mc-select" data-slot="${slot.id}">
                     ${EQUIPMENT_ITEMS[slot.id].map(item => `
                       <option value="${item.id}" data-image="${item.image || ''}">${item.name}</option>
@@ -420,7 +493,7 @@ export function render(manifest) {
                 </div>
                 <div class="slot-actions">
                   <button type="button" class="enchant-btn" data-slot="${slot.id}" title="エンチャント設定">
-                    <img src="${getInviconUrl('enchanted_book')}" alt="Enchant" class="mc-wiki-image" width="16" height="16" onerror="this.style.opacity='0.3'">
+                    <img src="${getInviconUrl('enchanted_book')}" alt="Enchant" class="mc-pixelated" width="16" height="16" onerror="this.style.opacity='0.3'">
                     <span class="enchant-count" data-slot="${slot.id}">0</span>
                   </button>
                   <div class="drop-chance-wrapper">
@@ -432,65 +505,164 @@ export function render(manifest) {
               </div>
             `).join('')}
           </div>
-        </div>
+        </section>
 
-        <!-- 属性設定 -->
-        <div class="form-group">
-          <label>
-            <input type="checkbox" id="use-attributes"> 属性をカスタマイズ
+        <!-- ステップ4: 属性設定 -->
+        <section class="form-section mc-section">
+          <div class="section-header">
+            <span class="step-number">4</span>
+            <h3>属性設定 <span class="optional-badge">任意</span></h3>
+          </div>
+
+          <label class="attributes-toggle">
+            <input type="checkbox" id="use-attributes">
+            <span>属性をカスタマイズ</span>
           </label>
+
           <div class="attributes-section" id="attributes-section" style="display: none;">
             ${ATTRIBUTES.map(attr => `
               <div class="attribute-row">
-                <img src="${attr.image}" alt="${attr.name}" class="attr-icon mc-wiki-image" width="20" height="20" onerror="this.style.opacity='0.3'">
+                <img src="${attr.image}" alt="${attr.name}" class="attr-icon mc-pixelated" width="24" height="24" onerror="this.style.opacity='0.3'">
                 <span class="attr-name">${attr.name}</span>
                 <input type="number" class="attr-value mc-input" data-attr="${attr.id}"
                        value="${attr.default}" min="${attr.min}" max="${attr.max}" step="${attr.step}">
               </div>
             `).join('')}
           </div>
-        </div>
+        </section>
 
-        <!-- AI・動作設定 -->
-        <div class="form-group">
-          <label>AI・動作設定</label>
-          <div class="options-grid">
-            <label class="option-label">
+        <!-- ステップ5: 動作設定（behavior-grid スタイル） -->
+        <section class="form-section mc-section">
+          <div class="section-header">
+            <span class="step-number">5</span>
+            <h3>動作設定</h3>
+          </div>
+
+          <div class="behavior-grid">
+            <label class="behavior-option">
               <input type="checkbox" id="opt-noai">
-              NoAI（動かない）
+              <div class="option-content">
+                <img src="${getInviconUrl('barrier')}" alt="" class="option-icon mc-pixelated">
+                <div class="option-text">
+                  <span class="option-name">NoAI</span>
+                  <span class="option-desc">動かない・攻撃しない</span>
+                </div>
+              </div>
             </label>
-            <label class="option-label">
+
+            <label class="behavior-option">
               <input type="checkbox" id="opt-silent">
-              Silent（音なし）
+              <div class="option-content">
+                <img src="${getInviconUrl('note_block')}" alt="" class="option-icon mc-pixelated">
+                <div class="option-text">
+                  <span class="option-name">Silent</span>
+                  <span class="option-desc">音を出さない</span>
+                </div>
+              </div>
             </label>
-            <label class="option-label">
+
+            <label class="behavior-option">
               <input type="checkbox" id="opt-invulnerable">
-              無敵
+              <div class="option-content">
+                <img src="${getInviconUrl('totem_of_undying')}" alt="" class="option-icon mc-pixelated">
+                <div class="option-text">
+                  <span class="option-name">無敵</span>
+                  <span class="option-desc">ダメージを受けない</span>
+                </div>
+              </div>
             </label>
-            <label class="option-label">
+
+            <label class="behavior-option">
               <input type="checkbox" id="opt-persistence" checked>
-              デスポーンしない
+              <div class="option-content">
+                <img src="${getInviconUrl('name_tag')}" alt="" class="option-icon mc-pixelated">
+                <div class="option-text">
+                  <span class="option-name">永続化</span>
+                  <span class="option-desc">デスポーンしない</span>
+                </div>
+              </div>
             </label>
-            <label class="option-label">
+
+            <label class="behavior-option">
               <input type="checkbox" id="opt-canbreakdoors">
-              ドアを壊せる
+              <div class="option-content">
+                <img src="${getInviconUrl('oak_door')}" alt="" class="option-icon mc-pixelated">
+                <div class="option-text">
+                  <span class="option-name">ドア破壊</span>
+                  <span class="option-desc">木製ドアを壊せる</span>
+                </div>
+              </div>
             </label>
-            <label class="option-label">
+
+            <label class="behavior-option">
               <input type="checkbox" id="opt-isbaby">
-              子供ゾンビ
+              <div class="option-content">
+                <img src="${getSpawnEggUrl('zombie')}" alt="" class="option-icon mc-pixelated">
+                <div class="option-text">
+                  <span class="option-name">子供ゾンビ</span>
+                  <span class="option-desc">小さく移動が速い</span>
+                </div>
+              </div>
             </label>
-            <label class="option-label">
+
+            <label class="behavior-option">
               <input type="checkbox" id="opt-glowing">
-              発光
+              <div class="option-content">
+                <img src="${getInviconUrl('glowstone_dust')}" alt="" class="option-icon mc-pixelated">
+                <div class="option-text">
+                  <span class="option-name">発光</span>
+                  <span class="option-desc">壁越しでも見える</span>
+                </div>
+              </div>
             </label>
           </div>
-        </div>
+        </section>
 
-        <!-- カスタム名 -->
-        <div class="form-group">
-          <label for="zombie-name">カスタム名</label>
-          <input type="text" id="zombie-name" class="mc-input" placeholder="最強ゾンビ">
-        </div>
+        <!-- ステップ6: 名前設定（カラーセレクター付き） -->
+        <section class="form-section mc-section">
+          <div class="section-header">
+            <span class="step-number">6</span>
+            <h3>名前設定 <span class="optional-badge">任意</span></h3>
+          </div>
+
+          <div class="name-editor">
+            <input type="text" id="zombie-name" class="mc-input name-input" placeholder="カスタム名を入力...">
+
+            <div class="name-style-options">
+              <div class="color-selector">
+                <label>文字色:</label>
+                <div class="color-grid" id="zombie-color-grid">
+                  ${TEXT_COLORS.map(c => `
+                    <button type="button" class="color-btn ${c.id === 'white' ? 'active' : ''}"
+                            data-color="${c.id}" style="background: ${c.hex}"
+                            title="${c.name}"></button>
+                  `).join('')}
+                </div>
+              </div>
+
+              <div class="text-style-btns">
+                <button type="button" class="style-btn" data-style="bold" title="太字">
+                  <strong>B</strong>
+                </button>
+                <button type="button" class="style-btn" data-style="italic" title="斜体">
+                  <em>I</em>
+                </button>
+                <button type="button" class="style-btn" data-style="underlined" title="下線">
+                  <u>U</u>
+                </button>
+                <button type="button" class="style-btn" data-style="obfuscated" title="難読化">
+                  §k
+                </button>
+              </div>
+            </div>
+
+            <!-- プレビュー -->
+            <div class="name-preview" id="zombie-name-preview">
+              <span class="preview-label">プレビュー:</span>
+              <span class="preview-text" id="zombie-preview-text">名前を入力...</span>
+            </div>
+          </div>
+        </section>
       </form>
 
       <!-- エンチャント設定モーダル -->
@@ -547,6 +719,11 @@ export function init(container) {
     },
     attributes: {},
     customName: '',
+    nameColor: 'white',
+    nameBold: false,
+    nameItalic: false,
+    nameUnderlined: false,
+    nameObfuscated: false,
     glowing: false,
     noAI: false,
     silent: false,
@@ -557,7 +734,7 @@ export function init(container) {
   };
 
   // プリセット選択
-  delegate(container, 'click', '.preset-btn', (e, target) => {
+  delegate(container, 'click', '.preset-card', (e, target) => {
     applyPreset(target.dataset.preset, container);
   });
 
@@ -566,12 +743,27 @@ export function init(container) {
     $$('.zombie-type-btn', container).forEach(btn => btn.classList.remove('active'));
     target.classList.add('active');
     state.zombieType = target.dataset.type;
+    updateSelectedZombieDisplay(container);
+    updateCommand();
+  });
+
+  // 座標プリセット
+  delegate(container, 'click', '.coord-preset', (e, target) => {
+    $$('.coord-preset', container).forEach(btn => btn.classList.remove('active'));
+    target.classList.add('active');
+    const pos = target.dataset.pos;
+    state.pos = pos;
+    $('#zombie-pos', container).value = pos;
     updateCommand();
   });
 
   // 座標入力
   $('#zombie-pos', container)?.addEventListener('input', debounce((e) => {
     state.pos = e.target.value || '~ ~ ~';
+    // カスタム入力時はプリセットのactiveを解除
+    $$('.coord-preset', container).forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.pos === state.pos);
+    });
     updateCommand();
   }, 150));
 
@@ -641,8 +833,32 @@ export function init(container) {
   // カスタム名
   $('#zombie-name', container)?.addEventListener('input', debounce((e) => {
     state.customName = e.target.value;
+    updateNamePreview(container);
     updateCommand();
   }, 150));
+
+  // 名前の色選択
+  delegate(container, 'click', '.color-btn', (e, target) => {
+    $$('.color-btn', container).forEach(btn => btn.classList.remove('active'));
+    target.classList.add('active');
+    state.nameColor = target.dataset.color;
+    updateNamePreview(container);
+    updateCommand();
+  });
+
+  // テキストスタイル選択
+  delegate(container, 'click', '.style-btn', (e, target) => {
+    const style = target.dataset.style;
+    target.classList.toggle('active');
+
+    if (style === 'bold') state.nameBold = target.classList.contains('active');
+    if (style === 'italic') state.nameItalic = target.classList.contains('active');
+    if (style === 'underlined') state.nameUnderlined = target.classList.contains('active');
+    if (style === 'obfuscated') state.nameObfuscated = target.classList.contains('active');
+
+    updateNamePreview(container);
+    updateCommand();
+  });
 
   // モーダル制御
   $('#modal-close', container)?.addEventListener('click', () => closeEnchantModal(container));
@@ -676,6 +892,11 @@ function resetForm(container) {
     },
     attributes: {},
     customName: '',
+    nameColor: 'white',
+    nameBold: false,
+    nameItalic: false,
+    nameUnderlined: false,
+    nameObfuscated: false,
     glowing: false,
     noAI: false,
     silent: false,
@@ -689,11 +910,63 @@ function resetForm(container) {
   $('#use-attributes', container).checked = false;
   $('#attributes-section', container).style.display = 'none';
 
+  // 名前スタイルをリセット
+  $$('.color-btn', container).forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.color === 'white');
+  });
+  $$('.style-btn', container).forEach(btn => btn.classList.remove('active'));
+
   // UIを状態から同期
   syncUIFromState(container);
+  updateSelectedZombieDisplay(container);
+  updateNamePreview(container);
 
   // コマンドを更新
   updateCommand();
+}
+
+/**
+ * 選択中のゾンビ表示を更新
+ */
+function updateSelectedZombieDisplay(container) {
+  const zombieInfo = ZOMBIE_TYPES.find(z => z.id === state.zombieType);
+  if (!zombieInfo) return;
+
+  const iconEl = $('#selected-zombie-icon', container);
+  const nameEl = $('#selected-zombie-name', container);
+  const idEl = $('#selected-zombie-id', container);
+
+  if (iconEl) iconEl.src = getSpawnEggUrl(state.zombieType);
+  if (nameEl) nameEl.textContent = zombieInfo.name;
+  if (idEl) idEl.textContent = `minecraft:${state.zombieType}`;
+}
+
+/**
+ * 名前プレビューを更新
+ */
+function updateNamePreview(container) {
+  const previewEl = $('#zombie-preview-text', container);
+  if (!previewEl) return;
+
+  const name = state.customName || '名前を入力...';
+  const colorInfo = TEXT_COLORS.find(c => c.id === state.nameColor);
+  const color = colorInfo?.hex || '#FFFFFF';
+
+  let styles = `color: ${color};`;
+  if (state.nameBold) styles += 'font-weight: bold;';
+  if (state.nameItalic) styles += 'font-style: italic;';
+  if (state.nameUnderlined) styles += 'text-decoration: underline;';
+
+  previewEl.style.cssText = styles;
+
+  if (state.nameObfuscated && state.customName) {
+    // 難読化エフェクト（表示用）
+    previewEl.textContent = '§k§k§k§k§k';
+    previewEl.classList.add('obfuscated');
+  } else {
+    previewEl.textContent = name;
+    previewEl.classList.remove('obfuscated');
+  }
 }
 
 /**
@@ -786,6 +1059,11 @@ function applyPreset(presetId, container) {
       },
       attributes: {},
       customName: '',
+      nameColor: 'white',
+      nameBold: false,
+      nameItalic: false,
+      nameUnderlined: false,
+      nameObfuscated: false,
       glowing: false,
       noAI: false,
       silent: false,
@@ -831,6 +1109,8 @@ function applyPreset(presetId, container) {
 
   // UI更新
   syncUIFromState(container);
+  updateSelectedZombieDisplay(container);
+  updateNamePreview(container);
   updateCommand();
 }
 
@@ -905,10 +1185,23 @@ function generateSummonZombieCommand(s) {
   const entityId = `minecraft:${s.zombieType}`;
   const nbtParts = [];
 
-  // カスタム名（1.21+ エンティティタグはPascalCase）
+  // カスタム名（1.21+ エンティティタグはPascalCase、JSON Text Component形式）
   if (s.customName) {
     const escapedName = s.customName.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
-    nbtParts.push(`CustomName:'{"text":"${escapedName}"}'`);
+    const jsonParts = [`"text":"${escapedName}"`];
+
+    // 色を追加（デフォルト白以外の場合）
+    if (s.nameColor && s.nameColor !== 'white') {
+      jsonParts.push(`"color":"${s.nameColor}"`);
+    }
+
+    // スタイルを追加
+    if (s.nameBold) jsonParts.push('"bold":true');
+    if (s.nameItalic) jsonParts.push('"italic":true');
+    if (s.nameUnderlined) jsonParts.push('"underlined":true');
+    if (s.nameObfuscated) jsonParts.push('"obfuscated":true');
+
+    nbtParts.push(`CustomName:'{${jsonParts.join(',')}}'`);
   }
 
   // オプション（1.21+ エンティティタグはPascalCase）
@@ -1565,6 +1858,448 @@ style.textContent = `
     text-align: right;
   }
 
+  /* ===== 新UI要素（summonツール統一デザイン） ===== */
+
+  /* セクション構造 */
+  .summon-zombie-tool .form-section {
+    margin-bottom: var(--mc-space-lg);
+    padding: var(--mc-space-lg);
+    background: linear-gradient(180deg, rgba(60,60,60,0.8) 0%, rgba(40,40,40,0.9) 100%);
+    border: 2px solid #555555;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  }
+
+  .summon-zombie-tool .section-header {
+    display: flex;
+    align-items: center;
+    gap: var(--mc-space-md);
+    margin-bottom: var(--mc-space-lg);
+    padding-bottom: var(--mc-space-sm);
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .summon-zombie-tool .step-number {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: linear-gradient(180deg, #5cb746 0%, #3a8128 100%);
+    color: white;
+    border-radius: 50%;
+    font-weight: bold;
+    font-size: 1rem;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  }
+
+  .summon-zombie-tool .section-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: #ffffff;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+  }
+
+  .summon-zombie-tool .optional-badge {
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 4px;
+    color: #aaaaaa;
+    margin-left: 8px;
+  }
+
+  /* プリセットカード */
+  .preset-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: var(--mc-space-md);
+    margin-bottom: var(--mc-space-lg);
+  }
+
+  .preset-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: var(--mc-space-md);
+    background: linear-gradient(180deg, #4a4a4a 0%, #3a3a3a 100%);
+    border: 2px solid #555555;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+  }
+
+  .preset-card:hover {
+    background: linear-gradient(180deg, #5cb746 0%, #3a8128 100%);
+    border-color: var(--mc-color-grass-main);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(92, 183, 70, 0.4);
+  }
+
+  .preset-card.preset-clear {
+    background: linear-gradient(180deg, #e04040 0%, #c80000 100%);
+    border-color: #a00000;
+  }
+
+  .preset-card.preset-clear:hover {
+    background: linear-gradient(180deg, #ff5050 0%, #e00000 100%);
+    border-color: #c80000;
+  }
+
+  .preset-card .preset-icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .preset-card .preset-name {
+    font-weight: bold;
+    color: #ffffff;
+    font-size: 0.9rem;
+  }
+
+  .preset-card .preset-desc {
+    font-size: 0.7rem;
+    color: #aaaaaa;
+    line-height: 1.3;
+  }
+
+  /* 選択中エンティティ表示 */
+  .selected-entity-display {
+    display: flex;
+    align-items: center;
+    gap: var(--mc-space-md);
+    padding: var(--mc-space-md);
+    background: rgba(92, 183, 70, 0.15);
+    border: 2px solid var(--mc-color-grass-main);
+    border-radius: 8px;
+    margin-top: var(--mc-space-md);
+  }
+
+  .selected-entity-icon {
+    width: 48px;
+    height: 48px;
+  }
+
+  .selected-entity-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .selected-entity-name {
+    font-weight: bold;
+    color: #ffffff;
+    font-size: 1.1rem;
+  }
+
+  .selected-entity-id {
+    font-size: 0.8rem;
+    color: #aaaaaa;
+    background: rgba(0,0,0,0.3);
+    padding: 2px 8px;
+    border-radius: 4px;
+  }
+
+  /* 座標入力 */
+  .coordinate-input {
+    display: flex;
+    flex-direction: column;
+    gap: var(--mc-space-md);
+  }
+
+  .coord-preset-btns {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--mc-space-sm);
+  }
+
+  .coord-preset {
+    padding: 8px 16px;
+    background: linear-gradient(180deg, #4a4a4a 0%, #3a3a3a 100%);
+    border: 2px solid #555555;
+    border-radius: 4px;
+    color: #ffffff;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.15s;
+  }
+
+  .coord-preset:hover {
+    background: linear-gradient(180deg, #5a5a5a 0%, #4a4a4a 100%);
+    border-color: #666666;
+  }
+
+  .coord-preset.active {
+    background: linear-gradient(180deg, #5cb746 0%, #3a8128 100%);
+    border-color: var(--mc-color-grass-main);
+  }
+
+  .coord-preset code {
+    background: rgba(0,0,0,0.3);
+    padding: 2px 6px;
+    border-radius: 3px;
+    margin-left: 4px;
+    font-size: 0.8rem;
+  }
+
+  .coord-custom {
+    display: flex;
+    align-items: center;
+    gap: var(--mc-space-sm);
+  }
+
+  .coord-custom label {
+    color: #cccccc;
+    font-size: 0.9rem;
+  }
+
+  .coord-input {
+    flex: 1;
+    max-width: 200px;
+  }
+
+  /* 動作設定（behavior-grid） */
+  .behavior-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: var(--mc-space-md);
+  }
+
+  .behavior-option {
+    display: flex;
+    align-items: center;
+    gap: var(--mc-space-md);
+    padding: var(--mc-space-md);
+    background: linear-gradient(180deg, #4a4a4a 0%, #3a3a3a 100%);
+    border: 2px solid #555555;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .behavior-option:hover {
+    background: linear-gradient(180deg, #5a5a5a 0%, #4a4a4a 100%);
+    border-color: #666666;
+  }
+
+  .behavior-option:has(input:checked) {
+    background: linear-gradient(180deg, rgba(92, 183, 70, 0.3) 0%, rgba(58, 129, 40, 0.3) 100%);
+    border-color: var(--mc-color-grass-main);
+  }
+
+  .behavior-option input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    accent-color: var(--mc-color-grass-main);
+  }
+
+  .option-content {
+    display: flex;
+    align-items: center;
+    gap: var(--mc-space-sm);
+    flex: 1;
+  }
+
+  .option-icon {
+    width: 32px;
+    height: 32px;
+  }
+
+  .option-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .option-name {
+    font-weight: bold;
+    color: #ffffff;
+    font-size: 0.9rem;
+  }
+
+  .option-desc {
+    font-size: 0.75rem;
+    color: #aaaaaa;
+  }
+
+  /* 属性トグル */
+  .attributes-toggle {
+    display: flex;
+    align-items: center;
+    gap: var(--mc-space-sm);
+    padding: var(--mc-space-sm) var(--mc-space-md);
+    background: rgba(0,0,0,0.2);
+    border-radius: 4px;
+    cursor: pointer;
+    margin-bottom: var(--mc-space-md);
+  }
+
+  .attributes-toggle input {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--mc-color-grass-main);
+  }
+
+  .attributes-toggle span {
+    color: #ffffff;
+    font-weight: 500;
+  }
+
+  /* 名前エディター */
+  .name-editor {
+    display: flex;
+    flex-direction: column;
+    gap: var(--mc-space-md);
+  }
+
+  .name-input {
+    font-size: 1.1rem;
+    padding: var(--mc-space-md);
+  }
+
+  .name-style-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--mc-space-lg);
+    align-items: flex-start;
+  }
+
+  .color-selector {
+    display: flex;
+    flex-direction: column;
+    gap: var(--mc-space-sm);
+  }
+
+  .color-selector label {
+    color: #cccccc;
+    font-size: 0.85rem;
+  }
+
+  .color-grid {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 4px;
+  }
+
+  .color-btn {
+    width: 28px;
+    height: 28px;
+    border: 2px solid #444444;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .color-btn:hover {
+    transform: scale(1.1);
+    border-color: #888888;
+  }
+
+  .color-btn.active {
+    border-color: #ffffff;
+    box-shadow: 0 0 8px rgba(255,255,255,0.5);
+  }
+
+  .text-style-btns {
+    display: flex;
+    gap: var(--mc-space-sm);
+  }
+
+  .style-btn {
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(180deg, #4a4a4a 0%, #3a3a3a 100%);
+    border: 2px solid #555555;
+    border-radius: 4px;
+    color: #ffffff;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .style-btn:hover {
+    background: linear-gradient(180deg, #5a5a5a 0%, #4a4a4a 100%);
+    border-color: #666666;
+  }
+
+  .style-btn.active {
+    background: linear-gradient(180deg, #5cb746 0%, #3a8128 100%);
+    border-color: var(--mc-color-grass-main);
+  }
+
+  /* 名前プレビュー */
+  .name-preview {
+    display: flex;
+    align-items: center;
+    gap: var(--mc-space-md);
+    padding: var(--mc-space-md);
+    background: rgba(0,0,0,0.4);
+    border: 2px solid #444444;
+    border-radius: 4px;
+  }
+
+  .preview-label {
+    color: #888888;
+    font-size: 0.85rem;
+  }
+
+  .preview-text {
+    font-size: 1.1rem;
+    color: #ffffff;
+  }
+
+  .preview-text.obfuscated {
+    animation: obfuscate 0.1s infinite;
+  }
+
+  @keyframes obfuscate {
+    0% { content: '▓▒░▓▒░'; }
+    50% { content: '░▒▓░▒▓'; }
+    100% { content: '▒░▓▒░▓'; }
+  }
+
+  /* ヘッダー改善 */
+  .summon-zombie-tool .tool-header {
+    display: flex;
+    align-items: center;
+    gap: var(--mc-space-md);
+    padding: var(--mc-space-lg);
+    background: linear-gradient(180deg, #5cb746 0%, #3a8128 100%);
+    border-radius: 8px 8px 0 0;
+    margin: calc(-1 * var(--mc-space-lg));
+    margin-bottom: var(--mc-space-lg);
+  }
+
+  .summon-zombie-tool .header-content {
+    display: flex;
+    align-items: center;
+    gap: var(--mc-space-md);
+  }
+
+  .summon-zombie-tool .header-icon {
+    width: 48px;
+    height: 48px;
+  }
+
+  .summon-zombie-tool .header-text h2 {
+    margin: 0;
+    font-size: 1.3rem;
+    color: #ffffff;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+  }
+
+  .summon-zombie-tool .header-subtitle {
+    margin: 4px 0 0 0;
+    font-size: 0.85rem;
+    color: rgba(255,255,255,0.8);
+  }
+
   @media (max-width: 600px) {
     .zombie-type-selector {
       justify-content: center;
@@ -1574,8 +2309,16 @@ style.textContent = `
       grid-template-columns: 1fr;
     }
 
-    .options-grid {
-      grid-template-columns: 1fr 1fr;
+    .behavior-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .preset-cards {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .color-grid {
+      grid-template-columns: repeat(4, 1fr);
     }
   }
 
