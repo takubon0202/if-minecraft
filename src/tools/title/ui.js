@@ -471,7 +471,7 @@ function updateCommand() {
 
   // コマンド生成
   if (type === 'title' || type === 'both') {
-    const json = titleEditor?.getOutput(globalVersion) || '""';
+    const json = getEditorOutput(titleEditor, globalVersion);
     commands.push(`/title ${target} title ${json}`);
   }
 
@@ -479,13 +479,13 @@ function updateCommand() {
     const subtitleGroups = subtitleEditor?.getFormattedGroups() || [];
     const useSubtitle = subtitleGroups.length > 0;
     const json = useSubtitle
-      ? subtitleEditor.getOutput(globalVersion)
-      : titleEditor?.getOutput(globalVersion) || '""';
+      ? getEditorOutput(subtitleEditor, globalVersion)
+      : getEditorOutput(titleEditor, globalVersion);
     commands.push(`/title ${target} subtitle ${json}`);
   }
 
   if (type === 'actionbar') {
-    const json = titleEditor?.getOutput(globalVersion) || '""';
+    const json = getEditorOutput(titleEditor, globalVersion);
     commands.push(`/title ${target} actionbar ${json}`);
   }
 
@@ -500,6 +500,21 @@ function escapeHtml(str) {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
+}
+
+/**
+ * RichTextEditorからバージョンに応じた出力を取得
+ */
+function getEditorOutput(editor, version) {
+  if (!editor) return '""';
+  const groups = editor.getFormattedGroups();
+  if (!groups || groups.length === 0) return '""';
+
+  if (compareVersions(version, '1.21') >= 0) {
+    return editor.generateSNBT();
+  } else {
+    return editor.generateJSON();
+  }
 }
 
 // スタイル追加

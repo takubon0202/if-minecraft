@@ -363,31 +363,45 @@ function updateCommand() {
   const waxed = $('#sign-waxed')?.checked;
   const outputType = document.querySelector('input[name="sign-output"]:checked')?.value || 'setblock';
 
+  // RTEから各行のSNBTを取得
+  const editors = [line1Editor, line2Editor, line3Editor, line4Editor];
   const lines = [];
   const previewLines = $('#sign-preview')?.querySelectorAll('.preview-line') || [];
 
-  for (let i = 1; i <= 4; i++) {
-    const text = $(`#sign-line${i}`)?.value || '';
-    const color = $(`#sign-color${i}`)?.value || '';
-    const bold = $(`#sign-bold${i}`)?.checked;
-    const italic = $(`#sign-italic${i}`)?.checked;
+  for (let i = 0; i < 4; i++) {
+    const editor = editors[i];
+    let lineJson;
 
-    // JSON Text Component
-    const component = { text };
-    if (color) component.color = color;
-    if (bold) component.bold = true;
-    if (italic) component.italic = true;
+    if (editor && editor.characters && editor.characters.length > 0) {
+      // RTEからSNBT形式を取得
+      lineJson = editor.getSNBT();
+    } else {
+      // 空の場合はデフォルト
+      lineJson = '{"text":""}';
+    }
 
-    lines.push(JSON.stringify(component));
+    lines.push(lineJson);
 
     // プレビュー更新
-    if (previewLines[i - 1]) {
-      let style = '';
-      if (color && MC_COLORS[color]) style += `color: ${MC_COLORS[color]};`;
-      if (bold) style += 'font-weight: bold;';
-      if (italic) style += 'font-style: italic;';
-      if (glowing) style += 'text-shadow: 0 0 5px currentColor;';
-      previewLines[i - 1].innerHTML = `<span style="${style}">${escapeHtml(text) || '&nbsp;'}</span>`;
+    if (previewLines[i] && editor) {
+      const plainText = editor.getPlainText();
+      let previewHtml = '';
+
+      if (editor.characters && editor.characters.length > 0) {
+        for (const c of editor.characters) {
+          let style = `color: ${editor.getColorHex(c.color)};`;
+          if (c.bold) style += 'font-weight: bold;';
+          if (c.italic) style += 'font-style: italic;';
+          if (c.underlined) style += 'text-decoration: underline;';
+          if (c.strikethrough) style += 'text-decoration: line-through;';
+          if (glowing) style += 'text-shadow: 0 0 5px currentColor;';
+
+          const escaped = c.char === ' ' ? '&nbsp;' : c.char.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+          previewHtml += `<span style="${style}">${escaped}</span>`;
+        }
+      }
+
+      previewLines[i].innerHTML = previewHtml || '&nbsp;';
     }
   }
 
@@ -876,6 +890,93 @@ style.textContent = `
       flex: 1;
     }
   }
+
+  /* ===== リッチテキストエディター用スタイル ===== */
+
+  /* RTEコンテナ */
+  .sign-tool .sign-lines-rte {
+    display: flex;
+    flex-direction: column;
+    gap: var(--mc-space-lg);
+  }
+
+  .sign-tool .sign-line-rte {
+    display: flex;
+    flex-direction: column;
+    gap: var(--mc-space-sm);
+  }
+
+  .sign-tool .sign-line-label {
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: rgba(255,255,255,0.8);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* RTE内のスタイル調整（看板用） */
+  .sign-tool .rich-text-editor.rte-advanced {
+    background: linear-gradient(180deg, #2a2a3e 0%, #1a1a2e 100%);
+    border: 2px solid rgba(139, 90, 43, 0.4);
+    border-radius: 6px;
+  }
+
+  .sign-tool .rte-advanced .rte-toolbar {
+    background: linear-gradient(180deg, #3a3a4e 0%, #2a2a3e 100%);
+    border-bottom: 2px solid rgba(139, 90, 43, 0.3);
+    padding: 12px;
+    gap: 10px;
+  }
+
+  .sign-tool .rte-advanced .rte-input-section {
+    padding: 12px;
+    border-bottom: 1px solid rgba(139, 90, 43, 0.2);
+  }
+
+  .sign-tool .rte-advanced .rte-char-editor-section {
+    padding: 12px;
+    border-bottom: 1px solid rgba(139, 90, 43, 0.2);
+  }
+
+  .sign-tool .rte-advanced .rte-char-grid {
+    min-height: 60px;
+    background: #1a1a2e;
+    border-color: rgba(139, 90, 43, 0.3);
+  }
+
+  .sign-tool .rte-advanced .rte-char-box {
+    background: #2a2a3e;
+    border-color: rgba(139, 90, 43, 0.3);
+  }
+
+  .sign-tool .rte-advanced .rte-char-box:hover {
+    border-color: #8b5a2b;
+    background: #3a3a4e;
+  }
+
+  .sign-tool .rte-advanced .rte-char-box.selected {
+    border-color: #8b5a2b;
+    background: rgba(139, 90, 43, 0.2);
+    box-shadow: 0 0 8px rgba(139, 90, 43, 0.4);
+  }
+
+  .sign-tool .rte-advanced .rte-text-input {
+    background: #1a1a2e;
+    border-color: rgba(139, 90, 43, 0.3);
+  }
+
+  .sign-tool .rte-advanced .rte-text-input:focus {
+    border-color: #8b5a2b;
+    box-shadow: 0 0 0 3px rgba(139, 90, 43, 0.3);
+  }
+
+  .sign-tool .rte-advanced .rte-format-btn.active {
+    background: linear-gradient(180deg, #8b5a2b 0%, #6b4423 100%);
+    border-color: #8b5a2b;
+  }
+
+  /* RTE CSS */
+  ${RICH_TEXT_EDITOR_CSS}
 `;
 document.head.appendChild(style);
 

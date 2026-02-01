@@ -4,20 +4,15 @@
  * summonデザイン統一（青系グラデーション）
  */
 
-import { $, $$, createElement, debounce, delegate } from '../../core/dom.js';
+import { $, $$, delegate } from '../../core/dom.js';
 import { setOutput } from '../../app/sidepanel.js';
 import { getInviconUrl } from '../../core/wiki-images.js';
 import { workspaceStore } from '../../core/store.js';
 import { RichTextEditor, RICH_TEXT_EDITOR_CSS } from '../../core/rich-text-editor.js';
 import {
-  MC_COLORS,
-  CLICK_ACTIONS,
-  HOVER_ACTIONS,
   SELECTORS,
   OUTPUT_FORMATS,
   createDefaultSegment,
-  generateCommand,
-  getColorHex,
 } from './engine.js';
 
 // リッチテキストエディターインスタンス
@@ -108,208 +103,55 @@ export function render(manifest) {
   `;
 }
 
-/**
- * セグメントHTMLを生成
- */
-function renderSegment(segment, index) {
-  const colorOptions = MC_COLORS.map(c => `
-    <option value="${c.id}" ${segment.color === c.id ? 'selected' : ''}>
-      ${c.name}
-    </option>
-  `).join('');
-
-  const clickOptions = CLICK_ACTIONS.map(a => `
-    <option value="${a.id}" ${segment.clickAction === a.id ? 'selected' : ''}>
-      ${a.name}
-    </option>
-  `).join('');
-
-  const hoverOptions = HOVER_ACTIONS.map(a => `
-    <option value="${a.id}" ${segment.hoverAction === a.id ? 'selected' : ''}>
-      ${a.name}
-    </option>
-  `).join('');
-
-  const selectorOptions = SELECTORS.map(s => `
-    <option value="${s.id}" ${segment.selector === s.id ? 'selected' : ''}>
-      ${s.id} - ${s.desc}
-    </option>
-  `).join('');
-
-  const clickPlaceholder = CLICK_ACTIONS.find(a => a.id === segment.clickAction)?.placeholder || '';
-  const hoverPlaceholder = HOVER_ACTIONS.find(a => a.id === segment.hoverAction)?.placeholder || '';
-
-  return `
-    <div class="jt-segment" data-segment-id="${segment.id}" data-index="${index}">
-      <div class="segment-header">
-        <span class="segment-number">#${index + 1}</span>
-        <div class="segment-type-toggle">
-          <button type="button" class="type-btn ${segment.type === 'text' ? 'active' : ''}" data-type="text">
-            テキスト
-          </button>
-          <button type="button" class="type-btn ${segment.type === 'selector' ? 'active' : ''}" data-type="selector">
-            セレクター
-          </button>
-        </div>
-        <button type="button" class="segment-remove-btn" title="削除">×</button>
-      </div>
-
-      <div class="segment-body">
-        <!-- テキスト入力 or セレクター選択 -->
-        <div class="segment-input-row">
-          ${segment.type === 'text' ? `
-            <input type="text" class="jt-input segment-text"
-                   value="${escapeHtml(segment.text)}"
-                   placeholder="テキストを入力...">
-          ` : `
-            <select class="jt-select segment-selector">
-              ${selectorOptions}
-            </select>
-          `}
-        </div>
-
-        <!-- カラーパレット -->
-        <div class="segment-color-row">
-          <label>色:</label>
-          <div class="color-palette">
-            <button type="button" class="color-swatch ${!segment.color ? 'active' : ''}"
-                    data-color="" title="デフォルト" style="background: linear-gradient(135deg, #888 50%, #444 50%);">
-            </button>
-            ${MC_COLORS.map(c => `
-              <button type="button" class="color-swatch ${segment.color === c.id ? 'active' : ''}"
-                      data-color="${c.id}" title="${c.name}" style="background-color: ${c.hex};">
-              </button>
-            `).join('')}
-          </div>
-        </div>
-
-        <!-- スタイルボタン -->
-        <div class="segment-style-row">
-          <label>スタイル:</label>
-          <div class="style-buttons">
-            <button type="button" class="style-btn ${segment.bold ? 'active' : ''}"
-                    data-style="bold" title="太字">
-              <strong>B</strong>
-            </button>
-            <button type="button" class="style-btn ${segment.italic ? 'active' : ''}"
-                    data-style="italic" title="斜体">
-              <em>I</em>
-            </button>
-            <button type="button" class="style-btn ${segment.underlined ? 'active' : ''}"
-                    data-style="underlined" title="下線">
-              <u>U</u>
-            </button>
-            <button type="button" class="style-btn ${segment.strikethrough ? 'active' : ''}"
-                    data-style="strikethrough" title="取り消し線">
-              <s>S</s>
-            </button>
-            <button type="button" class="style-btn obfuscated-btn ${segment.obfuscated ? 'active' : ''}"
-                    data-style="obfuscated" title="難読化">
-              <span>?!</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- イベント設定（折りたたみ） -->
-        <details class="segment-events">
-          <summary>クリック/ホバーイベント</summary>
-          <div class="events-content">
-            <div class="event-row">
-              <label>クリック:</label>
-              <select class="jt-select click-action">
-                ${clickOptions}
-              </select>
-              <input type="text" class="jt-input click-value"
-                     value="${escapeHtml(segment.clickValue)}"
-                     placeholder="${clickPlaceholder}"
-                     style="display: ${segment.clickAction ? 'block' : 'none'}">
-            </div>
-            <div class="event-row">
-              <label>ホバー:</label>
-              <select class="jt-select hover-action">
-                ${hoverOptions}
-              </select>
-              <input type="text" class="jt-input hover-value"
-                     value="${escapeHtml(segment.hoverValue)}"
-                     placeholder="${hoverPlaceholder}"
-                     style="display: ${segment.hoverAction ? 'block' : 'none'}">
-            </div>
-          </div>
-        </details>
-      </div>
-    </div>
-  `;
-}
-
-/**
- * 全セグメントをレンダリング
- */
-function renderAllSegments(container) {
-  container.innerHTML = formState.segments.map((seg, i) => renderSegment(seg, i)).join('');
-}
-
-/**
- * プレビューを更新
- */
-function updatePreview(container) {
-  const previewBox = $('#preview-box', container);
-  if (!previewBox) return;
-
-  const validSegments = formState.segments.filter(s =>
-    (s.type === 'text' && s.text) || s.type === 'selector'
-  );
-
-  if (validSegments.length === 0) {
-    previewBox.innerHTML = '<span class="preview-placeholder">テキストを入力するとプレビューが表示されます</span>';
-    return;
-  }
-
-  previewBox.innerHTML = validSegments.map(seg => {
-    let text = seg.type === 'selector' ? seg.selector : seg.text;
-    let style = '';
-    let classes = [];
-
-    // 色
-    if (seg.color) {
-      style += `color: ${getColorHex(seg.color)};`;
-    }
-
-    // スタイル
-    if (seg.bold) style += 'font-weight: bold;';
-    if (seg.italic) style += 'font-style: italic;';
-    if (seg.underlined) classes.push('preview-underlined');
-    if (seg.strikethrough) classes.push('preview-strikethrough');
-    if (seg.obfuscated) classes.push('mc-obfuscated');
-
-    const classAttr = classes.length > 0 ? `class="${classes.join(' ')}"` : '';
-
-    return `<span ${classAttr} style="${style}">${escapeHtml(text)}</span>`;
-  }).join('');
-}
 
 /**
  * コマンドを更新
  */
 function updateCommand(container) {
   const version = workspaceStore.get('version') || '1.21';
-  const command = generateCommand(
-    formState.segments,
-    formState.outputFormat,
-    formState.selector,
-    version
-  );
-  setOutput(command, 'json-text', { ...formState, version });
-  updatePreview(container);
+
+  // リッチテキストエディターからJSON/SNBTを取得
+  const jsonText = jsonTextEditor?.getJSON() || '';
+  const plainText = jsonTextEditor?.getPlainText() || '';
+
+  // 出力形式に応じてコマンドを生成
+  let command = '';
+  if (plainText) {
+    switch (formState.outputFormat) {
+      case 'tellraw':
+        command = `tellraw ${formState.selector} ${jsonText}`;
+        break;
+      case 'title':
+        command = `title ${formState.selector} title ${jsonText}`;
+        break;
+      case 'subtitle':
+        command = `title ${formState.selector} subtitle ${jsonText}`;
+        break;
+      case 'actionbar':
+        command = `title ${formState.selector} actionbar ${jsonText}`;
+        break;
+      case 'raw':
+        command = jsonText;
+        break;
+      default:
+        command = `tellraw ${formState.selector} ${jsonText}`;
+    }
+  }
+
+  setOutput(command, 'json-text', { ...formState, version, plainText });
 }
 
 /**
  * 初期化
  */
 export function init(container) {
-  const segmentsContainer = $('#segments-container', container);
-
-  // 初期セグメントをレンダリング
-  renderAllSegments(segmentsContainer);
+  // リッチテキストエディターの初期化
+  if (jsonTextEditor) {
+    jsonTextEditor.init(container);
+    jsonTextEditor.options.onChange = () => {
+      updateCommand(container);
+    };
+  }
 
   // 出力形式切り替え
   delegate(container, 'click', '.format-tab', (e, target) => {
@@ -339,162 +181,9 @@ export function init(container) {
     updateCommand(container);
   });
 
-  // セグメント追加
-  $('#add-segment-btn', container)?.addEventListener('click', () => {
-    formState.segments.push(createDefaultSegment());
-    renderAllSegments(segmentsContainer);
-    updateCommand(container);
-  });
-
-  // セグメント削除
-  delegate(segmentsContainer, 'click', '.segment-remove-btn', (e, target) => {
-    if (formState.segments.length <= 1) return;
-
-    const segmentEl = target.closest('.jt-segment');
-    const segmentId = segmentEl.dataset.segmentId;
-    formState.segments = formState.segments.filter(s => s.id !== segmentId);
-    renderAllSegments(segmentsContainer);
-    updateCommand(container);
-  });
-
-  // タイプ切り替え（テキスト/セレクター）
-  delegate(segmentsContainer, 'click', '.type-btn', (e, target) => {
-    const type = target.dataset.type;
-    const segmentEl = target.closest('.jt-segment');
-    const segmentId = segmentEl.dataset.segmentId;
-    const segment = formState.segments.find(s => s.id === segmentId);
-
-    if (segment) {
-      segment.type = type;
-      renderAllSegments(segmentsContainer);
-      updateCommand(container);
-    }
-  });
-
-  // テキスト入力
-  delegate(segmentsContainer, 'input', '.segment-text', debounce((e, target) => {
-    const segmentEl = target.closest('.jt-segment');
-    const segmentId = segmentEl.dataset.segmentId;
-    const segment = formState.segments.find(s => s.id === segmentId);
-
-    if (segment) {
-      segment.text = target.value;
-      updateCommand(container);
-    }
-  }, 100));
-
-  // セレクター選択
-  delegate(segmentsContainer, 'change', '.segment-selector', (e, target) => {
-    const segmentEl = target.closest('.jt-segment');
-    const segmentId = segmentEl.dataset.segmentId;
-    const segment = formState.segments.find(s => s.id === segmentId);
-
-    if (segment) {
-      segment.selector = target.value;
-      updateCommand(container);
-    }
-  });
-
-  // 色選択
-  delegate(segmentsContainer, 'click', '.color-swatch', (e, target) => {
-    const color = target.dataset.color;
-    const segmentEl = target.closest('.jt-segment');
-    const segmentId = segmentEl.dataset.segmentId;
-    const segment = formState.segments.find(s => s.id === segmentId);
-
-    if (segment) {
-      segment.color = color;
-      $$('.color-swatch', segmentEl).forEach(s => s.classList.remove('active'));
-      target.classList.add('active');
-      updateCommand(container);
-    }
-  });
-
-  // スタイルトグル
-  delegate(segmentsContainer, 'click', '.style-btn', (e, target) => {
-    const style = target.dataset.style;
-    const segmentEl = target.closest('.jt-segment');
-    const segmentId = segmentEl.dataset.segmentId;
-    const segment = formState.segments.find(s => s.id === segmentId);
-
-    if (segment) {
-      segment[style] = !segment[style];
-      target.classList.toggle('active');
-      updateCommand(container);
-    }
-  });
-
-  // クリックイベント変更
-  delegate(segmentsContainer, 'change', '.click-action', (e, target) => {
-    const segmentEl = target.closest('.jt-segment');
-    const segmentId = segmentEl.dataset.segmentId;
-    const segment = formState.segments.find(s => s.id === segmentId);
-    const valueInput = segmentEl.querySelector('.click-value');
-
-    if (segment) {
-      segment.clickAction = target.value;
-      segment.clickValue = '';
-
-      const action = CLICK_ACTIONS.find(a => a.id === target.value);
-      if (valueInput) {
-        valueInput.style.display = target.value ? 'block' : 'none';
-        valueInput.placeholder = action?.placeholder || '';
-        valueInput.value = '';
-      }
-
-      updateCommand(container);
-    }
-  });
-
-  // クリックイベント値
-  delegate(segmentsContainer, 'input', '.click-value', debounce((e, target) => {
-    const segmentEl = target.closest('.jt-segment');
-    const segmentId = segmentEl.dataset.segmentId;
-    const segment = formState.segments.find(s => s.id === segmentId);
-
-    if (segment) {
-      segment.clickValue = target.value;
-      updateCommand(container);
-    }
-  }, 100));
-
-  // ホバーイベント変更
-  delegate(segmentsContainer, 'change', '.hover-action', (e, target) => {
-    const segmentEl = target.closest('.jt-segment');
-    const segmentId = segmentEl.dataset.segmentId;
-    const segment = formState.segments.find(s => s.id === segmentId);
-    const valueInput = segmentEl.querySelector('.hover-value');
-
-    if (segment) {
-      segment.hoverAction = target.value;
-      segment.hoverValue = '';
-
-      const action = HOVER_ACTIONS.find(a => a.id === target.value);
-      if (valueInput) {
-        valueInput.style.display = target.value ? 'block' : 'none';
-        valueInput.placeholder = action?.placeholder || '';
-        valueInput.value = '';
-      }
-
-      updateCommand(container);
-    }
-  });
-
-  // ホバーイベント値
-  delegate(segmentsContainer, 'input', '.hover-value', debounce((e, target) => {
-    const segmentEl = target.closest('.jt-segment');
-    const segmentId = segmentEl.dataset.segmentId;
-    const segment = formState.segments.find(s => s.id === segmentId);
-
-    if (segment) {
-      segment.hoverValue = target.value;
-      updateCommand(container);
-    }
-  }, 100));
-
   // リセットボタン
   $('#json-text-reset-btn', container)?.addEventListener('click', () => {
-    resetForm(container, segmentsContainer);
+    resetForm(container);
   });
 
   // 初期コマンド生成
@@ -504,7 +193,7 @@ export function init(container) {
 /**
  * フォームをリセット
  */
-function resetForm(container, segmentsContainer) {
+function resetForm(container) {
   // 状態をデフォルトに戻す
   formState = {
     segments: [createDefaultSegment()],
@@ -532,23 +221,13 @@ function resetForm(container, segmentsContainer) {
     selectorRow.style.display = 'flex';
   }
 
-  // セグメントを再レンダリング
-  renderAllSegments(segmentsContainer);
+  // リッチテキストエディターをクリア
+  if (jsonTextEditor) {
+    jsonTextEditor.clear(container);
+  }
 
   // コマンドを更新
   updateCommand(container);
-}
-
-/**
- * HTMLエスケープ
- */
-function escapeHtml(str) {
-  if (!str) return '';
-  return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
 }
 
 // スタイル
@@ -674,6 +353,12 @@ style.textContent = `
     color: #ffffff;
     font-size: 1.1rem;
     flex: 1;
+  }
+
+  .json-text-tool .section-hint {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.85rem;
+    margin: 0 0 16px 0;
   }
 
   /* 出力形式タブ */

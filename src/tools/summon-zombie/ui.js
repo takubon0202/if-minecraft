@@ -329,26 +329,6 @@ const PRESETS = [
   },
 ];
 
-// JSONテキストの色（summonツールと統一）
-const TEXT_COLORS = [
-  { id: 'black', name: '黒', hex: '#000000' },
-  { id: 'dark_blue', name: '紺', hex: '#0000AA' },
-  { id: 'dark_green', name: '緑', hex: '#00AA00' },
-  { id: 'dark_aqua', name: '青緑', hex: '#00AAAA' },
-  { id: 'dark_red', name: '暗赤', hex: '#AA0000' },
-  { id: 'dark_purple', name: '紫', hex: '#AA00AA' },
-  { id: 'gold', name: '金', hex: '#FFAA00' },
-  { id: 'gray', name: '灰', hex: '#AAAAAA' },
-  { id: 'dark_gray', name: '暗灰', hex: '#555555' },
-  { id: 'blue', name: '青', hex: '#5555FF' },
-  { id: 'green', name: '黄緑', hex: '#55FF55' },
-  { id: 'aqua', name: '水色', hex: '#55FFFF' },
-  { id: 'red', name: '赤', hex: '#FF5555' },
-  { id: 'light_purple', name: 'ピンク', hex: '#FF55FF' },
-  { id: 'yellow', name: '黄', hex: '#FFFF55' },
-  { id: 'white', name: '白', hex: '#FFFFFF' },
-];
-
 // 状態管理
 let state = {
   zombieType: 'zombie',
@@ -363,11 +343,7 @@ let state = {
   },
   attributes: {},
   customName: '',
-  nameColor: 'white',
-  nameBold: false,
-  nameItalic: false,
-  nameUnderlined: false,
-  nameObfuscated: false,
+  customNameSNBT: '',
   glowing: false,
   noAI: false,
   silent: false,
@@ -380,10 +356,30 @@ let state = {
 // 現在編集中の装備スロット
 let currentEditSlot = null;
 
+// リッチテキストエディター（名前設定用）
+let zombieNameEditor = null;
+
+// RTE CSSを追加
+const rteStyle = document.createElement('style');
+rteStyle.textContent = RICH_TEXT_EDITOR_CSS;
+document.head.appendChild(rteStyle);
+
 /**
  * UIをレンダリング
  */
 export function render(manifest) {
+  // RTEインスタンスを作成
+  zombieNameEditor = new RichTextEditor('zombie-name-editor', {
+    placeholder: 'ゾンビの名前を入力...',
+    showPreview: true,
+    showClickEvent: false,
+    showHoverEvent: false,
+    onChange: (snbt, plainText) => {
+      state.customName = plainText;
+      state.customNameSNBT = snbt;
+      updateCommand();
+    }
+  });
   return `
     <div class="tool-panel summon-zombie-tool mc-themed" id="summon-zombie-panel">
       <!-- ヘッダー（summonツール統一デザイン） -->
@@ -621,52 +617,15 @@ export function render(manifest) {
           </div>
         </section>
 
-        <!-- ステップ6: 名前設定（カラーセレクター付き） -->
+        <!-- ステップ6: 名前設定（リッチテキストエディター） -->
         <section class="form-section mc-section">
           <div class="section-header">
             <span class="step-number">6</span>
             <h3>名前設定 <span class="optional-badge">任意</span></h3>
           </div>
 
-          <div class="name-editor">
-            <input type="text" id="zombie-name" class="mc-input name-input" placeholder="カスタム名を入力...">
-
-            <div class="name-style-options">
-              <div class="color-selector">
-                <label>文字色:</label>
-                <div class="color-grid" id="zombie-color-grid">
-                  ${TEXT_COLORS.map(c => `
-                    <button type="button" class="color-btn ${c.id === 'white' ? 'active' : ''}"
-                            data-color="${c.id}" style="background: ${c.hex}"
-                            title="${c.name}"></button>
-                  `).join('')}
-                </div>
-              </div>
-
-              <div class="text-style-btns">
-                <span class="text-style-btns-label">スタイル:</span>
-                <div class="text-style-btns-row">
-                  <button type="button" class="style-btn" data-style="bold" title="太字">
-                    <strong>B</strong>
-                  </button>
-                  <button type="button" class="style-btn" data-style="italic" title="斜体">
-                    <em>I</em>
-                  </button>
-                  <button type="button" class="style-btn" data-style="underlined" title="下線">
-                    <u>U</u>
-                  </button>
-                  <button type="button" class="style-btn" data-style="obfuscated" title="難読化">
-                    §k
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <!-- プレビュー -->
-            <div class="name-preview" id="zombie-name-preview">
-              <span class="preview-label">プレビュー:</span>
-              <span class="preview-text" id="zombie-preview-text">名前を入力...</span>
-            </div>
+          <div class="name-editor-container">
+            ${zombieNameEditor.render()}
           </div>
         </section>
       </form>
@@ -836,35 +795,10 @@ export function init(container) {
     });
   });
 
-  // カスタム名
-  $('#zombie-name', container)?.addEventListener('input', debounce((e) => {
-    state.customName = e.target.value;
-    updateNamePreview(container);
-    updateCommand();
-  }, 150));
-
-  // 名前の色選択
-  delegate(container, 'click', '.color-btn', (e, target) => {
-    $$('.color-btn', container).forEach(btn => btn.classList.remove('active'));
-    target.classList.add('active');
-    state.nameColor = target.dataset.color;
-    updateNamePreview(container);
-    updateCommand();
-  });
-
-  // テキストスタイル選択
-  delegate(container, 'click', '.style-btn', (e, target) => {
-    const style = target.dataset.style;
-    target.classList.toggle('active');
-
-    if (style === 'bold') state.nameBold = target.classList.contains('active');
-    if (style === 'italic') state.nameItalic = target.classList.contains('active');
-    if (style === 'underlined') state.nameUnderlined = target.classList.contains('active');
-    if (style === 'obfuscated') state.nameObfuscated = target.classList.contains('active');
-
-    updateNamePreview(container);
-    updateCommand();
-  });
+  // リッチテキストエディター初期化（名前設定用）
+  if (zombieNameEditor) {
+    zombieNameEditor.init(container);
+  }
 
   // モーダル制御
   $('#modal-close', container)?.addEventListener('click', () => closeEnchantModal(container));
@@ -898,11 +832,7 @@ function resetForm(container) {
     },
     attributes: {},
     customName: '',
-    nameColor: 'white',
-    nameBold: false,
-    nameItalic: false,
-    nameUnderlined: false,
-    nameObfuscated: false,
+    customNameSNBT: '',
     glowing: false,
     noAI: false,
     silent: false,
@@ -916,16 +846,14 @@ function resetForm(container) {
   $('#use-attributes', container).checked = false;
   $('#attributes-section', container).style.display = 'none';
 
-  // 名前スタイルをリセット
-  $$('.color-btn', container).forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.color === 'white');
-  });
-  $$('.style-btn', container).forEach(btn => btn.classList.remove('active'));
+  // リッチテキストエディターをクリア
+  if (zombieNameEditor) {
+    zombieNameEditor.clear(container);
+  }
 
   // UIを状態から同期
   syncUIFromState(container);
   updateSelectedZombieDisplay(container);
-  updateNamePreview(container);
 
   // コマンドを更新
   updateCommand();
@@ -945,34 +873,6 @@ function updateSelectedZombieDisplay(container) {
   if (iconEl) iconEl.src = getSpawnEggUrl(state.zombieType);
   if (nameEl) nameEl.textContent = zombieInfo.name;
   if (idEl) idEl.textContent = `minecraft:${state.zombieType}`;
-}
-
-/**
- * 名前プレビューを更新
- */
-function updateNamePreview(container) {
-  const previewEl = $('#zombie-preview-text', container);
-  if (!previewEl) return;
-
-  const name = state.customName || '名前を入力...';
-  const colorInfo = TEXT_COLORS.find(c => c.id === state.nameColor);
-  const color = colorInfo?.hex || '#FFFFFF';
-
-  let styles = `color: ${color};`;
-  if (state.nameBold) styles += 'font-weight: bold;';
-  if (state.nameItalic) styles += 'font-style: italic;';
-  if (state.nameUnderlined) styles += 'text-decoration: underline;';
-
-  previewEl.style.cssText = styles;
-
-  if (state.nameObfuscated && state.customName) {
-    // 難読化エフェクト（表示用）
-    previewEl.textContent = '§k§k§k§k§k';
-    previewEl.classList.add('obfuscated');
-  } else {
-    previewEl.textContent = name;
-    previewEl.classList.remove('obfuscated');
-  }
 }
 
 /**
@@ -1065,11 +965,7 @@ function applyPreset(presetId, container) {
       },
       attributes: {},
       customName: '',
-      nameColor: 'white',
-      nameBold: false,
-      nameItalic: false,
-      nameUnderlined: false,
-      nameObfuscated: false,
+      customNameSNBT: '',
       glowing: false,
       noAI: false,
       silent: false,
@@ -1078,6 +974,10 @@ function applyPreset(presetId, container) {
       canBreakDoors: false,
       isBaby: false,
     };
+    // RTEをクリア
+    if (zombieNameEditor) {
+      zombieNameEditor.clear(container);
+    }
   } else {
     const preset = PRESETS.find(p => p.id === presetId);
     if (!preset) return;
@@ -1085,11 +985,19 @@ function applyPreset(presetId, container) {
     const config = preset.config;
     state.zombieType = config.zombieType;
     state.customName = config.customName || '';
+    state.customNameSNBT = '';  // プリセットではSNBTはリセット
     state.glowing = config.glowing || false;
     state.noAI = config.noAI || false;
     state.invulnerable = config.invulnerable || false;
     state.persistenceRequired = config.persistenceRequired || true;
     state.canBreakDoors = config.canBreakDoors || false;
+
+    // RTEにプリセットの名前を設定
+    if (zombieNameEditor && config.customName) {
+      zombieNameEditor.setText(config.customName, container);
+    } else if (zombieNameEditor) {
+      zombieNameEditor.clear(container);
+    }
 
     // 装備
     Object.keys(config.equipment).forEach(slot => {
@@ -1116,7 +1024,6 @@ function applyPreset(presetId, container) {
   // UI更新
   syncUIFromState(container);
   updateSelectedZombieDisplay(container);
-  updateNamePreview(container);
   updateCommand();
 }
 
@@ -1170,9 +1077,6 @@ function syncUIFromState(container) {
   $('#opt-canbreakdoors', container).checked = state.canBreakDoors;
   $('#opt-isbaby', container).checked = state.isBaby;
   $('#opt-glowing', container).checked = state.glowing;
-
-  // カスタム名
-  $('#zombie-name', container).value = state.customName;
 }
 
 /**
@@ -1191,23 +1095,14 @@ function generateSummonZombieCommand(s) {
   const entityId = `minecraft:${s.zombieType}`;
   const nbtParts = [];
 
-  // カスタム名（1.21+ エンティティタグはPascalCase、JSON Text Component形式）
-  if (s.customName) {
+  // カスタム名（1.21+ エンティティタグはPascalCase、RTE出力を使用）
+  if (s.customName && s.customNameSNBT) {
+    // RTEからのSNBT形式を使用
+    nbtParts.push(`CustomName:'${s.customNameSNBT}'`);
+  } else if (s.customName) {
+    // フォールバック: プレーンテキストのみ
     const escapedName = s.customName.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
-    const jsonParts = [`"text":"${escapedName}"`];
-
-    // 色を追加（デフォルト白以外の場合）
-    if (s.nameColor && s.nameColor !== 'white') {
-      jsonParts.push(`"color":"${s.nameColor}"`);
-    }
-
-    // スタイルを追加
-    if (s.nameBold) jsonParts.push('"bold":true');
-    if (s.nameItalic) jsonParts.push('"italic":true');
-    if (s.nameUnderlined) jsonParts.push('"underlined":true');
-    if (s.nameObfuscated) jsonParts.push('"obfuscated":true');
-
-    nbtParts.push(`CustomName:'{${jsonParts.join(',')}}'`);
+    nbtParts.push(`CustomName:'{"text":"${escapedName}","italic":false}'`);
   }
 
   // オプション（1.21+ エンティティタグはPascalCase）
