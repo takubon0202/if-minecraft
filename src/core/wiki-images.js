@@ -125,6 +125,9 @@ const ITEM_NAME_MAP = {
   'splash_potion_healing': 'Splash_Potion_of_Healing',
   'lingering_potion_healing': 'Lingering_Potion_of_Healing',
 
+  // === ウサギ関連 ===
+  'rabbit_foot': 'Rabbit%27s_Foot',  // アポストロフィ付き
+
   // === 食料 ===
   'cooked_beef': 'Steak',
   'cooked_porkchop': 'Cooked_Porkchop',
