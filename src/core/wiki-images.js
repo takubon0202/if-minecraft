@@ -157,15 +157,15 @@ const ITEM_NAME_MAP = {
   'waxed_exposed_copper_chain': 'Waxed_Exposed_Copper_Chain',
   'waxed_weathered_copper_chain': 'Waxed_Weathered_Copper_Chain',
   'waxed_oxidized_copper_chain': 'Waxed_Oxidized_Copper_Chain',
-  // 銅の松明
-  'copper_torch': 'Copper_Torch',
-  'exposed_copper_torch': 'Exposed_Copper_Torch',
-  'weathered_copper_torch': 'Weathered_Copper_Torch',
-  'oxidized_copper_torch': 'Oxidized_Copper_Torch',
-  'waxed_copper_torch': 'Waxed_Copper_Torch',
-  'waxed_exposed_copper_torch': 'Waxed_Exposed_Copper_Torch',
-  'waxed_weathered_copper_torch': 'Waxed_Weathered_Copper_Torch',
-  'waxed_oxidized_copper_torch': 'Waxed_Oxidized_Copper_Torch',
+  // 銅の松明（JE2_BE2形式 - バージョン依存のため）
+  'copper_torch': 'Copper_Torch_JE2_BE2',
+  'exposed_copper_torch': 'Copper_Torch_JE2_BE2',    // バリエーションは未登録、基本で代用
+  'weathered_copper_torch': 'Copper_Torch_JE2_BE2',  // バリエーションは未登録、基本で代用
+  'oxidized_copper_torch': 'Copper_Torch_JE2_BE2',   // バリエーションは未登録、基本で代用
+  'waxed_copper_torch': 'Copper_Torch_JE2_BE2',
+  'waxed_exposed_copper_torch': 'Copper_Torch_JE2_BE2',
+  'waxed_weathered_copper_torch': 'Copper_Torch_JE2_BE2',
+  'waxed_oxidized_copper_torch': 'Copper_Torch_JE2_BE2',
   // 銅のバー
   'copper_bars': 'Copper_Bars',
   'exposed_copper_bars': 'Exposed_Copper_Bars',
@@ -409,12 +409,12 @@ const ITEM_NAME_MAP = {
   'waxed_oxidized_cut_copper_slab': 'Waxed_Oxidized_Cut_Copper_Slab',
 
   // === 特殊ブロック ===
-  'spawner': 'Spawner',
+  'spawner': 'Monster_Spawner',
   'jack_o_lantern': 'Jack_o%27Lantern',
-  'chain': 'Chain',
-  'water': 'Water',
-  'lava': 'Lava',
-  'air': 'Air',
+  'chain': 'Iron_Chain',
+  'water': 'Water_Bucket',  // ブロックはアイテム無し、バケツで代用
+  'lava': 'Lava_Bucket',    // ブロックはアイテム無し、バケツで代用
+  'air': 'Barrier',         // 空気は不可視、バリアで代用
   'void_air': 'Barrier',
   'cave_air': 'Barrier',
 
