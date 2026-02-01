@@ -1944,79 +1944,79 @@ style.textContent = `
   }
 
   /* レベル選択UI */
-  .enchant-level-selector {
+  .enchant-tool .enchant-level-selector {
     display: flex;
     align-items: center;
     gap: 6px;
     margin-top: 4px;
   }
 
-  .enchant-level-selector .level-label {
+  .enchant-tool .enchant-level-selector .level-label {
     font-size: 0.75rem;
-    color: var(--mc-text-muted);
+    color: #aaaaaa;
     font-weight: bold;
   }
 
-  .enchant-level-selector .enchant-level-input {
+  .enchant-tool .enchant-level-selector .enchant-level-input {
     width: 55px;
     padding: 4px 6px;
     font-size: 0.85rem;
     font-weight: bold;
     text-align: center;
-    background: var(--mc-bg-panel);
-    border: 2px solid var(--mc-border-dark);
+    background: #2a2a2a;
+    border: 2px solid #444444;
     color: var(--mc-color-diamond);
     border-radius: 3px;
   }
 
-  .enchant-level-selector .enchant-level-input:focus {
+  .enchant-tool .enchant-level-selector .enchant-level-input:focus {
     outline: none;
-    border-color: var(--mc-color-diamond);
-    box-shadow: 0 0 0 2px rgba(77, 236, 242, 0.2);
+    border-color: #6b4ce8;
+    box-shadow: 0 0 0 2px rgba(107, 76, 232, 0.3);
   }
 
-  .enchant-level-selector .level-presets {
+  .enchant-tool .enchant-level-selector .level-presets {
     display: flex;
     gap: 3px;
   }
 
-  .enchant-level-selector .level-preset-btn {
+  .enchant-tool .enchant-level-selector .level-preset-btn {
     padding: 3px 6px;
     font-size: 0.65rem;
     font-weight: bold;
     border-radius: 3px;
-    border: 1px solid var(--mc-border-dark);
-    background: var(--mc-bg-surface);
-    color: var(--mc-text-primary);
+    border: 1px solid #555555;
+    background: #3a3a3a;
+    color: #ffffff;
     cursor: pointer;
     transition: all 0.15s;
   }
 
-  .enchant-level-selector .level-preset-btn:hover {
-    background: var(--mc-color-grass-light);
-    border-color: var(--mc-color-grass-main);
+  .enchant-tool .enchant-level-selector .level-preset-btn:hover {
+    background: #6b4ce8;
+    border-color: #8b6cf8;
     color: white;
   }
 
-  .enchant-level-selector .level-preset-btn.extreme {
+  .enchant-tool .enchant-level-selector .level-preset-btn.extreme {
     background: linear-gradient(135deg, rgba(255, 170, 0, 0.3) 0%, rgba(255, 107, 107, 0.3) 100%);
     border-color: var(--mc-color-gold);
     color: var(--mc-color-gold);
   }
 
-  .enchant-level-selector .level-preset-btn.extreme:hover {
+  .enchant-tool .enchant-level-selector .level-preset-btn.extreme:hover {
     background: linear-gradient(135deg, #ffaa00 0%, #ff6b6b 100%);
     color: white;
     box-shadow: 0 0 6px rgba(255, 170, 0, 0.5);
   }
 
   /* 追加ボタン */
-  .enchant-add-btn {
+  .enchant-tool .enchant-add-btn {
     align-self: flex-end;
     padding: 4px 12px;
     font-size: 1rem;
     font-weight: bold;
-    background: var(--mc-color-grass-main);
+    background: linear-gradient(180deg, #6b4ce8 0%, #4a32b3 100%);
     color: white;
     border: none;
     border-radius: 4px;
@@ -2024,190 +2024,192 @@ style.textContent = `
     transition: all 0.15s;
   }
 
-  .enchant-add-btn:hover {
-    background: var(--mc-color-grass-light);
+  .enchant-tool .enchant-add-btn:hover {
+    background: linear-gradient(180deg, #7d5ef5 0%, #5a42c3 100%);
     transform: scale(1.05);
   }
 
-  .enchant-item.selected .enchant-add-btn {
-    background: var(--mc-text-muted);
+  .enchant-tool .enchant-item.selected .enchant-add-btn {
+    background: #555555;
     cursor: not-allowed;
   }
 
-  .enchant-info-hint {
+  .enchant-tool .enchant-info-hint {
     display: flex;
     align-items: center;
     gap: var(--mc-space-sm);
     padding: var(--mc-space-sm) var(--mc-space-md);
-    background: linear-gradient(135deg, rgba(85, 255, 255, 0.1) 0%, rgba(255, 170, 0, 0.1) 100%);
-    border: 1px solid rgba(85, 255, 255, 0.3);
+    background: linear-gradient(135deg, rgba(107, 76, 232, 0.15) 0%, rgba(170, 0, 255, 0.15) 100%);
+    border: 1px solid rgba(107, 76, 232, 0.4);
     border-radius: 4px;
     margin-bottom: var(--mc-space-sm);
     font-size: 0.8rem;
+    color: #cccccc;
   }
 
-  .enchant-info-hint .hint-icon {
+  .enchant-tool .enchant-info-hint .hint-icon {
     font-size: 1.1rem;
   }
 
   /* 選択されたエンチャント */
-  .selected-enchants {
+  .enchant-tool .selected-enchants {
     display: flex;
     flex-direction: column;
     gap: var(--mc-space-xs);
     padding: var(--mc-space-sm);
-    background: var(--mc-bg-panel);
-    border: 1px solid var(--mc-border-dark);
+    background: rgba(30,30,30,0.8);
+    border: 2px solid #555555;
+    border-radius: 4px;
     min-height: 60px;
     max-height: 300px;
     overflow-y: auto;
   }
 
-  .selected-enchant {
+  .enchant-tool .selected-enchant {
     display: flex;
     align-items: center;
     gap: var(--mc-space-sm);
     padding: 8px 12px;
-    background: var(--mc-bg-surface);
-    border-left: 4px solid var(--mc-color-grass-main);
+    background: linear-gradient(180deg, #3a3a3a 0%, #2a2a2a 100%);
+    border-left: 4px solid #6b4ce8;
     border-radius: 0 4px 4px 0;
     transition: all 0.2s;
   }
 
-  .selected-enchant:hover {
-    background: rgba(92, 183, 70, 0.1);
+  .enchant-tool .selected-enchant:hover {
+    background: linear-gradient(180deg, rgba(107, 76, 232, 0.2) 0%, rgba(74, 50, 179, 0.2) 100%);
   }
 
-  .selected-enchant.curse {
+  .enchant-tool .selected-enchant.curse {
     border-left-color: var(--mc-color-redstone);
   }
 
-  .selected-enchant .enchant-info {
+  .enchant-tool .selected-enchant .enchant-info {
     display: flex;
     flex-direction: column;
     gap: 2px;
     min-width: 100px;
   }
 
-  .selected-enchant .enchant-label {
+  .enchant-tool .selected-enchant .enchant-label {
     font-size: 0.85rem;
     font-weight: bold;
-    color: var(--mc-text-primary);
+    color: #ffffff;
   }
 
-  .selected-enchant .enchant-level-display {
+  .enchant-tool .selected-enchant .enchant-level-display {
     font-size: 0.7rem;
     color: var(--mc-color-diamond);
     font-family: var(--mc-font-mono);
   }
 
-  .selected-enchant .enchant-level-control {
+  .enchant-tool .selected-enchant .enchant-level-control {
     display: flex;
     align-items: center;
     gap: 8px;
     flex: 1;
   }
 
-  .selected-enchant .level-input-wrapper {
+  .enchant-tool .selected-enchant .level-input-wrapper {
     display: flex;
     align-items: center;
     position: relative;
   }
 
-  .selected-enchant .enchant-level {
+  .enchant-tool .selected-enchant .enchant-level {
     width: 55px;
     padding: 4px 6px;
     font-size: 0.85rem;
     font-weight: bold;
     text-align: center;
-    background: var(--mc-bg-panel);
-    border: 2px solid var(--mc-border-dark);
-    color: var(--mc-text-primary);
+    background: #2a2a2a;
+    border: 2px solid #555555;
+    color: #ffffff;
     border-radius: 3px;
     transition: all 0.15s;
   }
 
-  .selected-enchant .enchant-level:hover {
-    border-color: var(--mc-color-grass-main);
-    background: rgba(92, 183, 70, 0.1);
+  .enchant-tool .selected-enchant .enchant-level:hover {
+    border-color: #6b4ce8;
+    background: rgba(107, 76, 232, 0.1);
   }
 
-  .selected-enchant .enchant-level:focus {
+  .enchant-tool .selected-enchant .enchant-level:focus {
     outline: none;
-    border-color: var(--mc-color-diamond);
-    box-shadow: 0 0 0 2px rgba(77, 236, 242, 0.2);
+    border-color: #6b4ce8;
+    box-shadow: 0 0 0 2px rgba(107, 76, 232, 0.3);
   }
 
-  .selected-enchant .level-suffix {
+  .enchant-tool .selected-enchant .level-suffix {
     font-size: 0.65rem;
-    color: var(--mc-text-muted);
+    color: #aaaaaa;
     margin-left: 3px;
     font-weight: bold;
   }
 
-  .selected-enchant .level-quick-controls {
+  .enchant-tool .selected-enchant .level-quick-controls {
     display: flex;
     gap: 3px;
   }
 
-  .selected-enchant .level-quick-btn {
+  .enchant-tool .selected-enchant .level-quick-btn {
     padding: 4px 8px;
     font-size: 0.7rem;
     font-weight: bold;
     border-radius: 3px;
-    border: 1px solid var(--mc-border-dark);
-    background: var(--mc-bg-surface);
-    color: var(--mc-text-primary);
+    border: 1px solid #555555;
+    background: #3a3a3a;
+    color: #ffffff;
     cursor: pointer;
     transition: all 0.15s;
     min-width: 32px;
   }
 
-  .selected-enchant .level-quick-btn:hover {
+  .enchant-tool .selected-enchant .level-quick-btn:hover {
     transform: translateY(-1px);
   }
 
-  .selected-enchant .level-quick-btn.quick-btn-preset {
+  .enchant-tool .selected-enchant .level-quick-btn.quick-btn-preset {
     min-width: 28px;
   }
 
-  .selected-enchant .level-quick-btn.quick-btn-preset:hover {
-    background: var(--mc-color-stone-400);
-    border-color: var(--mc-color-stone-500);
+  .enchant-tool .selected-enchant .level-quick-btn.quick-btn-preset:hover {
+    background: #555555;
+    border-color: #666666;
   }
 
-  .selected-enchant .level-quick-btn.quick-btn-normal:hover {
-    background: var(--mc-color-grass-light);
-    border-color: var(--mc-color-grass-main);
+  .enchant-tool .selected-enchant .level-quick-btn.quick-btn-normal:hover {
+    background: #6b4ce8;
+    border-color: #8b6cf8;
     color: white;
   }
 
-  .selected-enchant .level-quick-btn.quick-btn-extreme {
+  .enchant-tool .selected-enchant .level-quick-btn.quick-btn-extreme {
     background: linear-gradient(135deg, rgba(255, 107, 107, 0.8) 0%, rgba(255, 165, 0, 0.8) 100%);
     color: white;
     border-color: #ff6b6b;
   }
 
-  .selected-enchant .level-quick-btn.quick-btn-extreme:hover {
+  .enchant-tool .selected-enchant .level-quick-btn.quick-btn-extreme:hover {
     background: linear-gradient(135deg, #ff6b6b 0%, #ff9100 100%);
     border-color: #ff4444;
     box-shadow: 0 0 8px rgba(255, 107, 107, 0.5);
   }
 
-  .selected-enchant .level-status-badge {
+  .enchant-tool .selected-enchant .level-status-badge {
     font-size: 0.8rem;
     color: var(--mc-color-gold);
     min-width: 14px;
     text-align: center;
   }
 
-  .selected-enchant .enchant-remove {
+  .enchant-tool .selected-enchant .enchant-remove {
     width: 28px;
     height: 28px;
-    background: rgba(200, 0, 0, 0.1);
-    border: 1px solid transparent;
+    background: rgba(200, 0, 0, 0.2);
+    border: 1px solid #aa0000;
     border-radius: 4px;
-    color: var(--mc-color-redstone);
+    color: #ff5555;
     cursor: pointer;
     font-size: 1.2rem;
     display: flex;
@@ -2216,29 +2218,29 @@ style.textContent = `
     transition: all 0.15s;
   }
 
-  .selected-enchant .enchant-remove:hover {
-    background: var(--mc-color-redstone);
+  .enchant-tool .selected-enchant .enchant-remove:hover {
+    background: #c80000;
     color: white;
     border-color: #a00000;
   }
 
-  .selected-enchant.over-default {
+  .enchant-tool .selected-enchant.over-default {
     border-left-color: var(--mc-color-gold);
-    background: rgba(255, 170, 0, 0.08);
+    background: rgba(255, 170, 0, 0.15);
   }
 
-  .selected-enchant.over-default .enchant-level {
+  .enchant-tool .selected-enchant.over-default .enchant-level {
     border-color: var(--mc-color-gold);
-    background: rgba(242, 193, 61, 0.15);
+    background: rgba(242, 193, 61, 0.2);
     color: var(--mc-color-gold);
   }
 
-  .selected-enchant.over-default .enchant-level-display {
+  .enchant-tool .selected-enchant.over-default .enchant-level-display {
     color: var(--mc-color-gold);
   }
 
   /* 属性 */
-  .attributes-section {
+  .enchant-tool .attributes-section {
     margin-top: var(--mc-space-sm);
     padding: var(--mc-space-sm);
     background: var(--mc-bg-panel);

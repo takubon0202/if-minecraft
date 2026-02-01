@@ -59,10 +59,10 @@ const EFFECTS = [
 
 // ポーションタイプ
 const POTION_TYPES = [
-  { id: 'potion', name: '通常のポーション' },
-  { id: 'splash_potion', name: 'スプラッシュポーション' },
-  { id: 'lingering_potion', name: '残留ポーション' },
-  { id: 'tipped_arrow', name: '効果付きの矢' },
+  { id: 'potion', name: '通常のポーション', icon: 'potion' },
+  { id: 'splash_potion', name: 'スプラッシュポーション', icon: 'splash_potion' },
+  { id: 'lingering_potion', name: '残留ポーション', icon: 'lingering_potion' },
+  { id: 'tipped_arrow', name: '効果付きの矢', icon: 'tipped_arrow' },
 ];
 
 // エフェクトアイコンのHTML生成（画像またはカラー円フォールバック）
@@ -137,63 +137,105 @@ export function render(manifest) {
   });
   return `
     <style>${RICH_TEXT_EDITOR_CSS}</style>
-    <div class="tool-panel potion-tool" id="potion-panel">
-      <div class="tool-header">
-        <img src="${getInviconUrl(manifest.iconItem || 'potion')}" class="tool-header-icon mc-wiki-image" width="32" height="32" alt="">
-        <h2>${manifest.title}</h2>
+    <div class="tool-panel potion-tool mc-themed" id="potion-panel">
+      <!-- ヘッダー -->
+      <div class="tool-header mc-header-banner">
+        <div class="header-content">
+          <img src="${getInviconUrl(manifest.iconItem || 'potion')}" alt="" class="header-icon mc-pixelated">
+          <div class="header-text">
+            <h2>ポーションコマンド</h2>
+            <p class="header-subtitle">カスタム効果付きポーション生成</p>
+          </div>
+        </div>
         <span class="version-badge" id="potion-version-badge">1.21+</span>
         <button type="button" class="reset-btn" id="potion-reset-btn" title="設定をリセット">リセット</button>
       </div>
       <p class="version-note" id="potion-version-note"></p>
 
-      <form class="tool-form" id="potion-form">
-        <!-- ポーションタイプ選択（タブ形式） -->
-        <div class="form-group">
-          <label>ポーションタイプ</label>
-          <div class="potion-type-tabs" id="potion-type-tabs">
+      <form class="tool-form mc-form" id="potion-form">
+        <!-- ステップ1: ポーションタイプ選択 -->
+        <section class="form-section mc-section">
+          <div class="section-header">
+            <span class="step-number">1</span>
+            <h3>ポーションタイプ</h3>
+          </div>
+
+          <div class="potion-type-grid">
             ${POTION_TYPES.map((t, i) => `
-              <button type="button" class="type-tab ${i === 0 ? 'active' : ''}" data-type="${t.id}">
-                <img src="${getInviconUrl(t.id)}" alt="${t.name}" class="tab-icon-img" width="32" height="32" loading="lazy" onerror="this.style.opacity='0.3'">
-                <span class="tab-name">${t.name}</span>
+              <button type="button" class="potion-type-option ${i === 0 ? 'active' : ''}" data-type="${t.id}">
+                <img src="${getInviconUrl(t.id)}" alt="${t.name}" class="type-icon mc-pixelated" onerror="this.style.opacity='0.3'">
+                <span class="type-name">${t.name}</span>
               </button>
             `).join('')}
           </div>
-        </div>
+        </section>
 
-        <!-- 設定行 -->
-        <div class="form-row">
-          <div class="form-group">
-            <label for="potion-count">個数</label>
-            <input type="number" id="potion-count" class="mc-input" value="1" min="1" max="64">
+        <!-- ステップ2: 基本設定 -->
+        <section class="form-section mc-section">
+          <div class="section-header">
+            <span class="step-number">2</span>
+            <h3>基本設定</h3>
           </div>
-        </div>
 
-        <!-- カスタム名（リッチテキストエディター） -->
-        <div class="form-group">
-          <label>カスタム名 <small style="color: var(--mc-text-muted);">（1文字ごとに色や書式を設定可能）</small></label>
-          ${customNameEditor.render()}
-        </div>
+          <div class="settings-row">
+            <div class="setting-item">
+              <label for="potion-count">個数</label>
+              <input type="number" id="potion-count" class="mc-input" value="1" min="1" max="64">
+            </div>
+          </div>
+        </section>
 
-        <!-- カスタムカラー -->
-        <div class="form-group">
-          <label>
-            <input type="checkbox" id="potion-use-color"> カスタム色を使用
-          </label>
+        <!-- ステップ3: カスタム名 -->
+        <section class="form-section mc-section">
+          <div class="section-header">
+            <span class="step-number">3</span>
+            <h3>カスタム名 <span class="optional-badge">任意</span></h3>
+          </div>
+
+          <div class="name-editor">
+            <label>ポーション名 <small class="hint">（1文字ごとに色や書式を設定可能）</small></label>
+            ${customNameEditor.render()}
+          </div>
+        </section>
+
+        <!-- ステップ4: カスタムカラー -->
+        <section class="form-section mc-section">
+          <div class="section-header">
+            <span class="step-number">4</span>
+            <h3>オプション <span class="optional-badge">任意</span></h3>
+          </div>
+
+          <div class="behavior-grid">
+            <label class="behavior-option">
+              <input type="checkbox" id="potion-use-color">
+              <div class="option-content">
+                <img src="${getInviconUrl('magenta_dye')}" alt="" class="option-icon mc-pixelated">
+                <div class="option-text">
+                  <span class="option-name">カスタム色</span>
+                  <span class="option-desc">ポーションの液体色を変更</span>
+                </div>
+              </div>
+            </label>
+          </div>
+
           <div class="color-picker-row" id="color-picker-row" style="display: none;">
             <input type="color" id="potion-color" value="#3F76E4">
             <input type="text" id="potion-color-hex" class="mc-input" value="#3F76E4" style="width: 100px;">
-            <div class="color-preview" id="color-preview"></div>
+            <div class="color-preview" id="color-preview" style="background-color: #3F76E4;"></div>
           </div>
-        </div>
+        </section>
 
-        <!-- エフェクト検索 -->
-        <div class="form-group">
-          <label>エフェクトを追加</label>
-          <input type="text" id="effect-search" class="mc-input effect-search" placeholder="エフェクト名で検索...">
-        </div>
+        <!-- ステップ5: エフェクト選択 -->
+        <section class="form-section mc-section">
+          <div class="section-header">
+            <span class="step-number">5</span>
+            <h3>エフェクトを追加</h3>
+          </div>
 
-        <!-- エフェクトタブとグリッド -->
-        <div class="form-group">
+          <div class="effect-search-wrapper">
+            <input type="text" id="effect-search" class="mc-input effect-search" placeholder="エフェクト名で検索...">
+          </div>
+
           <div class="effect-tabs">
             <button type="button" class="effect-tab active" data-type="beneficial">
               <span class="tab-dot beneficial"></span>有益 (${EFFECTS.filter(e => e.type === 'beneficial').length})
@@ -208,27 +250,36 @@ export function render(manifest) {
               全て (${EFFECTS.length})
             </button>
           </div>
+
           <div class="effect-grid-container">
             <div class="effect-grid" id="effect-grid"></div>
           </div>
-        </div>
+        </section>
 
-        <!-- 選択されたエフェクト -->
-        <div class="form-group">
-          <label>選択中のエフェクト <span id="effect-count">(0)</span></label>
+        <!-- ステップ6: 選択されたエフェクト -->
+        <section class="form-section mc-section">
+          <div class="section-header">
+            <span class="step-number">6</span>
+            <h3>選択中のエフェクト <span class="effect-count-badge" id="effect-count">(0)</span></h3>
+          </div>
+
           <div class="selected-effects" id="selected-effects">
             <p class="empty-message">上のグリッドからエフェクトをクリックして追加</p>
           </div>
-        </div>
+        </section>
 
-        <!-- プリセット（カテゴリ別） -->
-        <div class="form-group">
-          <label>プリセット</label>
+        <!-- ステップ7: プリセット -->
+        <section class="form-section mc-section">
+          <div class="section-header">
+            <span class="step-number">7</span>
+            <h3>プリセット <span class="optional-badge">任意</span></h3>
+          </div>
+
           <div class="preset-categories">
             ${Object.entries(PRESET_CATEGORIES).map(([catId, cat]) => `
               <div class="preset-category" data-category="${catId}">
                 <div class="preset-category-header" style="border-left-color: ${cat.color};">
-                  <img src="${getInviconUrl(cat.icon)}" class="preset-category-icon mc-wiki-image" width="16" height="16" alt="">
+                  <img src="${getInviconUrl(cat.icon)}" class="preset-category-icon mc-pixelated" width="16" height="16" alt="">
                   <span>${cat.name}</span>
                 </div>
                 <div class="preset-category-buttons">
@@ -241,10 +292,10 @@ export function render(manifest) {
               </div>
             `).join('')}
           </div>
-          <button type="button" class="preset-btn preset-clear" data-preset="clear" style="margin-top: 8px;">
+          <button type="button" class="preset-btn preset-clear" data-preset="clear">
             クリア
           </button>
-        </div>
+        </section>
       </form>
 
       <!-- Minecraft風ゲーム画面プレビュー -->
@@ -310,8 +361,8 @@ export function init(container) {
   renderEffectGrid(container, 'beneficial');
 
   // ポーションタイプ選択
-  delegate(container, 'click', '.type-tab', (e, target) => {
-    $$('.type-tab', container).forEach(t => t.classList.remove('active'));
+  delegate(container, 'click', '.potion-type-option', (e, target) => {
+    $$('.potion-type-option', container).forEach(t => t.classList.remove('active'));
     target.classList.add('active');
     updatePreview(container);
     updateCommand(container);
@@ -476,7 +527,7 @@ function resetForm(container) {
   if (searchInput) searchInput.value = '';
 
   // ポーションタイプを通常に戻す
-  $$('.type-tab', container).forEach((t, i) => {
+  $$('.potion-type-option', container).forEach((t, i) => {
     t.classList.toggle('active', i === 0);
   });
 
@@ -671,7 +722,7 @@ function updatePreview(container) {
   const statEffectsEl = $('#potion-stat-effects', container);
   const statDurationEl = $('#potion-stat-duration', container);
 
-  const activeType = $('.type-tab.active', container);
+  const activeType = $('.potion-type-option.active', container);
   const potionType = POTION_TYPES.find(t => t.id === activeType?.dataset.type) || POTION_TYPES[0];
   const customName = customNameEditor?.getPlainText() || '';
   const count = parseInt($('#potion-count', container)?.value) || 1;
@@ -802,7 +853,7 @@ function applyPreset(presetId, container) {
  * コマンドを更新（バージョン対応）
  */
 function updateCommand(container) {
-  const activeType = $('.type-tab.active', container);
+  const activeType = $('.potion-type-option.active', container);
   const potionType = activeType?.dataset.type || 'potion';
   const count = parseInt($('#potion-count', container)?.value) || 1;
 
@@ -1069,31 +1120,293 @@ function formatDuration(ticks) {
 // スタイル追加（ポーション固有スタイルのみ - 共通スタイルはtheme.cssに定義）
 const style = document.createElement('style');
 style.textContent = `
-  /* 設定行（横並び） */
-  .form-row {
+  /* ===== summonツール統一デザイン ===== */
+
+  /* セクション構造 */
+  .potion-tool .form-section {
+    margin-bottom: var(--mc-space-lg);
+    padding: var(--mc-space-lg);
+    background: linear-gradient(180deg, rgba(60,60,60,0.8) 0%, rgba(40,40,40,0.9) 100%);
+    border: 2px solid #555555;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  }
+
+  .potion-tool .section-header {
+    display: flex;
+    align-items: center;
+    gap: var(--mc-space-md);
+    margin-bottom: var(--mc-space-lg);
+    padding-bottom: var(--mc-space-sm);
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .potion-tool .step-number {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: linear-gradient(180deg, #5cb746 0%, #3a8128 100%);
+    color: white;
+    border-radius: 50%;
+    font-weight: bold;
+    font-size: 1rem;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+  }
+
+  .potion-tool .section-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: #ffffff;
+  }
+
+  .potion-tool .optional-badge {
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 4px;
+    color: #aaaaaa;
+    margin-left: 8px;
+  }
+
+  .potion-tool .effect-count-badge {
+    font-size: 0.85rem;
+    color: var(--mc-color-diamond);
+    margin-left: 8px;
+  }
+
+  /* ヘッダー */
+  .potion-tool .tool-header {
+    display: flex;
+    align-items: center;
+    gap: var(--mc-space-md);
+    padding: var(--mc-space-lg);
+    background: linear-gradient(180deg, #5cb746 0%, #3a8128 100%);
+    border-radius: 8px 8px 0 0;
+    margin: calc(-1 * var(--mc-space-lg));
+    margin-bottom: var(--mc-space-lg);
+  }
+
+  .potion-tool .header-content {
+    display: flex;
+    align-items: center;
+    gap: var(--mc-space-md);
+  }
+
+  .potion-tool .header-icon {
+    width: 48px;
+    height: 48px;
+  }
+
+  .potion-tool .header-text h2 {
+    margin: 0;
+    font-size: 1.3rem;
+    color: #ffffff;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+  }
+
+  .potion-tool .header-subtitle {
+    margin: 4px 0 0 0;
+    font-size: 0.85rem;
+    color: rgba(255,255,255,0.8);
+  }
+
+  /* ポーションタイプグリッド */
+  .potion-tool .potion-type-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: var(--mc-space-md);
+  }
+
+  .potion-tool .potion-type-option {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: var(--mc-space-md);
+    background: linear-gradient(180deg, #4a4a4a 0%, #3a3a3a 100%);
+    border: 2px solid #555555;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .potion-tool .potion-type-option:hover {
+    background: linear-gradient(180deg, #5a5a5a 0%, #4a4a4a 100%);
+    border-color: #666666;
+  }
+
+  .potion-tool .potion-type-option.active {
+    background: linear-gradient(180deg, rgba(92, 183, 70, 0.3) 0%, rgba(58, 129, 40, 0.3) 100%);
+    border-color: var(--mc-color-grass-main);
+  }
+
+  .potion-tool .potion-type-option .type-icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .potion-tool .potion-type-option .type-name {
+    font-size: 0.8rem;
+    color: #ffffff;
+    text-align: center;
+  }
+
+  /* 設定行 */
+  .potion-tool .settings-row {
     display: flex;
     gap: var(--mc-space-md);
     flex-wrap: wrap;
     align-items: flex-start;
   }
 
-  .form-row .form-group {
+  .potion-tool .setting-item {
     flex: 1;
     min-width: 120px;
   }
 
-  .form-row .form-group label {
+  .potion-tool .setting-item label {
     display: block;
     margin-bottom: var(--mc-space-xs);
     font-weight: 500;
-    white-space: nowrap;
+    color: #cccccc;
+    font-size: 0.9rem;
   }
 
-  /* ポーションタイプタブ（4列グリッド） */
-  .potion-type-tabs {
+  /* 名前エディター */
+  .potion-tool .name-editor {
+    margin-bottom: var(--mc-space-md);
+  }
+
+  .potion-tool .name-editor label {
+    display: block;
+    color: #cccccc;
+    font-size: 0.9rem;
+    margin-bottom: var(--mc-space-xs);
+  }
+
+  .potion-tool .hint {
+    font-weight: normal;
+    font-size: 0.75rem;
+    color: #888888;
+  }
+
+  /* behavior-grid */
+  .potion-tool .behavior-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: var(--mc-space-md);
+    margin-bottom: var(--mc-space-md);
+  }
+
+  .potion-tool .behavior-option {
+    display: flex;
+    align-items: center;
+    gap: var(--mc-space-md);
+    padding: var(--mc-space-md);
+    background: linear-gradient(180deg, #4a4a4a 0%, #3a3a3a 100%);
+    border: 2px solid #555555;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .potion-tool .behavior-option:hover {
+    background: linear-gradient(180deg, #5a5a5a 0%, #4a4a4a 100%);
+  }
+
+  .potion-tool .behavior-option:has(input:checked) {
+    background: linear-gradient(180deg, rgba(92, 183, 70, 0.3) 0%, rgba(58, 129, 40, 0.3) 100%);
+    border-color: var(--mc-color-grass-main);
+  }
+
+  .potion-tool .behavior-option input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    accent-color: var(--mc-color-grass-main);
+  }
+
+  .potion-tool .option-content {
+    display: flex;
+    align-items: center;
+    gap: var(--mc-space-sm);
+    flex: 1;
+  }
+
+  .potion-tool .option-icon {
+    width: 32px;
+    height: 32px;
+  }
+
+  .potion-tool .option-text {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .potion-tool .option-name {
+    font-weight: bold;
+    color: #ffffff;
+    font-size: 0.9rem;
+  }
+
+  .potion-tool .option-desc {
+    font-size: 0.75rem;
+    color: #aaaaaa;
+  }
+
+  /* カラーピッカー */
+  .potion-tool .color-picker-row {
+    display: flex;
+    align-items: center;
+    gap: var(--mc-space-sm);
+    margin-top: var(--mc-space-sm);
+    padding: var(--mc-space-md);
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+  }
+
+  .potion-tool .color-preview {
+    width: 32px;
+    height: 32px;
+    border: 2px solid var(--mc-border-dark);
+    border-radius: 4px;
+  }
+
+  /* エフェクト検索 */
+  .potion-tool .effect-search-wrapper {
+    margin-bottom: var(--mc-space-md);
+  }
+
+  /* エフェクトタブ */
+  .potion-tool .effect-tabs {
+    display: flex;
     gap: var(--mc-space-xs);
+    margin-bottom: var(--mc-space-md);
+    flex-wrap: wrap;
+  }
+
+  .potion-tool .effect-tab {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    background: linear-gradient(180deg, #4a4a4a 0%, #3a3a3a 100%);
+    border: 2px solid #555555;
+    border-radius: 4px;
+    color: #ffffff;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.15s;
+  }
+
+  .potion-tool .effect-tab:hover {
+    background: linear-gradient(180deg, #5a5a5a 0%, #4a4a4a 100%);
+  }
+
+  .potion-tool .effect-tab.active {
+    background: linear-gradient(180deg, #5cb746 0%, #3a8128 100%);
+    border-color: var(--mc-color-grass-main);
   }
 
   /* エフェクトタイプ色分け */
@@ -1129,7 +1442,7 @@ style.textContent = `
   .effect-item .effect-name { font-size: 0.8rem; flex: 1; color: #e8e8e8; font-weight: 500; }
 
   /* エフェクトグリッドアイテム（レベル入力付き） */
-  .effect-grid {
+  .potion-tool .effect-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: 8px;
@@ -1256,6 +1569,28 @@ style.textContent = `
   }
   .effect-header .effect-remove:hover { opacity: 1; }
 
+  /* 選択されたエフェクト */
+  .potion-tool .selected-effects {
+    display: flex;
+    flex-direction: column;
+    gap: var(--mc-space-sm);
+  }
+
+  .potion-tool .selected-effect {
+    padding: var(--mc-space-md);
+    background: rgba(70, 70, 70, 0.8);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    border-left: 4px solid var(--effect-color);
+  }
+
+  .potion-tool .effect-header {
+    display: flex;
+    align-items: center;
+    gap: var(--mc-space-sm);
+    margin-bottom: var(--mc-space-sm);
+  }
+
   /* エフェクトコントロール */
   .effect-controls { display: flex; gap: var(--mc-space-md); flex-wrap: wrap; }
   .control-group {
@@ -1269,18 +1604,67 @@ style.textContent = `
   .infinite-check { margin-left: auto; }
   .infinite-check input { margin-right: 4px; }
 
-  /* カラーピッカー */
-  .color-picker-row {
+  /* プリセットカテゴリ */
+  .potion-tool .preset-categories {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: var(--mc-space-md);
+    margin-bottom: var(--mc-space-md);
+  }
+
+  .potion-tool .preset-category {
+    background: rgba(50, 50, 50, 0.6);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  .potion-tool .preset-category-header {
     display: flex;
     align-items: center;
     gap: var(--mc-space-sm);
-    margin-top: var(--mc-space-sm);
+    padding: var(--mc-space-sm) var(--mc-space-md);
+    background: rgba(0, 0, 0, 0.3);
+    border-left: 4px solid;
+    font-size: 0.85rem;
+    font-weight: bold;
+    color: #ffffff;
   }
-  .color-preview {
-    width: 32px;
-    height: 32px;
-    border: 2px solid var(--mc-border-dark);
+
+  .potion-tool .preset-category-icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  .potion-tool .preset-category-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--mc-space-xs);
+    padding: var(--mc-space-sm);
+  }
+
+  .potion-tool .preset-btn {
+    padding: 6px 12px;
+    background: linear-gradient(180deg, #4a4a4a 0%, #3a3a3a 100%);
+    border: 2px solid #555555;
     border-radius: 4px;
+    color: #ffffff;
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: all 0.15s;
+  }
+
+  .potion-tool .preset-btn:hover {
+    background: linear-gradient(180deg, #5cb746 0%, #3a8128 100%);
+    border-color: var(--mc-color-grass-main);
+  }
+
+  .potion-tool .preset-clear {
+    background: linear-gradient(180deg, #e04040 0%, #c80000 100%);
+    border-color: #a00000;
+  }
+
+  .potion-tool .preset-clear:hover {
+    background: linear-gradient(180deg, #ff5050 0%, #e00000 100%);
   }
 
   /* ポーションプレビュー */
@@ -1452,9 +1836,20 @@ style.textContent = `
   .preview-effect-item.beneficial { color: #5CB746; }
   .preview-effect-item.harmful { color: #E74C3C; }
 
+  .potion-tool .empty-message {
+    color: var(--mc-text-muted);
+    font-style: italic;
+    text-align: center;
+    padding: var(--mc-space-md);
+  }
+
+  .potion-tool .text-muted {
+    color: var(--mc-text-muted);
+  }
+
   /* レスポンシブ */
   @media (max-width: 600px) {
-    .potion-type-tabs { grid-template-columns: repeat(2, 1fr); }
+    .potion-tool .potion-type-grid { grid-template-columns: repeat(2, 1fr); }
     .effect-controls { flex-direction: column; gap: var(--mc-space-xs); }
   }
 `;
