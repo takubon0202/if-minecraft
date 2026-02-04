@@ -641,6 +641,7 @@ export function render(manifest) {
             <button type="button" class="modal-close" id="modal-close">&times;</button>
           </div>
           <div class="modal-body">
+            <p class="modal-hint">通常のエンチャントレベルを超えて255まで設定できます。</p>
             <div class="enchant-categories" id="modal-enchant-categories">
               ${Object.entries(ENCHANT_CATEGORIES).map(([catId, cat]) => `
                 <div class="enchant-category">
@@ -651,7 +652,7 @@ export function render(manifest) {
                         <span class="enchant-name">${e.name}</span>
                         <input type="number" class="enchant-level mc-input" data-enchant="${e.id}"
                                value="0" min="0" max="255" placeholder="0">
-                        <span class="enchant-max">Max: ${e.maxLevel}</span>
+                        <span class="enchant-max">通常:${e.maxLevel} / 最大:255</span>
                       </div>
                     `).join('')}
                   </div>
@@ -1131,6 +1132,8 @@ function generateSummonZombieCommand(s) {
   const equipmentItems = buildEquipmentNBT(s.equipment);
   if (equipmentItems) {
     nbtParts.push(equipmentItems);
+    // 装備を確実に保持するため、他のアイテムを拾わないようにする
+    nbtParts.push('CanPickUpLoot:0b');
   }
 
   // ドロップ確率
@@ -1591,99 +1594,100 @@ style.textContent = `
   /* 装備設定 */
   .equipment-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: var(--mc-space-md);
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 16px;
   }
 
   .equipment-slot {
-    padding: var(--mc-space-md);
-    background: linear-gradient(180deg, #4a4a4a 0%, #3a3a3a 100%);
-    border: 2px solid #555555;
+    padding: 16px;
+    background: rgba(0,0,0,0.3);
+    border: 2px solid rgba(255,255,255,0.15);
     border-radius: 6px;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.1), 0 2px 4px rgba(0,0,0,0.2);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    transition: all 0.15s ease;
+  }
+
+  .equipment-slot:hover {
+    border-color: rgba(92, 183, 70, 0.5);
+    background: rgba(0,0,0,0.4);
   }
 
   .slot-header {
     display: flex;
     align-items: center;
-    gap: var(--mc-space-xs);
-    margin-bottom: var(--mc-space-xs);
-    font-weight: bold;
-    font-size: 0.85rem;
-    color: var(--mc-text-primary);
+    gap: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
   }
 
   .slot-name {
     color: #ffffff;
-    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+    font-weight: 600;
+    font-size: 1rem;
   }
 
   .slot-header .slot-icon {
-    width: 24px;
-    height: 24px;
+    width: 32px;
+    height: 32px;
+    filter: drop-shadow(1px 1px 2px rgba(0,0,0,0.5));
   }
 
   .equipment-slot > .equipment-select {
     width: 100%;
-    margin-bottom: var(--mc-space-xs);
+    font-size: 0.95rem;
+    padding: 8px 12px;
   }
 
   .slot-actions {
     display: flex;
     align-items: center;
-    gap: var(--mc-space-sm);
-    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 4px;
   }
 
   .enchant-btn {
-    padding: 6px 10px;
-    background: linear-gradient(180deg, #6b4ce8 0%, #4a32b3 100%);
-    color: #ffffff;
-    border: 2px solid #3d2694;
+    padding: 8px 14px;
+    background: rgba(170, 0, 255, 0.2);
+    border: 2px solid rgba(170, 0, 255, 0.5);
     border-radius: 4px;
+    color: #cc66ff;
     cursor: pointer;
-    font-size: 0.75rem;
+    font-size: 0.9rem;
     font-weight: bold;
     display: flex;
     align-items: center;
     gap: 6px;
-    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
     transition: all 0.15s ease;
   }
 
-  .enchant-btn .mc-wiki-image {
-    filter: drop-shadow(0 0 2px rgba(255,255,255,0.7));
+  .enchant-btn img {
+    width: 20px;
+    height: 20px;
   }
 
   .enchant-btn:hover {
-    background: linear-gradient(180deg, #7d5ef5 0%, #5a42c3 100%);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(107, 76, 232, 0.4);
+    background: rgba(170, 0, 255, 0.3);
+    border-color: #cc66ff;
   }
 
   .enchant-btn:active {
     transform: translateY(1px);
-    box-shadow: 0 1px 2px rgba(0,0,0,0.3);
   }
 
   .enchant-count {
-    background: rgba(255,255,255,0.25);
-    color: #ffffff;
-    padding: 2px 6px;
-    border-radius: 3px;
+    font-size: 0.9rem;
     font-weight: bold;
-    min-width: 20px;
-    text-align: center;
   }
 
   .drop-chance-wrapper {
     display: flex;
     align-items: center;
     gap: 6px;
-    font-size: 0.8rem;
-    color: #ffffff;
-    font-weight: 500;
+    font-size: 0.95rem;
+    color: rgba(255,255,255,0.8);
   }
 
   .drop-chance-wrapper label {
@@ -1692,12 +1696,12 @@ style.textContent = `
 
   .drop-chance {
     width: 70px;
-    background: #2a2a2a;
+    background: #1a1a2e;
     color: #ffffff;
-    border: 2px solid #444444;
+    border: 2px solid rgba(255,255,255,0.2);
     border-radius: 4px;
-    padding: 4px 8px;
-    font-size: 0.85rem;
+    padding: 6px 8px;
+    font-size: 0.95rem;
     text-align: center;
   }
 
@@ -1875,31 +1879,52 @@ style.textContent = `
   .enchant-list {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 10px;
   }
 
   .enchant-row {
     display: flex;
     align-items: center;
-    gap: var(--mc-space-sm);
-    padding: 4px;
-    background: var(--mc-bg-surface);
+    gap: 12px;
+    padding: 12px 14px;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 4px;
+  }
+
+  .enchant-row:hover {
+    background: rgba(0,0,0,0.4);
+    border-color: rgba(170, 0, 255, 0.3);
   }
 
   .enchant-row .enchant-name {
     flex: 1;
-    font-size: 0.8rem;
+    font-size: 1rem;
+    font-weight: 500;
   }
 
   .enchant-row .enchant-level {
-    width: 60px;
+    width: 70px;
+    padding: 8px 10px;
+    font-size: 1rem;
+    text-align: center;
   }
 
   .enchant-row .enchant-max {
-    font-size: 0.7rem;
-    color: var(--mc-text-muted);
-    width: 50px;
+    font-size: 0.8rem;
+    color: rgba(255,255,255,0.5);
+    min-width: 100px;
     text-align: right;
+  }
+
+  .modal-hint {
+    color: #55ffff;
+    font-size: 0.9rem;
+    margin: 0 0 16px 0;
+    padding: 10px 14px;
+    background: rgba(85, 255, 255, 0.1);
+    border: 1px solid rgba(85, 255, 255, 0.3);
+    border-radius: 4px;
   }
 
   /* ===== 新UI要素（summonツール統一デザイン） ===== */

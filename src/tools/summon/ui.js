@@ -612,6 +612,7 @@ export function render(manifest) {
             <button type="button" class="modal-close" id="modal-close">&times;</button>
           </div>
           <div class="modal-body">
+            <p class="modal-hint">通常のエンチャントレベルを超えて255まで設定できます。</p>
             <div class="enchant-categories" id="modal-enchant-categories">
               ${Object.entries(ENCHANT_CATEGORIES).map(([catId, cat]) => `
                 <div class="enchant-category">
@@ -622,7 +623,7 @@ export function render(manifest) {
                         <span class="enchant-name">${e.name}</span>
                         <input type="number" class="enchant-level mc-input" data-enchant="${e.id}"
                                value="0" min="0" max="255" placeholder="0">
-                        <span class="enchant-max">Max: ${e.maxLevel}</span>
+                        <span class="enchant-max">通常:${e.maxLevel} / 最大:255</span>
                       </div>
                     `).join('')}
                   </div>
@@ -1272,6 +1273,9 @@ function updateCommand(container) {
 
     const dropChances = buildDropChancesNBT(formState.equipment);
     if (dropChances) nbtParts.push(dropChances);
+
+    // 装備を確実に保持するため、他のアイテムを拾わないようにする
+    nbtParts.push('CanPickUpLoot:0b');
   }
 
   // Raw NBT
@@ -2165,71 +2169,84 @@ style.textContent = `
   /* 装備グリッド */
   .equipment-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
     gap: 16px;
   }
 
   .equipment-slot {
-    background: rgba(0,0,0,0.2);
-    border: 2px solid rgba(255,255,255,0.1);
-    padding: 12px;
+    background: rgba(0,0,0,0.3);
+    border: 2px solid rgba(255,255,255,0.15);
+    border-radius: 6px;
+    padding: 16px;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 12px;
+  }
+
+  .equipment-slot:hover {
+    border-color: rgba(92, 183, 70, 0.5);
+    background: rgba(0,0,0,0.4);
   }
 
   .slot-header {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
   }
 
   .slot-icon {
-    width: 24px;
-    height: 24px;
+    width: 32px;
+    height: 32px;
+    filter: drop-shadow(1px 1px 2px rgba(0,0,0,0.5));
   }
 
   .slot-name {
     color: #ffffff;
-    font-weight: 500;
-    font-size: 0.9rem;
+    font-weight: 600;
+    font-size: 1rem;
   }
 
   .equipment-select-wrapper {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
   }
 
   .selected-item-image {
-    width: 24px;
-    height: 24px;
+    width: 32px;
+    height: 32px;
     flex-shrink: 0;
+    filter: drop-shadow(1px 1px 2px rgba(0,0,0,0.5));
   }
 
   .equipment-select {
     flex: 1;
-    font-size: 0.85rem;
-    padding: 6px 8px;
+    font-size: 0.95rem;
+    padding: 8px 12px;
   }
 
   .slot-actions {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 8px;
+    gap: 12px;
+    margin-top: 4px;
   }
 
   .enchant-btn {
     display: flex;
     align-items: center;
-    gap: 4px;
-    padding: 6px 10px;
+    gap: 6px;
+    padding: 8px 14px;
     background: rgba(170, 0, 255, 0.2);
     border: 2px solid rgba(170, 0, 255, 0.5);
+    border-radius: 4px;
     color: #cc66ff;
     cursor: pointer;
     transition: all 0.15s;
+    font-size: 0.9rem;
   }
 
   .enchant-btn:hover {
@@ -2237,23 +2254,29 @@ style.textContent = `
     border-color: #cc66ff;
   }
 
+  .enchant-btn img {
+    width: 20px;
+    height: 20px;
+  }
+
   .enchant-count {
-    font-size: 0.8rem;
+    font-size: 0.9rem;
     font-weight: bold;
   }
 
   .drop-chance-wrapper {
     display: flex;
     align-items: center;
-    gap: 4px;
-    font-size: 0.8rem;
-    color: rgba(255,255,255,0.7);
+    gap: 6px;
+    font-size: 0.95rem;
+    color: rgba(255,255,255,0.8);
   }
 
   .drop-chance {
-    width: 60px;
-    padding: 4px 6px;
-    font-size: 0.8rem;
+    width: 70px;
+    padding: 6px 8px;
+    font-size: 0.95rem;
+    text-align: center;
   }
 
   /* エンチャントモーダル */
@@ -2325,6 +2348,16 @@ style.textContent = `
     flex: 1;
   }
 
+  .modal-hint {
+    color: #55ffff;
+    font-size: 0.9rem;
+    margin: 0 0 16px 0;
+    padding: 10px 14px;
+    background: rgba(85, 255, 255, 0.1);
+    border: 1px solid rgba(85, 255, 255, 0.3);
+    border-radius: 4px;
+  }
+
   .enchant-categories {
     display: flex;
     flex-direction: column;
@@ -2342,35 +2375,43 @@ style.textContent = `
   .enchant-list {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 10px;
   }
 
   .enchant-row {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 8px;
-    background: rgba(0,0,0,0.2);
+    gap: 12px;
+    padding: 12px 14px;
+    background: rgba(0,0,0,0.3);
     border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 4px;
+  }
+
+  .enchant-row:hover {
+    background: rgba(0,0,0,0.4);
+    border-color: rgba(170, 0, 255, 0.3);
   }
 
   .enchant-name {
     flex: 1;
     color: #ffffff;
-    font-size: 0.85rem;
+    font-size: 1rem;
+    font-weight: 500;
   }
 
   .enchant-level {
-    width: 60px;
-    padding: 4px 6px;
-    font-size: 0.85rem;
+    width: 70px;
+    padding: 8px 10px;
+    font-size: 1rem;
     text-align: center;
   }
 
   .enchant-max {
-    color: rgba(255,255,255,0.4);
-    font-size: 0.75rem;
-    min-width: 50px;
+    color: rgba(255,255,255,0.5);
+    font-size: 0.8rem;
+    min-width: 100px;
+    text-align: right;
   }
 
   .modal-footer {
