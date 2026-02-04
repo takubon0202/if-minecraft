@@ -1209,17 +1209,18 @@ function buildEquipmentNBT(equipment) {
 }
 
 /**
- * アイテムNBTを生成（1.21.5+ アイテムコンポーネント形式）
+ * アイテムNBTを生成（1.21+ アイテムコンポーネント形式）
+ * summonコマンドではlevelsラッパーが必須（giveコマンドとは異なる）
  */
 function buildItemNBT(itemId, enchants) {
   const components = [];
 
-  // エンチャント（1.21.5+ コンポーネント形式）
-  // 1.21.5以降: "minecraft:enchantments":{"minecraft:sharpness":5}
-  // ※levelsラッパーは1.21.5で廃止
+  // エンチャント（1.21+ コンポーネント形式）
+  // summonコマンドでは常にlevelsラッパーが必要
+  // 形式: "minecraft:enchantments":{levels:{"minecraft:protection":4}}
   if (enchants && enchants.length > 0) {
     const enchantPairs = enchants.map(e => `"minecraft:${e.id}":${e.level}`).join(',');
-    components.push(`"minecraft:enchantments":{${enchantPairs}}`);
+    components.push(`"minecraft:enchantments":{levels:{${enchantPairs}}}`);
   }
 
   if (components.length > 0) {
