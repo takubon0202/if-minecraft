@@ -60,7 +60,7 @@
 }
 
 .site-title {
-  font-size: 1.25rem;
+  font-size: 1.4rem;
   margin: 0 0 var(--mc-space-sm) 0;
   display: flex;
   align-items: center;
@@ -91,7 +91,7 @@
   display: flex;
   align-items: center;
   gap: var(--mc-space-sm);
-  font-size: 0.75rem;
+  font-size: 0.9rem;
 }
 
 .version-selector label {
@@ -102,8 +102,8 @@
   background-color: var(--mc-bg-panel);
   color: var(--mc-text-primary);
   border: 1px solid var(--mc-border-dark);
-  padding: 4px 8px;
-  font-size: 0.75rem;
+  padding: 6px 10px;
+  font-size: 0.9rem;
   cursor: pointer;
 }
 
@@ -126,7 +126,7 @@
   background-color: var(--mc-bg-panel);
   border: var(--mc-border-width) solid var(--mc-border-dark);
   box-shadow: var(--mc-shadow-inset);
-  font-size: 0.875rem;
+  font-size: 1rem;
 }
 
 .nav-search input:focus {
@@ -145,7 +145,7 @@
 }
 
 .category-title {
-  font-size: 0.75rem;
+  font-size: 0.9rem;
   text-transform: uppercase;
   color: var(--mc-text-muted);
   margin: 0 0 var(--mc-space-xs) var(--mc-space-sm);
@@ -167,7 +167,7 @@
   padding: var(--mc-space-sm) var(--mc-space-md);
   color: var(--mc-text-primary);
   text-decoration: none;
-  font-size: 0.875rem;
+  font-size: 1rem;
   border-radius: var(--mc-radius-sm);
   transition: background-color 0.15s;
 }
@@ -245,7 +245,7 @@
   border: 1px solid var(--mc-border-dark);
   border-radius: var(--mc-radius-sm) var(--mc-radius-sm) 0 0;
   cursor: pointer;
-  font-size: 0.8rem;
+  font-size: 0.95rem;
   white-space: nowrap;
   transition: background-color 0.15s;
 }
@@ -387,7 +387,7 @@
 
 .quick-tool-btn .label {
   font-weight: bold;
-  font-size: 0.875rem;
+  font-size: 1rem;
 }
 
 /* --- Side Panel --- */
@@ -413,7 +413,7 @@
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 0.8rem;
+  font-size: 0.95rem;
   font-weight: bold;
   color: var(--mc-text-muted);
   transition: background-color 0.15s, color 0.15s;
@@ -462,8 +462,8 @@
   margin: 0;
   white-space: pre-wrap;
   word-break: break-all;
-  font-size: 0.8rem;
-  line-height: 1.5;
+  font-size: 0.95rem;
+  line-height: 1.6;
 }
 
 .output-actions {
@@ -536,7 +536,7 @@
   background-color: var(--mc-bg-panel);
   border: 1px solid var(--mc-border-dark);
   cursor: pointer;
-  font-size: 0.75rem;
+  font-size: 0.9rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -562,8 +562,8 @@
 
 .history-search-input {
   width: 100%;
-  padding: 6px 10px;
-  font-size: 0.75rem;
+  padding: 8px 12px;
+  font-size: 0.9rem;
   background: var(--mc-bg-input);
   border: 1px solid var(--mc-border-main);
   border-radius: 4px;
@@ -583,7 +583,7 @@
 .history-item {
   padding: var(--mc-space-sm);
   border-bottom: 1px solid var(--mc-border-dark);
-  font-size: 0.75rem;
+  font-size: 0.9rem;
   transition: background-color 0.15s;
 }
 
@@ -634,7 +634,7 @@
 
 .history-time {
   color: var(--mc-text-muted);
-  font-size: 0.65rem;
+  font-size: 0.8rem;
 }
 
 .history-command {
@@ -654,7 +654,7 @@
 
 .history-tool {
   color: var(--mc-text-muted);
-  font-size: 0.6rem;
+  font-size: 0.8rem;
   margin-top: 2px;
 }
 
@@ -667,7 +667,7 @@
 
 /* --- Help Panel --- */
 .help-content {
-  font-size: 0.85rem;
+  font-size: 1rem;
 }
 
 .help-content h4 {
@@ -701,7 +701,7 @@
   color: var(--mc-color-stone-400);
   text-align: center;
   padding: var(--mc-space-md);
-  font-size: 0.75rem;
+  font-size: 0.9rem;
 }
 
 .site-footer p {
@@ -728,7 +728,7 @@
 
 .tool-header h2 {
   margin: 0;
-  font-size: 1.25rem;
+  font-size: 1.5rem;
   text-shadow: 2px 2px 0px var(--mc-border-darker);
 }
 
@@ -739,7 +739,7 @@
   border: 1px solid var(--mc-border-dark);
   border-radius: var(--mc-radius-sm);
   cursor: pointer;
-  font-size: 0.75rem;
+  font-size: 0.9rem;
   color: var(--mc-text-secondary);
   transition: background-color 0.15s, color 0.15s;
 }
@@ -771,7 +771,7 @@
 
 .form-group label {
   font-weight: bold;
-  font-size: 0.85rem;
+  font-size: 1rem;
   color: var(--mc-text-secondary);
 }
 

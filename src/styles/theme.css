@@ -96,7 +96,7 @@
 }
 
 html {
-  font-size: 16px;
+  font-size: 18px;  /* 基準フォントサイズを大きく（小学生でも読みやすく） */
   scroll-behavior: smooth;
 }
 
@@ -108,8 +108,9 @@ body {
   background-repeat: repeat;
   margin: 0;
   padding: 0;
-  line-height: 1.6;
+  line-height: 1.7;  /* 行間を広げて読みやすく */
   min-height: 100vh;
+  font-size: 1rem;
 }
 
 /* --- Components --- */
@@ -136,7 +137,7 @@ body {
 .mc-btn {
   font-family: var(--mc-font-body);
   font-weight: bold;
-  font-size: 0.875rem;
+  font-size: 1rem;
   color: var(--mc-text-primary);
   background-color: var(--mc-bg-panel);
   border: var(--mc-border-width) solid var(--mc-border-dark);
@@ -203,7 +204,7 @@ body {
 
 .mc-input {
   font-family: var(--mc-font-body);
-  font-size: 0.875rem;
+  font-size: 1rem;
   background-color: var(--mc-bg-panel);
   color: var(--mc-text-primary);
   border: var(--mc-border-width) solid var(--mc-border-dark);
@@ -223,7 +224,7 @@ body {
 
 .mc-select {
   font-family: var(--mc-font-body);
-  font-size: 0.875rem;
+  font-size: 1rem;
   background-color: var(--mc-bg-panel);
   color: var(--mc-text-primary);
   border: var(--mc-border-width) solid var(--mc-border-dark);
@@ -285,7 +286,7 @@ body {
 
 .tool-header h2 {
   margin: 0;
-  font-size: 1.25rem;
+  font-size: 1.5rem;
   color: var(--mc-text-primary);
   text-shadow: 2px 2px 0 var(--mc-border-darker);
   letter-spacing: 0.5px;
@@ -301,8 +302,8 @@ body {
 /* --- Version Badge --- */
 .version-badge {
   display: inline-block;
-  padding: 3px 10px;
-  font-size: 0.7rem;
+  padding: 4px 12px;
+  font-size: 0.85rem;
   font-family: var(--mc-font-mono);
   background: linear-gradient(180deg, var(--mc-color-grass-light) 0%, var(--mc-color-grass-main) 100%);
   color: white;
@@ -315,8 +316,8 @@ body {
 
 /* --- Reset Button --- */
 .reset-btn {
-  padding: 4px 12px;
-  font-size: 0.75rem;
+  padding: 6px 14px;
+  font-size: 0.9rem;
   font-family: var(--mc-font-mono);
   background: linear-gradient(180deg, #888 0%, #666 100%);
   color: white;
@@ -342,9 +343,9 @@ body {
 /* --- Version Note --- */
 .version-note {
   margin: var(--mc-space-xs) 0 var(--mc-space-md) 0;
-  font-size: 0.8rem;
+  font-size: 0.95rem;
   color: var(--mc-color-diamond);
-  padding: 6px 12px;
+  padding: 8px 14px;
   background: rgba(77, 236, 242, 0.1);
   border-left: 3px solid var(--mc-color-diamond);
   border-radius: 0 4px 4px 0;
@@ -362,7 +363,7 @@ body {
 .form-group > label {
   display: block;
   color: var(--mc-text-primary);
-  font-size: 0.95rem;
+  font-size: 1.05rem;
   font-weight: 600;
   margin-bottom: var(--mc-space-sm);
   text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
@@ -387,14 +388,14 @@ body {
 }
 
 .preset-btn {
-  padding: 8px 16px;
+  padding: 10px 18px;
   background: linear-gradient(180deg, #4a4a4a 0%, #3a3a3a 100%);
   background-image: var(--mc-texture-noise);
   border: 2px solid #555;
   border-radius: 4px;
   color: var(--mc-text-primary);
   cursor: pointer;
-  font-size: 0.85rem;
+  font-size: 1rem;
   font-weight: 500;
   transition: all 0.15s;
   text-shadow: 1px 1px 1px rgba(0,0,0,0.3);
@@ -441,10 +442,10 @@ body {
   display: flex;
   align-items: center;
   gap: var(--mc-space-sm);
-  padding: 8px 12px;
+  padding: 10px 14px;
   background: rgba(0,0,0,0.2);
   border-left: 3px solid var(--mc-color-grass-main);
-  font-size: 0.85rem;
+  font-size: 1rem;
   font-weight: 600;
   color: var(--mc-text-secondary);
 }
@@ -519,7 +520,7 @@ body {
 }
 
 .color-preview-label {
-  font-size: 0.8rem;
+  font-size: 0.95rem;
   color: var(--mc-text-muted);
 }
 
@@ -543,10 +544,10 @@ body {
   display: flex;
   align-items: center;
   gap: var(--mc-space-sm);
-  font-size: 0.9rem;
+  font-size: 1rem;
   cursor: pointer;
   color: var(--mc-text-primary);
-  padding: 4px 8px;
+  padding: 6px 10px;
   border-radius: 4px;
   transition: background 0.15s;
 }
@@ -556,8 +557,8 @@ body {
 }
 
 .option-label input[type="checkbox"] {
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   accent-color: var(--mc-color-grass-main);
   cursor: pointer;
 }
@@ -605,7 +606,7 @@ body {
 }
 
 .type-tab span, .tab-btn span {
-  font-size: 0.8rem;
+  font-size: 0.95rem;
   color: var(--mc-text-primary);
   font-weight: 500;
   text-shadow: 1px 1px 1px rgba(0,0,0,0.3);
@@ -623,11 +624,11 @@ body {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: var(--mc-space-xs) var(--mc-space-md);
+  padding: var(--mc-space-sm) var(--mc-space-md);
   background: var(--mc-bg-panel);
   border: 1px solid var(--mc-border-dark);
   cursor: pointer;
-  font-size: 0.8rem;
+  font-size: 0.95rem;
   transition: all 0.15s;
 }
 
@@ -718,7 +719,7 @@ body {
 
 .preview-section h3 {
   margin: 0 0 var(--mc-space-md) 0;
-  font-size: 0.9rem;
+  font-size: 1rem;
   color: var(--mc-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -778,7 +779,7 @@ body {
 
 .modal-header h3 {
   margin: 0;
-  font-size: 1rem;
+  font-size: 1.15rem;
   color: var(--mc-text-primary);
 }
 
@@ -1128,7 +1129,7 @@ body {
 
 .mc-preview-section h3 {
   margin: 0 0 var(--mc-space-md) 0;
-  font-size: 0.9rem;
+  font-size: 1rem;
   color: var(--mc-text-muted);
   text-transform: uppercase;
   letter-spacing: 1px;
