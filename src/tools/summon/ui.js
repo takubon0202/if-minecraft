@@ -886,21 +886,25 @@ function updateCommand(container) {
   const nbtParts = [];
 
   // カスタム名（JSONテキスト形式 - バージョンで形式が異なる）
+  // 1.21+: CustomName:'{"text":"名前","color":"red"}'（シングルクォート）
   if (formState.customName) {
-    const jsonText = {
-      text: formState.customName,
-    };
-    if (formState.nameColor !== 'white') jsonText.color = formState.nameColor;
-    if (formState.nameBold) jsonText.bold = true;
-    if (formState.nameItalic) jsonText.italic = true;
-
     if (versionGroup === 'legacy') {
       // 1.12- では単純文字列
       nbtParts.push(`CustomName:"${formState.customName}"`);
     } else {
-      // 1.13+ では JSON形式
-      const jsonStr = JSON.stringify(jsonText).replace(/"/g, '\\"');
-      nbtParts.push(`CustomName:"${jsonStr}"`);
+      // 1.13+ では JSON形式（シングルクォートで囲む）
+      // italic:false を追加してデフォルトの斜体を解除
+      const jsonParts = [`"text":"${escapeJsonString(formState.customName)}"`, `"italic":false`];
+      if (formState.nameColor && formState.nameColor !== 'white') {
+        jsonParts.push(`"color":"${formState.nameColor}"`);
+      }
+      if (formState.nameBold) jsonParts.push(`"bold":true`);
+      if (formState.nameItalic) {
+        // italic:trueで上書き
+        const idx = jsonParts.indexOf(`"italic":false`);
+        if (idx !== -1) jsonParts[idx] = `"italic":true`;
+      }
+      nbtParts.push(`CustomName:'{${jsonParts.join(',')}}'`);
     }
     nbtParts.push('CustomNameVisible:1b');
   }
@@ -952,6 +956,18 @@ function updateCommand(container) {
   updateSummonPreview(container);
 
   setOutput(command, 'summon', { ...formState, version });
+}
+
+/**
+ * JSON文字列をエスケープ
+ * CustomName用：バックスラッシュ、ダブルクォート、改行をエスケープ
+ */
+function escapeJsonString(str) {
+  if (!str) return '';
+  return str
+    .replace(/\\/g, '\\\\')
+    .replace(/"/g, '\\"')
+    .replace(/\n/g, '\\n');
 }
 
 /**
