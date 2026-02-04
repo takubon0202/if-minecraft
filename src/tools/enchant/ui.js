@@ -1505,7 +1505,9 @@ function updateCommand(container) {
   const useCustom = $('#use-custom-item', container)?.checked;
   const customId = $('#custom-item-id', container)?.value;
   const itemId = $('#item-select', container)?.value;
-  const item = useCustom && customId ? customId : `minecraft:${itemId}`;
+  // 1.21.5+: minecraft:プレフィックスなし、それ以前: プレフィックスあり
+  const usePrefixFreeFormat = compareVersions(version, '1.21.5') >= 0;
+  const item = useCustom && customId ? customId : (usePrefixFreeFormat ? itemId : `minecraft:${itemId}`);
 
   // バージョンに応じてリッチテキストエディターから適切な形式を取得
   // 1.21.5以降: SNBT形式 {text:"...",color:"red"}
@@ -1583,15 +1585,16 @@ function generateComponentCommand(item, count, customName, useSNBT, unbreakable,
     const componentName = isEnchantedBook ? 'stored_enchantments' : 'enchantments';
 
     if (useSimplifiedForm) {
-      // 1.21.5+: 簡略形式（levelsラッパー廃止、show_in_tooltipはtooltip_displayへ移動）
-      const enchantPairs = selectedEnchants.map(e => `"minecraft:${e.id}":${e.level}`).join(',');
+      // 1.21.5+/1.21.11: 簡略形式（minecraft:プレフィックスなし）
+      // 正しい形式: enchantments={"sharpness":10,"smite":5}
+      const enchantPairs = selectedEnchants.map(e => `"${e.id}":${e.level}`).join(',');
       components.push(`${componentName}={${enchantPairs}}`);
       if (hideEnchants) {
         // 1.21.5+: tooltip_displayコンポーネントで非表示を制御
         components.push(`tooltip_display={hidden_components:["${componentName}"]}`);
       }
     } else {
-      // 1.20.5-1.21.4: 長い形式（levelsラッパー必須）
+      // 1.20.5-1.21.4: 長い形式（levelsラッパー必須、minecraft:プレフィックス必要）
       const enchantPairs = selectedEnchants.map(e => `"minecraft:${e.id}":${e.level}`).join(',');
       if (hideEnchants) {
         components.push(`${componentName}={levels:{${enchantPairs}},show_in_tooltip:false}`);
@@ -1611,14 +1614,17 @@ function generateComponentCommand(item, count, customName, useSNBT, unbreakable,
       const operation = $(`.attr-operation[data-attr="${attrId}"]`, container)?.value || 'add_value';
       // 1.21.11+ attribute_modifiers 正式構文
       // 形式: attribute_modifiers=[{...},{...}] （直接配列形式）
-      // type: 属性ID（generic.xxxではなくattack_damage等の短縮形も可）
-      // id: 一意な識別子（数字文字列も可）
+      // type: 属性ID（generic.プレフィックスなし、attack_damage等の短縮形）
+      // id: 一意な識別子（数字文字列）
       // amount: 数値
       // operation: add_value, add_multiplied_base, add_multiplied_total
       // slot: any, hand, armor, mainhand, offhand, head, chest, legs, feet, body
+
+      // generic. プレフィックスを削除（generic.attack_damage → attack_damage）
+      const shortAttrId = attrId.replace(/^generic\./, '');
       const modifierId = `${idCounter}${Date.now()}`;
       idCounter++;
-      attrs.push(`{"type":"${attrId}","amount":${value},"operation":"${operation}","slot":"${slot}","id":"${modifierId}"}`);
+      attrs.push(`{"type":"${shortAttrId}","amount":${value},"operation":"${operation}","slot":"${slot}","id":"${modifierId}"}`);
     });
     if (attrs.length > 0) {
       components.push(`attribute_modifiers=[${attrs.join(',')}]`);
