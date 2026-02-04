@@ -1128,8 +1128,8 @@ function generateSummonZombieCommand(s) {
   if (s.isBaby) nbtParts.push('IsBaby:1b');
   if (s.canBreakDoors) nbtParts.push('CanBreakDoors:1b');
 
-  // 装備
-  const equipmentItems = buildEquipmentNBT(s.equipment);
+  // 装備（1.21.5+はequipment形式、それ以前はArmorItems/HandItems形式）
+  const equipmentItems = buildEquipmentNBT(s.equipment, version);
   if (equipmentItems) {
     nbtParts.push(equipmentItems);
     // 装備を確実に保持するため、他のアイテムを拾わないようにする
@@ -1165,47 +1165,68 @@ function generateSummonZombieCommand(s) {
 }
 
 /**
- * 装備NBTを生成（1.21+ エンティティタグはPascalCase）
+ * 装備NBTを生成
+ * 1.21.5+: equipment マップ形式（新形式）
+ * 1.20.5-1.21.4: ArmorItems/HandItems リスト形式（旧形式）
  */
-function buildEquipmentNBT(equipment) {
-  const armorItems = [];
-  const handItems = [];
+function buildEquipmentNBT(equipment, version = '1.21.5') {
+  // 1.21.5以降はequipmentマップ形式を使用
+  const useNewFormat = compareVersions(version, '1.21.5') >= 0;
 
-  // 足から頭の順（ArmorItemsの順序）
-  ['feet', 'legs', 'chest', 'head'].forEach(slot => {
-    const eq = equipment[slot];
-    if (eq?.item) {
-      armorItems.push(buildItemNBT(eq.item, eq.enchants));
-    } else {
-      armorItems.push('{}');
+  if (useNewFormat) {
+    // 1.21.5+ equipment形式
+    // equipment:{mainhand:{id:"...",count:1},head:{id:"...",count:1},...}
+    const equipmentParts = [];
+    const slots = ['mainhand', 'offhand', 'head', 'chest', 'legs', 'feet'];
+
+    slots.forEach(slot => {
+      const eq = equipment[slot];
+      if (eq?.item) {
+        equipmentParts.push(`${slot}:${buildItemNBT(eq.item, eq.enchants)}`);
+      }
+    });
+
+    if (equipmentParts.length === 0) return null;
+    return `equipment:{${equipmentParts.join(',')}}`;
+  } else {
+    // 1.20.5-1.21.4 ArmorItems/HandItems形式
+    const armorItems = [];
+    const handItems = [];
+
+    // 足から頭の順（ArmorItemsの順序）
+    ['feet', 'legs', 'chest', 'head'].forEach(slot => {
+      const eq = equipment[slot];
+      if (eq?.item) {
+        armorItems.push(buildItemNBT(eq.item, eq.enchants));
+      } else {
+        armorItems.push('{}');
+      }
+    });
+
+    // メイン手、オフハンドの順
+    ['mainhand', 'offhand'].forEach(slot => {
+      const eq = equipment[slot];
+      if (eq?.item) {
+        handItems.push(buildItemNBT(eq.item, eq.enchants));
+      } else {
+        handItems.push('{}');
+      }
+    });
+
+    const parts = [];
+    const hasArmor = armorItems.some(i => i !== '{}');
+    const hasHands = handItems.some(i => i !== '{}');
+
+    if (hasArmor) {
+      parts.push(`ArmorItems:[${armorItems.join(',')}]`);
     }
-  });
 
-  // メイン手、オフハンドの順
-  ['mainhand', 'offhand'].forEach(slot => {
-    const eq = equipment[slot];
-    if (eq?.item) {
-      handItems.push(buildItemNBT(eq.item, eq.enchants));
-    } else {
-      handItems.push('{}');
+    if (hasHands) {
+      parts.push(`HandItems:[${handItems.join(',')}]`);
     }
-  });
 
-  const parts = [];
-
-  // 装備があれば追加（1.21+ PascalCase）
-  const hasArmor = armorItems.some(i => i !== '{}');
-  const hasHands = handItems.some(i => i !== '{}');
-
-  if (hasArmor) {
-    parts.push(`ArmorItems:[${armorItems.join(',')}]`);
+    return parts.length > 0 ? parts.join(',') : null;
   }
-
-  if (hasHands) {
-    parts.push(`HandItems:[${handItems.join(',')}]`);
-  }
-
-  return parts.length > 0 ? parts.join(',') : null;
 }
 
 /**
