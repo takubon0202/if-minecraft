@@ -1165,20 +1165,18 @@ function buildEquipmentNBT(equipment) {
  * summonコマンドではlevelsラッパーが必須（giveコマンドとは異なる）
  */
 function buildItemNBT(itemId, enchants) {
-  const components = [];
+  // 1.20.5+/1.21+: count は小文字で整数型
+  // エンチャントがある場合のみcomponentsを追加
 
   // エンチャント（1.21+ コンポーネント形式）
   // summonコマンドでは常にlevelsラッパーが必要
-  // 形式: "minecraft:enchantments":{levels:{"minecraft:protection":4}}
+  // 形式: components:{"minecraft:enchantments":{levels:{"minecraft:protection":4}}}
   if (enchants && enchants.length > 0) {
     const enchantPairs = enchants.map(e => `"minecraft:${e.id}":${e.level}`).join(',');
-    components.push(`"minecraft:enchantments":{levels:{${enchantPairs}}}`);
+    return `{id:"minecraft:${itemId}",count:1,components:{"minecraft:enchantments":{levels:{${enchantPairs}}}}}`;
   }
 
-  if (components.length > 0) {
-    return `{id:"minecraft:${itemId}",count:1,components:{${components.join(',')}}}`;
-  }
-
+  // エンチャントなしの場合はシンプルな形式
   return `{id:"minecraft:${itemId}",count:1}`;
 }
 
