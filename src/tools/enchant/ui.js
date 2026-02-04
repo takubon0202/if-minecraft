@@ -2007,8 +2007,6 @@ style.textContent = `
 
   /* エンチャントカテゴリ */
   .enchant-tool .enchant-categories {
-    max-height: 400px;
-    overflow-y: auto;
     border: 2px solid #555555;
     border-radius: 4px;
   }
