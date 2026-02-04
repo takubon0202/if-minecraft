@@ -131,6 +131,15 @@ const ITEM_NAME_MAP = {
   // === その他アイテム（属性アイコン用） ===
   'slime_ball': 'Slimeball',  // アンダースコアなし
   'ender_eye': 'Eye_of_Ender',  // 名前が異なる
+  'heart_of_the_sea': 'Heart_of_the_Sea',  // 小文字の前置詞
+  'prismarine_shard': 'Prismarine_Shard',
+  'prismarine_crystals': 'Prismarine_Crystals',
+  'nether_star': 'Nether_Star',
+  'blaze_rod': 'Blaze_Rod',
+  'magma_cream': 'Magma_Cream',
+  'ghast_tear': 'Ghast_Tear',
+  // UIアイコン用（ゲーム内アイテムではないが属性表示に使用）
+  'heart': 'Apple',  // ハートはアイテム無し、リンゴで代用
 
   // === 食料 ===
   'cooked_beef': 'Steak',

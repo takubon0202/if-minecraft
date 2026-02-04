@@ -144,7 +144,7 @@ const ENCHANT_CATEGORIES = {
 
 // 属性一覧
 const ATTRIBUTES = [
-  { id: 'max_health', name: '最大体力', image: getInviconUrl('heart'), default: 20, min: 1, max: 1024, step: 1 },
+  { id: 'max_health', name: '最大体力', image: getInviconUrl('golden_apple'), default: 20, min: 1, max: 1024, step: 1 },
   { id: 'attack_damage', name: '攻撃力', image: getInviconUrl('iron_sword'), default: 3, min: 0, max: 2048, step: 0.5 },
   { id: 'movement_speed', name: '移動速度', image: getInviconUrl('sugar'), default: 0.23, min: 0, max: 1, step: 0.01 },
   { id: 'knockback_resistance', name: 'ノックバック耐性', image: getInviconUrl('anvil'), default: 0, min: 0, max: 1, step: 0.1 },
