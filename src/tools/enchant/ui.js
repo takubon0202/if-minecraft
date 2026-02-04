@@ -1609,19 +1609,19 @@ function generateComponentCommand(item, count, customName, useSNBT, unbreakable,
       const value = parseFloat($(`.attr-value[data-attr="${attrId}"]`, container)?.value) || 0;
       const slot = $(`.attr-slot[data-attr="${attrId}"]`, container)?.value || 'mainhand';
       const operation = $(`.attr-operation[data-attr="${attrId}"]`, container)?.value || 'add_value';
-      // 1.21+ attribute_modifiers 正式構文 (minecraft.wiki/w/Commands/give)
-      // コンポーネント名: attribute_modifiers（minecraft:プレフィックスなし）
-      // type: 属性ID（minecraft:generic.xxx形式）
-      // id: 一意な識別子（namespace:path形式の文字列）- 必須
+      // 1.21.11+ attribute_modifiers 正式構文
+      // 形式: attribute_modifiers=[{...},{...}] （直接配列形式）
+      // type: 属性ID（generic.xxxではなくattack_damage等の短縮形も可）
+      // id: 一意な識別子（数字文字列も可）
       // amount: 数値
       // operation: add_value, add_multiplied_base, add_multiplied_total
       // slot: any, hand, armor, mainhand, offhand, head, chest, legs, feet, body
-      const modifierId = `minecraft:custom_${idCounter}`;
+      const modifierId = `${idCounter}${Date.now()}`;
       idCounter++;
-      attrs.push(`{type:"minecraft:${attrId}",id:"${modifierId}",amount:${value},operation:"${operation}",slot:"${slot}"}`);
+      attrs.push(`{"type":"${attrId}","amount":${value},"operation":"${operation}","slot":"${slot}","id":"${modifierId}"}`);
     });
     if (attrs.length > 0) {
-      components.push(`attribute_modifiers={modifiers:[${attrs.join(',')}]}`);
+      components.push(`attribute_modifiers=[${attrs.join(',')}]`);
     }
   }
 
