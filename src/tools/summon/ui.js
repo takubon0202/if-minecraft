@@ -10,6 +10,10 @@ import { setOutput } from '../../app/sidepanel.js';
 import { getInviconUrl, getSpawnEggUrl } from '../../core/wiki-images.js';
 import { applyTooltip, addItemData } from '../../core/mc-tooltip.js';
 import { compareVersions, getVersionGroup, getVersionNote } from '../../core/version-compat.js';
+import { RichTextEditor, RICH_TEXT_EDITOR_CSS } from '../../core/rich-text-editor.js';
+
+// RichTextEditorインスタンス
+let summonNameEditor = null;
 
 // エンティティカテゴリ（カテゴリ別に整理）
 const ENTITY_CATEGORIES = {
@@ -205,10 +209,7 @@ const EFFECTS = [
 let formState = {
   entity: 'zombie',
   pos: '~ ~ ~',
-  customName: '',
-  nameColor: 'white',
-  nameBold: false,
-  nameItalic: false,
+  // customName, nameColor, nameBold, nameItalic は RichTextEditor が管理
   noAI: false,
   silent: false,
   invulnerable: false,
@@ -224,7 +225,15 @@ let selectedCategory = 'hostile';
  * UIをレンダリング
  */
 export function render(manifest) {
+  // RichTextEditorインスタンスを作成
+  summonNameEditor = new RichTextEditor('summon-name-editor', {
+    placeholder: 'エンティティの名前を入力...',
+    showPreview: true,
+    onChange: () => {}
+  });
+
   return `
+    <style>${RICH_TEXT_EDITOR_CSS}</style>
     <div class="tool-panel summon-tool mc-themed" id="summon-panel">
       <!-- ヘッダー -->
       <div class="tool-header mc-header-banner">
@@ -305,51 +314,14 @@ export function render(manifest) {
           </div>
         </section>
 
-        <!-- ステップ3: カスタム名（JSONテキスト対応） -->
+        <!-- ステップ3: カスタム名（RichTextEditor対応） -->
         <section class="form-section mc-section">
           <div class="section-header">
             <span class="step-number">3</span>
             <h3>名前設定 <span class="optional-badge">任意</span></h3>
           </div>
-
-          <div class="name-editor">
-            <input type="text" id="summon-name" class="mc-input name-input"
-                   placeholder="カスタム名を入力...">
-
-            <div class="name-style-options">
-              <div class="color-selector">
-                <label>文字色:</label>
-                <div class="color-grid" id="color-grid">
-                  ${TEXT_COLORS.map(c => `
-                    <button type="button" class="color-btn ${c.id === 'white' ? 'active' : ''}"
-                            data-color="${c.id}" style="background: ${c.hex}"
-                            title="${c.name}"></button>
-                  `).join('')}
-                </div>
-              </div>
-
-              <div class="text-style-btns">
-                <button type="button" class="style-btn" data-style="bold" title="太字">
-                  <strong>B</strong>
-                </button>
-                <button type="button" class="style-btn" data-style="italic" title="斜体">
-                  <em>I</em>
-                </button>
-                <button type="button" class="style-btn" data-style="underlined" title="下線">
-                  <u>U</u>
-                </button>
-                <button type="button" class="style-btn" data-style="obfuscated" title="難読化">
-                  §k
-                </button>
-              </div>
-            </div>
-
-            <!-- プレビュー -->
-            <div class="name-preview" id="name-preview">
-              <span class="preview-label">プレビュー:</span>
-              <span class="preview-text" id="preview-text">名前を入力...</span>
-            </div>
-          </div>
+          <p class="section-hint">1文字ずつ色やスタイルを設定できます。テキストを選択して書式を適用してください。</p>
+          ${summonNameEditor.render()}
         </section>
 
         <!-- ステップ4: 動作設定 -->
@@ -568,36 +540,14 @@ export function init(container) {
     updateCommand(container);
   }, 150));
 
-  // 名前入力
-  $('#summon-name', container)?.addEventListener('input', debounce((e) => {
-    formState.customName = e.target.value;
-    updateNamePreview(container);
-    updateCommand(container);
-  }, 150));
-
-  // 色選択
-  delegate(container, 'click', '.color-btn', (e, target) => {
-    const color = target.dataset.color;
-    formState.nameColor = color;
-
-    $$('.color-btn', container).forEach(b => b.classList.remove('active'));
-    target.classList.add('active');
-
-    updateNamePreview(container);
-    updateCommand(container);
-  });
-
-  // スタイルボタン
-  delegate(container, 'click', '.style-btn', (e, target) => {
-    const style = target.dataset.style;
-    target.classList.toggle('active');
-
-    if (style === 'bold') formState.nameBold = target.classList.contains('active');
-    if (style === 'italic') formState.nameItalic = target.classList.contains('active');
-
-    updateNamePreview(container);
-    updateCommand(container);
-  });
+  // RichTextEditor初期化
+  if (summonNameEditor) {
+    summonNameEditor.init(container);
+    summonNameEditor.options.onChange = () => {
+      updateSummonPreview(container);
+      updateCommand(container);
+    };
+  }
 
   // オプションチェックボックス
   ['noai', 'silent', 'invulnerable', 'persistence', 'glowing'].forEach(opt => {
@@ -677,10 +627,7 @@ function resetForm(container) {
   formState = {
     entity: 'zombie',
     pos: '~ ~ ~',
-    customName: '',
-    nameColor: 'white',
-    nameBold: false,
-    nameItalic: false,
+    // customName, nameColor, nameBold, nameItalic は RichTextEditor が管理
     noAI: false,
     silent: false,
     invulnerable: false,
@@ -717,23 +664,9 @@ function resetForm(container) {
     b.classList.toggle('active', b.dataset.pos === '~ ~ ~');
   });
 
-  // 名前をリセット
-  const nameInput = $('#summon-name', container);
-  if (nameInput) nameInput.value = '';
-
-  // 色をリセット
-  $$('.color-btn', container).forEach(b => {
-    b.classList.toggle('active', b.dataset.color === 'white');
-  });
-
-  // スタイルボタンをリセット
-  $$('.style-btn', container).forEach(b => b.classList.remove('active'));
-
-  // 名前プレビューをリセット
-  const previewText = $('#preview-text', container);
-  if (previewText) {
-    previewText.textContent = '名前を入力...';
-    previewText.style.cssText = 'color: #FFFFFF;';
+  // RichTextEditorをリセット
+  if (summonNameEditor) {
+    summonNameEditor.clear();
   }
 
   // オプションをリセット
@@ -858,24 +791,6 @@ function renderEffectList(container) {
 }
 
 /**
- * 名前プレビューを更新
- */
-function updateNamePreview(container) {
-  const preview = $('#preview-text', container);
-  if (!preview) return;
-
-  const name = formState.customName || '名前を入力...';
-  const color = TEXT_COLORS.find(c => c.id === formState.nameColor);
-
-  let style = `color: ${color?.hex || '#FFFFFF'};`;
-  if (formState.nameBold) style += ' font-weight: bold;';
-  if (formState.nameItalic) style += ' font-style: italic;';
-
-  preview.style.cssText = style;
-  preview.textContent = name;
-}
-
-/**
  * コマンドを生成・更新（バージョン対応）
  */
 function updateCommand(container) {
@@ -887,24 +802,15 @@ function updateCommand(container) {
 
   // カスタム名（JSONテキスト形式 - バージョンで形式が異なる）
   // 1.21+: CustomName:'{"text":"名前","color":"red"}'（シングルクォート）
-  if (formState.customName) {
+  const customName = summonNameEditor?.getPlainText() || '';
+  if (customName) {
     if (versionGroup === 'legacy') {
       // 1.12- では単純文字列
-      nbtParts.push(`CustomName:"${formState.customName}"`);
+      nbtParts.push(`CustomName:"${customName}"`);
     } else {
       // 1.13+ では JSON形式（シングルクォートで囲む）
-      // italic:false を追加してデフォルトの斜体を解除
-      const jsonParts = [`"text":"${escapeJsonString(formState.customName)}"`, `"italic":false`];
-      if (formState.nameColor && formState.nameColor !== 'white') {
-        jsonParts.push(`"color":"${formState.nameColor}"`);
-      }
-      if (formState.nameBold) jsonParts.push(`"bold":true`);
-      if (formState.nameItalic) {
-        // italic:trueで上書き
-        const idx = jsonParts.indexOf(`"italic":false`);
-        if (idx !== -1) jsonParts[idx] = `"italic":true`;
-      }
-      nbtParts.push(`CustomName:'{${jsonParts.join(',')}}'`);
+      const jsonName = generateCustomNameJSON(customName);
+      nbtParts.push(`CustomName:'${jsonName}'`);
     }
     nbtParts.push('CustomNameVisible:1b');
   }
@@ -971,6 +877,71 @@ function escapeJsonString(str) {
 }
 
 /**
+ * HTMLエスケープ
+ */
+function escapeHtml(str) {
+  if (!str) return '';
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+/**
+ * カスタム名のJSON Text Componentを生成
+ * CustomNameはJSON形式の文字列（SNBTではない）
+ *
+ * 注意: CustomNameはデフォルトで斜体になるため、italic:falseを設定
+ * 複数色の場合は配列形式で、最初に空のベースコンポーネントを追加
+ */
+function generateCustomNameJSON(plainText) {
+  // RichTextEditorのcharactersがあればそれを使用
+  if (summonNameEditor && summonNameEditor.characters && summonNameEditor.characters.length > 0) {
+    const groups = summonNameEditor.getFormattedGroups();
+    if (groups.length === 0) {
+      return `{"text":"${escapeJsonString(plainText)}","italic":false}`;
+    }
+
+    if (groups.length === 1) {
+      return formatGroupToJSON(groups[0]);
+    }
+
+    // 複数グループの場合は配列形式
+    // 最初に空のベースコンポーネントを追加して斜体を解除
+    const components = groups.map(g => formatGroupToJSON(g));
+    return `[{"text":"","italic":false},${components.join(',')}]`;
+  }
+
+  // フォールバック: プレーンテキスト
+  return `{"text":"${escapeJsonString(plainText)}","italic":false}`;
+}
+
+/**
+ * グループをJSON形式に変換
+ */
+function formatGroupToJSON(group) {
+  const parts = [`"text":"${escapeJsonString(group.text)}"`];
+  parts.push(`"italic":false`);
+
+  if (group.color && group.color !== 'white') {
+    parts.push(`"color":"${group.color}"`);
+  }
+  if (group.bold) parts.push(`"bold":true`);
+  if (group.italic) {
+    // italic:falseを上書き
+    const idx = parts.indexOf(`"italic":false`);
+    if (idx !== -1) parts[idx] = `"italic":true`;
+  }
+  if (group.underlined) parts.push(`"underlined":true`);
+  if (group.strikethrough) parts.push(`"strikethrough":true`);
+  if (group.obfuscated) parts.push(`"obfuscated":true`);
+
+  return `{${parts.join(',')}}`;
+}
+
+/**
  * Summonプレビューを更新
  */
 function updateSummonPreview(container) {
@@ -1006,16 +977,31 @@ function updateSummonPreview(container) {
 
   // 名前表示
   if (nameEl) {
-    const displayName = formState.customName || entityInfo?.name || formState.entity;
-    nameEl.textContent = displayName;
+    const customName = summonNameEditor?.getPlainText() || '';
+    const displayName = customName || entityInfo?.name || formState.entity;
 
-    // カスタム名の色を適用
-    if (formState.customName) {
-      const colorHex = TEXT_COLORS.find(c => c.id === formState.nameColor)?.hex || '#FFFFFF';
-      nameEl.style.color = colorHex;
-      if (formState.nameBold) nameEl.style.fontWeight = 'bold';
-      if (formState.nameItalic) nameEl.style.fontStyle = 'italic';
+    // RichTextEditorの出力を使ってリッチテキスト表示
+    if (customName && summonNameEditor && summonNameEditor.characters && summonNameEditor.characters.length > 0) {
+      const groups = summonNameEditor.getFormattedGroups();
+      if (groups.length > 0) {
+        // リッチテキストをHTML表示
+        nameEl.innerHTML = groups.map(g => {
+          const colorHex = TEXT_COLORS.find(c => c.id === g.color)?.hex || '#FFFFFF';
+          let style = `color: ${colorHex};`;
+          if (g.bold) style += ' font-weight: bold;';
+          if (g.italic) style += ' font-style: italic;';
+          if (g.underlined) style += ' text-decoration: underline;';
+          if (g.strikethrough) style += ' text-decoration: line-through;';
+          return `<span style="${style}">${escapeHtml(g.text)}</span>`;
+        }).join('');
+      } else {
+        nameEl.textContent = displayName;
+        nameEl.style.color = '';
+        nameEl.style.fontWeight = '';
+        nameEl.style.fontStyle = '';
+      }
     } else {
+      nameEl.textContent = displayName;
       nameEl.style.color = '';
       nameEl.style.fontWeight = '';
       nameEl.style.fontStyle = '';
@@ -1063,7 +1049,8 @@ function updateSummonPreview(container) {
 
   // スロットのグロー効果
   if (previewSlot) {
-    const hasCustomization = formState.customName || formState.effects.length > 0 ||
+    const customName = summonNameEditor?.getPlainText() || '';
+    const hasCustomization = customName || formState.effects.length > 0 ||
       formState.noAI || formState.invulnerable || formState.glowing;
     if (hasCustomization) {
       previewSlot.classList.add('customized');
@@ -1738,6 +1725,12 @@ style.textContent = `
     color: rgba(255,255,255,0.5);
     font-size: 0.85rem;
     margin-bottom: 12px;
+  }
+
+  .section-hint {
+    color: rgba(255,255,255,0.5);
+    font-size: 0.85rem;
+    margin: -8px 0 16px 0;
   }
 
   /* スクロールバー */
