@@ -4,12 +4,10 @@
  */
 
 import { $, $$, debounce, delegate } from '../../core/dom.js';
-import { workspaceStore } from '../../core/store.js';
 import { setOutput } from '../../app/sidepanel.js';
 import { getInviconUrl, getSpawnEggUrl } from '../../core/wiki-images.js';
 import { applyTooltip } from '../../core/mc-tooltip.js';
 import { RichTextEditor, RICH_TEXT_EDITOR_CSS } from '../../core/rich-text-editor.js';
-import { compareVersions } from '../../core/version-compat.js';
 
 // ゾンビタイプ
 const ZOMBIE_TYPES = [
@@ -1100,21 +1098,12 @@ function generateSummonZombieCommand(s) {
   const entityId = `minecraft:${s.zombieType}`;
   const nbtParts = [];
 
-  // 現在のバージョンを取得
-  const version = workspaceStore.get('version') || '1.21';
-  const useSNBT = compareVersions(version, '1.21.5') >= 0;
-
-  // カスタム名（バージョンで形式が異なる）
+  // カスタム名（1.21+ CustomNameはJSON Text形式の文字列）
+  // 注意: 1.21.5でText ComponentがSNBT化されたが、CustomNameは引き続きJSON文字列形式
   if (s.customName) {
-    if (useSNBT) {
-      // 1.21.5+ SNBT形式（クォートなし）
-      const snbtName = zombieNameEditor?.getSNBT() || generateCustomNameSNBT(s);
-      nbtParts.push(`CustomName=${snbtName}`);
-    } else {
-      // 1.21-1.21.4 JSON形式（シングルクォートで囲む）
-      const jsonName = zombieNameEditor?.getJSON() || generateCustomNameJSON(s);
-      nbtParts.push(`CustomName:'${jsonName}'`);
-    }
+    // JSON形式（シングルクォートで囲む）
+    const jsonName = zombieNameEditor?.getJSON() || generateCustomNameJSON(s);
+    nbtParts.push(`CustomName:'${jsonName}'`);
   }
 
   // オプション（1.21+ エンティティタグはPascalCase）
