@@ -798,17 +798,24 @@ function updateCommand(container) {
   const version = workspaceStore.get('version') || '1.21';
   const versionGroup = getVersionGroup(version);
 
+  // 1.21.5以降: SNBTオブジェクト形式 {text:"...",color:"red"}
+  // 1.13-1.21.4: JSON文字列形式 '{"text":"...","color":"red"}'
+  const useSNBT = compareVersions(version, '1.21.5') >= 0;
+
   const nbtParts = [];
 
   // カスタム名（バージョンで形式が異なる）
-  // 注意: 1.21.5でText ComponentがSNBT化されたが、CustomNameは引き続きJSON文字列形式
   const customName = summonNameEditor?.getPlainText() || '';
   if (customName) {
     if (versionGroup === 'legacy') {
       // 1.12- では単純文字列
       nbtParts.push(`CustomName:"${customName}"`);
+    } else if (useSNBT) {
+      // 1.21.5+ では SNBTオブジェクト形式（コロン区切り、クォートなし）
+      const snbtName = summonNameEditor?.getSNBT() || generateCustomNameSNBT(customName);
+      nbtParts.push(`CustomName:${snbtName}`);
     } else {
-      // 1.13+ では JSON形式（シングルクォートで囲む）
+      // 1.13-1.21.4 では JSON文字列形式（シングルクォートで囲む）
       const jsonName = summonNameEditor?.getJSON() || generateCustomNameJSON(customName);
       nbtParts.push(`CustomName:'${jsonName}'`);
     }
