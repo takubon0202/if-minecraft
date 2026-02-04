@@ -467,34 +467,83 @@ export function render(manifest) {
 
           <div class="section-content" id="equipment-content" style="display: none;">
             <p class="section-hint">装備可能なモブ（ゾンビ、スケルトン等）のみ有効です。</p>
-            <div class="equipment-grid" id="equipment-grid">
-              ${EQUIPMENT_SLOTS.map(slot => `
-                <div class="equipment-slot" data-slot="${slot.id}">
-                  <div class="slot-header">
-                    <img src="${slot.image}" alt="${slot.name}" class="slot-icon mc-pixelated" width="24" height="24" data-mc-tooltip="${slot.itemId}" onerror="this.style.opacity='0.3'">
-                    <span class="slot-name">${slot.name}</span>
-                  </div>
-                  <div class="equipment-select-wrapper">
-                    <img src="" alt="" class="selected-item-image mc-pixelated" data-slot="${slot.id}" width="24" height="24" style="display: none;" onerror="this.style.opacity='0.3'">
-                    <select class="equipment-select mc-select" data-slot="${slot.id}">
-                      ${EQUIPMENT_ITEMS[slot.id].map(item => `
-                        <option value="${item.id}" data-image="${item.image || ''}">${item.name}</option>
-                      `).join('')}
-                    </select>
-                  </div>
-                  <div class="slot-actions">
-                    <button type="button" class="enchant-btn" data-slot="${slot.id}" title="エンチャント設定">
-                      <img src="${getInviconUrl('enchanted_book')}" alt="Enchant" class="mc-pixelated" width="16" height="16" onerror="this.style.opacity='0.3'">
-                      <span class="enchant-count" data-slot="${slot.id}">0</span>
-                    </button>
-                    <div class="drop-chance-wrapper">
-                      <label>Drop:</label>
-                      <input type="number" class="drop-chance mc-input" data-slot="${slot.id}"
-                             value="8.5" min="0" max="100" step="0.1">%
+
+            <!-- 防具セクション -->
+            <div class="equipment-category">
+              <h4 class="equipment-category-title">
+                <img src="${getInviconUrl('iron_chestplate')}" alt="" class="mc-pixelated" width="20" height="20">
+                防具
+              </h4>
+              <div class="equipment-grid equipment-grid-armor" id="equipment-grid-armor">
+                ${EQUIPMENT_SLOTS.filter(s => ['head', 'chest', 'legs', 'feet'].includes(s.id)).map(slot => `
+                  <div class="equipment-slot" data-slot="${slot.id}">
+                    <div class="slot-visual">
+                      <div class="slot-icon-large">
+                        <img src="${slot.image}" alt="${slot.name}" class="slot-icon mc-pixelated" data-slot="${slot.id}" width="48" height="48" data-mc-tooltip="${slot.itemId}" onerror="this.style.opacity='0.3'">
+                      </div>
+                      <span class="slot-name">${slot.name}</span>
+                    </div>
+                    <div class="slot-controls">
+                      <select class="equipment-select mc-select" data-slot="${slot.id}">
+                        ${EQUIPMENT_ITEMS[slot.id].map(item => `
+                          <option value="${item.id}" data-image="${item.image || ''}">${item.name}</option>
+                        `).join('')}
+                      </select>
+                      <div class="slot-bottom-row">
+                        <button type="button" class="enchant-btn" data-slot="${slot.id}" title="エンチャント設定">
+                          <img src="${getInviconUrl('enchanted_book')}" alt="" class="mc-pixelated" width="18" height="18">
+                          <span>エンチャント</span>
+                          <span class="enchant-count" data-slot="${slot.id}">0</span>
+                        </button>
+                        <div class="drop-chance-wrapper">
+                          <span class="drop-label">Drop</span>
+                          <input type="number" class="drop-chance mc-input" data-slot="${slot.id}"
+                                 value="8.5" min="0" max="100" step="0.1"><span class="drop-unit">%</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
-              `).join('')}
+                `).join('')}
+              </div>
+            </div>
+
+            <!-- 手持ちセクション -->
+            <div class="equipment-category">
+              <h4 class="equipment-category-title">
+                <img src="${getInviconUrl('iron_sword')}" alt="" class="mc-pixelated" width="20" height="20">
+                手持ち
+              </h4>
+              <div class="equipment-grid equipment-grid-hands" id="equipment-grid-hands">
+                ${EQUIPMENT_SLOTS.filter(s => ['mainhand', 'offhand'].includes(s.id)).map(slot => `
+                  <div class="equipment-slot equipment-slot-hand" data-slot="${slot.id}">
+                    <div class="slot-visual">
+                      <div class="slot-icon-large">
+                        <img src="${slot.image}" alt="${slot.name}" class="slot-icon mc-pixelated" data-slot="${slot.id}" width="48" height="48" data-mc-tooltip="${slot.itemId}" onerror="this.style.opacity='0.3'">
+                      </div>
+                      <span class="slot-name">${slot.name}</span>
+                    </div>
+                    <div class="slot-controls">
+                      <select class="equipment-select mc-select" data-slot="${slot.id}">
+                        ${EQUIPMENT_ITEMS[slot.id].map(item => `
+                          <option value="${item.id}" data-image="${item.image || ''}">${item.name}</option>
+                        `).join('')}
+                      </select>
+                      <div class="slot-bottom-row">
+                        <button type="button" class="enchant-btn" data-slot="${slot.id}" title="エンチャント設定">
+                          <img src="${getInviconUrl('enchanted_book')}" alt="" class="mc-pixelated" width="18" height="18">
+                          <span>エンチャント</span>
+                          <span class="enchant-count" data-slot="${slot.id}">0</span>
+                        </button>
+                        <div class="drop-chance-wrapper">
+                          <span class="drop-label">Drop</span>
+                          <input type="number" class="drop-chance mc-input" data-slot="${slot.id}"
+                                 value="8.5" min="0" max="100" step="0.1"><span class="drop-unit">%</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
             </div>
           </div>
         </section>
@@ -1049,14 +1098,17 @@ function renderEffectList(container) {
  * 装備選択時に画像を更新
  */
 function updateEquipmentImage(slot, itemId, container) {
-  const imageEl = $(`.selected-item-image[data-slot="${slot}"]`, container);
-  if (!imageEl) return;
+  // 新UIでは slot-icon-large 内の img を更新
+  const iconEl = $(`.slot-icon[data-slot="${slot}"]`, container);
+  const slotInfo = EQUIPMENT_SLOTS.find(s => s.id === slot);
 
-  if (itemId) {
-    imageEl.src = getInviconUrl(itemId);
-    imageEl.style.display = 'block';
-  } else {
-    imageEl.style.display = 'none';
+  if (iconEl) {
+    if (itemId) {
+      iconEl.src = getInviconUrl(itemId);
+    } else {
+      // デフォルトアイコンに戻す
+      iconEl.src = slotInfo?.image || '';
+    }
   }
 }
 
@@ -2192,157 +2244,218 @@ style.textContent = `
     flex: 1;
   }
 
-  /* 装備グリッド */
+  /* 装備カテゴリ */
+  .equipment-category {
+    margin-bottom: 24px;
+  }
+
+  .equipment-category:last-child {
+    margin-bottom: 0;
+  }
+
+  .equipment-category-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 16px 0;
+    padding-bottom: 8px;
+    border-bottom: 2px solid rgba(92, 183, 70, 0.3);
+    color: #5cb746;
+    font-size: 1rem;
+    font-weight: 600;
+  }
+
+  /* 装備グリッド - 新デザイン */
   .equipment-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    grid-template-columns: repeat(2, 1fr);
     gap: 16px;
   }
 
+  .equipment-grid-armor {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .equipment-grid-hands {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
   .equipment-slot {
-    background: rgba(0,0,0,0.3);
-    border: 2px solid rgba(255,255,255,0.15);
-    border-radius: 6px;
+    background: linear-gradient(145deg, rgba(30,30,50,0.9), rgba(20,20,40,0.9));
+    border: 2px solid rgba(93, 63, 211, 0.3);
+    border-radius: 8px;
     padding: 16px;
     display: flex;
     flex-direction: column;
     gap: 12px;
+    transition: all 0.2s ease;
   }
 
   .equipment-slot:hover {
-    border-color: rgba(92, 183, 70, 0.5);
-    background: rgba(0,0,0,0.4);
+    border-color: rgba(93, 63, 211, 0.6);
+    background: linear-gradient(145deg, rgba(40,40,70,0.9), rgba(30,30,55,0.9));
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(93, 63, 211, 0.2);
   }
 
-  .slot-header {
+  /* スロットビジュアル（アイコン＋名前） */
+  .slot-visual {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .slot-icon-large {
+    width: 64px;
+    height: 64px;
+    background: linear-gradient(135deg, #2a2a4a 0%, #1a1a30 100%);
+    border: 3px solid rgba(255,255,255,0.1);
+    border-radius: 8px;
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding-bottom: 8px;
-    border-bottom: 1px solid rgba(255,255,255,0.1);
+    justify-content: center;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
   }
 
-  .slot-icon {
-    width: 32px;
-    height: 32px;
-    filter: drop-shadow(1px 1px 2px rgba(0,0,0,0.5));
+  .slot-icon-large img {
+    filter: drop-shadow(2px 2px 3px rgba(0,0,0,0.5));
   }
 
   .slot-name {
     color: #ffffff;
     font-weight: 600;
-    font-size: 1rem;
+    font-size: 0.9rem;
+    text-align: center;
   }
 
-  .equipment-select-wrapper {
+  /* スロットコントロール */
+  .slot-controls {
     display: flex;
-    align-items: center;
+    flex-direction: column;
     gap: 10px;
-  }
-
-  .selected-item-image {
-    width: 32px;
-    height: 32px;
-    flex-shrink: 0;
-    filter: drop-shadow(1px 1px 2px rgba(0,0,0,0.5));
-    border-radius: 4px;
-    background: #222222;
-    padding: 2px;
+    width: 100%;
   }
 
   .equipment-select {
-    flex: 1;
-    font-size: 0.95rem;
-    padding: 8px 12px;
-    background: #2a2a2a;
+    width: 100%;
+    font-size: 0.85rem;
+    padding: 10px 12px;
+    background: #1a1a2e;
     color: #ffffff;
-    border: 2px solid rgba(255,255,255,0.2);
-    border-radius: 4px;
+    border: 2px solid rgba(255,255,255,0.15);
+    border-radius: 6px;
     cursor: pointer;
     transition: all 0.15s ease;
   }
 
   .equipment-select:hover {
-    border-color: #666666;
-    background-color: #333333;
+    border-color: rgba(93, 63, 211, 0.5);
+    background-color: #252540;
   }
 
   .equipment-select:focus {
-    border-color: var(--mc-color-grass-main);
+    border-color: #5d3fd3;
     outline: none;
-    box-shadow: 0 0 0 2px rgba(92, 183, 70, 0.3);
+    box-shadow: 0 0 0 3px rgba(93, 63, 211, 0.25);
   }
 
   .equipment-select option {
-    background: #2a2a2a;
+    background: #1a1a2e;
     color: #ffffff;
     padding: 8px;
   }
 
-  .slot-actions {
+  /* スロットボトム行（エンチャント＋ドロップ） */
+  .slot-bottom-row {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    margin-top: 4px;
+    flex-direction: column;
+    gap: 8px;
   }
 
   .enchant-btn {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 6px;
-    padding: 8px 14px;
-    background: rgba(170, 0, 255, 0.2);
+    width: 100%;
+    padding: 10px 12px;
+    background: linear-gradient(135deg, rgba(170, 0, 255, 0.25), rgba(130, 0, 200, 0.2));
     border: 2px solid rgba(170, 0, 255, 0.5);
-    border-radius: 4px;
+    border-radius: 6px;
     color: #cc66ff;
     cursor: pointer;
-    transition: all 0.15s;
-    font-size: 0.9rem;
+    transition: all 0.2s ease;
+    font-size: 0.8rem;
+    font-weight: 600;
   }
 
   .enchant-btn:hover {
-    background: rgba(170, 0, 255, 0.3);
+    background: linear-gradient(135deg, rgba(170, 0, 255, 0.4), rgba(130, 0, 200, 0.35));
     border-color: #cc66ff;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(170, 0, 255, 0.3);
+  }
+
+  .enchant-btn:active {
+    transform: translateY(0);
   }
 
   .enchant-btn img {
-    width: 20px;
-    height: 20px;
+    width: 18px;
+    height: 18px;
+  }
+
+  .enchant-btn span {
+    white-space: nowrap;
   }
 
   .enchant-count {
-    font-size: 0.9rem;
+    background: rgba(170, 0, 255, 0.4);
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 0.75rem;
     font-weight: bold;
   }
 
   .drop-chance-wrapper {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 6px;
-    font-size: 0.95rem;
-    color: rgba(255,255,255,0.8);
+    font-size: 0.85rem;
+    color: rgba(255,255,255,0.7);
+    background: rgba(0,0,0,0.2);
+    padding: 6px 10px;
+    border-radius: 4px;
+  }
+
+  .drop-label {
+    color: rgba(255,255,255,0.5);
+    font-size: 0.75rem;
+    text-transform: uppercase;
   }
 
   .drop-chance {
-    width: 70px;
-    background: #1a1a2e;
+    width: 60px;
+    background: rgba(0,0,0,0.3);
     color: #ffffff;
-    border: 2px solid rgba(255,255,255,0.2);
+    border: 1px solid rgba(255,255,255,0.15);
     border-radius: 4px;
-    padding: 6px 8px;
-    font-size: 0.95rem;
+    padding: 4px 6px;
+    font-size: 0.85rem;
     text-align: center;
   }
 
   .drop-chance:focus {
-    border-color: var(--mc-color-grass-main);
+    border-color: #5d3fd3;
     outline: none;
-    box-shadow: 0 0 0 2px rgba(92, 183, 70, 0.3);
+    box-shadow: 0 0 0 2px rgba(93, 63, 211, 0.3);
   }
 
-  .drop-chance-wrapper label {
-    color: #cccccc;
+  .drop-unit {
+    color: rgba(255,255,255,0.5);
+    font-size: 0.75rem;
   }
 
   /* エンチャントモーダル */
@@ -2578,12 +2691,36 @@ style.textContent = `
       grid-template-columns: 1fr;
     }
 
-    .equipment-grid {
-      grid-template-columns: 1fr;
+    .equipment-grid,
+    .equipment-grid-armor,
+    .equipment-grid-hands {
+      grid-template-columns: repeat(2, 1fr);
     }
 
-    .slot-actions {
-      flex-wrap: wrap;
+    .slot-bottom-row {
+      flex-direction: column;
+    }
+
+    .equipment-slot {
+      padding: 12px;
+    }
+
+    .slot-icon-large {
+      width: 48px;
+      height: 48px;
+    }
+
+    .slot-icon-large img {
+      width: 36px;
+      height: 36px;
+    }
+  }
+
+  @media (max-width: 400px) {
+    .equipment-grid,
+    .equipment-grid-armor,
+    .equipment-grid-hands {
+      grid-template-columns: 1fr;
     }
   }
 
