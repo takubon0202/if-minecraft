@@ -798,18 +798,25 @@ function updateCommand(container) {
   const version = workspaceStore.get('version') || '1.21';
   const versionGroup = getVersionGroup(version);
 
+  // 1.21.5以降: SNBT形式 {text:"...",color:"red"}
+  // 1.13-1.21.4: JSON形式 '{"text":"...","color":"red"}'
+  const useSNBT = compareVersions(version, '1.21.5') >= 0;
+
   const nbtParts = [];
 
-  // カスタム名（JSONテキスト形式 - バージョンで形式が異なる）
-  // 1.21+: CustomName:'{"text":"名前","color":"red"}'（シングルクォート）
+  // カスタム名（バージョンで形式が異なる）
   const customName = summonNameEditor?.getPlainText() || '';
   if (customName) {
     if (versionGroup === 'legacy') {
       // 1.12- では単純文字列
       nbtParts.push(`CustomName:"${customName}"`);
+    } else if (useSNBT) {
+      // 1.21.5+ では SNBT形式（クォートなし）
+      const snbtName = summonNameEditor?.getSNBT() || generateCustomNameSNBT(customName);
+      nbtParts.push(`CustomName=${snbtName}`);
     } else {
-      // 1.13+ では JSON形式（シングルクォートで囲む）
-      const jsonName = generateCustomNameJSON(customName);
+      // 1.13-1.21.4 では JSON形式（シングルクォートで囲む）
+      const jsonName = summonNameEditor?.getJSON() || generateCustomNameJSON(customName);
       nbtParts.push(`CustomName:'${jsonName}'`);
     }
     nbtParts.push('CustomNameVisible:1b');
@@ -937,6 +944,59 @@ function formatGroupToJSON(group) {
   if (group.underlined) parts.push(`"underlined":true`);
   if (group.strikethrough) parts.push(`"strikethrough":true`);
   if (group.obfuscated) parts.push(`"obfuscated":true`);
+
+  return `{${parts.join(',')}}`;
+}
+
+/**
+ * カスタム名のSNBT Text Componentを生成（1.21.5+用）
+ * CustomNameはSNBT形式のオブジェクト（クォートで囲まない）
+ *
+ * 注意: CustomNameはデフォルトで斜体になるため、italic:falseを設定
+ * 複数色の場合は配列形式で、最初に空のベースコンポーネントを追加
+ */
+function generateCustomNameSNBT(plainText) {
+  // RichTextEditorのcharactersがあればそれを使用
+  if (summonNameEditor && summonNameEditor.characters && summonNameEditor.characters.length > 0) {
+    const groups = summonNameEditor.getFormattedGroups();
+    if (groups.length === 0) {
+      return `{text:"${escapeJsonString(plainText)}",italic:false}`;
+    }
+
+    if (groups.length === 1) {
+      return formatGroupToSNBT(groups[0]);
+    }
+
+    // 複数グループの場合は配列形式
+    // 最初に空のベースコンポーネントを追加して斜体を解除
+    const components = groups.map(g => formatGroupToSNBT(g));
+    return `[{text:"",italic:false},${components.join(',')}]`;
+  }
+
+  // フォールバック: プレーンテキスト
+  return `{text:"${escapeJsonString(plainText)}",italic:false}`;
+}
+
+/**
+ * グループをSNBT形式に変換（1.21.5+用）
+ * SNBT形式: キーはクォートなし、値は文字列のみクォート
+ */
+function formatGroupToSNBT(group) {
+  const parts = [`text:"${escapeJsonString(group.text)}"`];
+  parts.push(`italic:false`);
+
+  if (group.color && group.color !== 'white') {
+    parts.push(`color:"${group.color}"`);
+  }
+  if (group.bold) parts.push(`bold:true`);
+  if (group.italic) {
+    // italic:falseを上書き
+    const idx = parts.indexOf(`italic:false`);
+    if (idx !== -1) parts[idx] = `italic:true`;
+  }
+  if (group.underlined) parts.push(`underlined:true`);
+  if (group.strikethrough) parts.push(`strikethrough:true`);
+  if (group.obfuscated) parts.push(`obfuscated:true`);
 
   return `{${parts.join(',')}}`;
 }

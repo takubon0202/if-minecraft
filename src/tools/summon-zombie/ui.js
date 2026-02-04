@@ -4,10 +4,12 @@
  */
 
 import { $, $$, debounce, delegate } from '../../core/dom.js';
+import { workspaceStore } from '../../core/store.js';
 import { setOutput } from '../../app/sidepanel.js';
 import { getInviconUrl, getSpawnEggUrl } from '../../core/wiki-images.js';
 import { applyTooltip } from '../../core/mc-tooltip.js';
 import { RichTextEditor, RICH_TEXT_EDITOR_CSS } from '../../core/rich-text-editor.js';
+import { compareVersions } from '../../core/version-compat.js';
 
 // ゾンビタイプ
 const ZOMBIE_TYPES = [
@@ -1089,18 +1091,30 @@ function updateCommand() {
 
 /**
  * /summon コマンドを生成
- * 1.21.2+ NBT: エンティティタグはPascalCase (CustomName, Attributes, ArmorItems, HandItems)
- * 属性ID: minecraft:max_health（generic.プレフィックス削除）
+ * 1.21.5+: CustomNameはSNBT形式 {text:"...",color:"red"}
+ * 1.21-1.21.4: CustomNameはJSON形式 '{"text":"...","color":"red"}'
+ * NBT: エンティティタグはPascalCase (CustomName, Attributes, ArmorItems, HandItems)
+ * 属性ID: minecraft:generic.max_health（generic.プレフィックス必須）
  */
 function generateSummonZombieCommand(s) {
   const entityId = `minecraft:${s.zombieType}`;
   const nbtParts = [];
 
-  // カスタム名（1.21+ CustomNameはJSON Text形式の文字列）
+  // 現在のバージョンを取得
+  const version = workspaceStore.get('version') || '1.21';
+  const useSNBT = compareVersions(version, '1.21.5') >= 0;
+
+  // カスタム名（バージョンで形式が異なる）
   if (s.customName) {
-    // RTEからJSON形式を生成
-    const jsonName = generateCustomNameJSON(s);
-    nbtParts.push(`CustomName:'${jsonName}'`);
+    if (useSNBT) {
+      // 1.21.5+ SNBT形式（クォートなし）
+      const snbtName = zombieNameEditor?.getSNBT() || generateCustomNameSNBT(s);
+      nbtParts.push(`CustomName=${snbtName}`);
+    } else {
+      // 1.21-1.21.4 JSON形式（シングルクォートで囲む）
+      const jsonName = zombieNameEditor?.getJSON() || generateCustomNameJSON(s);
+      nbtParts.push(`CustomName:'${jsonName}'`);
+    }
   }
 
   // オプション（1.21+ エンティティタグはPascalCase）
@@ -1317,6 +1331,59 @@ function formatGroupToJSON(group) {
   if (group.underlined) parts.push(`"underlined":true`);
   if (group.strikethrough) parts.push(`"strikethrough":true`);
   if (group.obfuscated) parts.push(`"obfuscated":true`);
+
+  return `{${parts.join(',')}}`;
+}
+
+/**
+ * カスタム名のSNBT Text Componentを生成（1.21.5+用）
+ * CustomNameはSNBT形式のオブジェクト（クォートで囲まない）
+ *
+ * 注意: CustomNameはデフォルトで斜体になるため、italic:falseを設定
+ * 複数色の場合は配列形式で、最初に空のベースコンポーネントを追加
+ */
+function generateCustomNameSNBT(s) {
+  // RTEのcharactersがあればそれを使用
+  if (typeof zombieNameEditor !== 'undefined' && zombieNameEditor && zombieNameEditor.characters && zombieNameEditor.characters.length > 0) {
+    const groups = zombieNameEditor.getFormattedGroups();
+    if (groups.length === 0) {
+      return `{text:"${escapeJSON(s.customName)}",italic:false}`;
+    }
+
+    if (groups.length === 1) {
+      return formatGroupToSNBT(groups[0]);
+    }
+
+    // 複数グループの場合は配列形式
+    // 最初に空のベースコンポーネントを追加して斜体を解除
+    const components = groups.map(g => formatGroupToSNBT(g));
+    return `[{text:"",italic:false},${components.join(',')}]`;
+  }
+
+  // フォールバック: プレーンテキスト
+  return `{text:"${escapeJSON(s.customName)}",italic:false}`;
+}
+
+/**
+ * グループをSNBT形式に変換（1.21.5+用）
+ * SNBT形式: キーはクォートなし、値は文字列のみクォート
+ */
+function formatGroupToSNBT(group) {
+  const parts = [`text:"${escapeJSON(group.text)}"`];
+  parts.push(`italic:false`);
+
+  if (group.color && group.color !== 'white') {
+    parts.push(`color:"${group.color}"`);
+  }
+  if (group.bold) parts.push(`bold:true`);
+  if (group.italic) {
+    // italic:falseを上書き
+    const idx = parts.indexOf(`italic:false`);
+    if (idx !== -1) parts[idx] = `italic:true`;
+  }
+  if (group.underlined) parts.push(`underlined:true`);
+  if (group.strikethrough) parts.push(`strikethrough:true`);
+  if (group.obfuscated) parts.push(`obfuscated:true`);
 
   return `{${parts.join(',')}}`;
 }
