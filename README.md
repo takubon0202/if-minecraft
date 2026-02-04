@@ -451,18 +451,21 @@ echo "今日は2026年2月4日です。[質問]" | codex exec - --sandbox read-o
 | **gemini-cli-security** | 0.4.0 | セキュリティ脆弱性分析 | `/security:analyze` |
 | **nanobanana** | 1.0.10 | 画像生成・編集・復元 | `/icon`, `/pattern`, `/diagram`, `/edit`, `/restore` |
 
-#### Jules（非同期エージェント）
+#### Jules（コード修正特化エージェント）
 
-バックグラウンドでコーディングタスクを実行し、GitHubにPRを作成します。
+**コード修正専用**の非同期エージェント。バグ修正・リファクタリングをバックグラウンドで実行し、GitHubにPRを作成します。
 
 ```bash
 # Gemini CLI対話モードで
-/jules このファイルにユニットテストを追加して
-/jules プロジェクト全体のコードフォーマットを統一して
+/jules src/tools/enchant/ui.js の属性生成バグを修正して
+/jules TypeScriptのコンパイルエラーを全て修正して
+/jules この関数を小さな関数に分割して
 /jules status  # 進捗確認
 ```
 
-適したタスク: ユニットテスト追加、コードリファクタリング、依存関係アップグレード
+適したタスク: バグ修正、構文エラー修正、リファクタリング、コードスタイル統一、非推奨API修正
+
+**注意**: 新機能追加には使用しない（Claude/Geminiで実装）
 
 #### Security（脆弱性分析）
 
