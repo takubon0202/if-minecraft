@@ -429,15 +429,84 @@ export function init(container) {
 
 **Gemini（Gemini 3系のみ使用）:**
 ```bash
-gemini -m gemini-3-pro-preview "今日は2026年1月31日です。[質問]"
+gemini -m gemini-3-pro-preview "今日は2026年2月4日です。[質問]"
 ```
 - Gemini 2.5系は使用禁止
 
 **Codex（非対話モード必須）:**
 ```bash
-echo "今日は2026年1月31日です。[質問]" | codex exec - --sandbox read-only
+echo "今日は2026年2月4日です。[質問]" | codex exec - --sandbox read-only
 ```
 - `codex exec -` 形式でstdinからプロンプトを渡す
+
+### Gemini CLI 拡張機能
+
+このプロジェクトでは以下のGemini CLI拡張機能を使用しています。
+
+| 拡張機能 | バージョン | 用途 | コマンド |
+|----------|------------|------|----------|
+| **code-review** | 0.1.0 | コードレビュー自動化 | `/code-review` |
+| **conductor** | 0.2.0 | 機能計画策定・実装管理 | - |
+| **gemini-cli-jules** | 0.1.0 | 非同期コーディングエージェント | `/jules [タスク]` |
+| **gemini-cli-security** | 0.4.0 | セキュリティ脆弱性分析 | `/security:analyze` |
+| **nanobanana** | 1.0.10 | 画像生成・編集・復元 | `/icon`, `/pattern`, `/diagram`, `/edit`, `/restore` |
+
+#### Jules（非同期エージェント）
+
+バックグラウンドでコーディングタスクを実行し、GitHubにPRを作成します。
+
+```bash
+# Gemini CLI対話モードで
+/jules このファイルにユニットテストを追加して
+/jules プロジェクト全体のコードフォーマットを統一して
+/jules status  # 進捗確認
+```
+
+適したタスク: ユニットテスト追加、コードリファクタリング、依存関係アップグレード
+
+#### Security（脆弱性分析）
+
+```bash
+# 包括的スキャン
+/security:analyze
+```
+
+検出可能な脆弱性:
+- ハードコードされた秘密（APIキー、パスワード）
+- アクセス制御の欠陥（IDOR、権限昇格）
+- インジェクション（SQLi、XSS、コマンドインジェクション）
+- 認証の問題
+- LLM安全性（プロンプトインジェクション）
+- プライバシー違反
+
+重大度レベル: Critical / High / Medium / Low
+
+#### Nano Banana（画像生成）
+
+```bash
+# アイコン生成
+/icon Minecraft風のダイヤソード 32x32 --count=3 --styles=pixel-art
+
+# シームレスパターン
+/pattern 石レンガテクスチャ --seamless --density=medium
+
+# ダイアグラム
+/diagram システム構成図 --labels
+```
+
+#### 拡張機能管理
+
+```bash
+# 一覧表示
+gemini extensions list
+
+# インストール
+gemini extensions install https://github.com/gemini-cli-extensions/[name] --auto-update
+
+# 有効化/無効化
+gemini extensions enable [name]
+gemini extensions disable [name]
+```
 
 ---
 
