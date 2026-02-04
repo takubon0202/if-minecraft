@@ -2025,13 +2025,13 @@ style.textContent = `
     width: 100%;
     display: flex;
     align-items: center;
-    gap: var(--mc-space-sm);
-    padding: var(--mc-space-sm) var(--mc-space-md);
+    gap: 12px;
+    padding: 12px 16px;
     background: linear-gradient(180deg, #4a4a4a 0%, #3a3a3a 100%);
     border: none;
     cursor: pointer;
     text-align: left;
-    font-size: 0.85rem;
+    font-size: 1rem;
     color: #ffffff;
   }
 
@@ -2040,8 +2040,8 @@ style.textContent = `
   }
 
   .enchant-tool .cat-icon-img {
-    width: 24px;
-    height: 24px;
+    width: 28px;
+    height: 28px;
     image-rendering: pixelated;
     flex-shrink: 0;
   }
@@ -2049,11 +2049,12 @@ style.textContent = `
   .enchant-tool .cat-name {
     flex: 1;
     color: #ffffff;
+    font-weight: 600;
   }
 
   .enchant-tool .cat-count {
-    color: #aaaaaa;
-    font-size: 0.75rem;
+    color: #cccccc;
+    font-size: 0.85rem;
   }
 
   .enchant-tool .cat-arrow {
@@ -2063,21 +2064,23 @@ style.textContent = `
 
   .enchant-tool .category-enchants {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 6px;
-    padding: var(--mc-space-sm);
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 10px;
+    padding: 12px;
     background: rgba(30,30,30,0.8);
+    max-width: 100%;
   }
 
   .enchant-tool .enchant-item {
     display: flex;
     flex-direction: column;
-    gap: 6px;
-    padding: 10px;
+    gap: 8px;
+    padding: 14px;
     background: linear-gradient(180deg, #3a3a3a 0%, #2a2a2a 100%);
     border: 2px solid #444444;
-    border-radius: 4px;
+    border-radius: 6px;
     transition: all 0.15s;
+    min-height: 90px;
   }
 
   .enchant-tool .enchant-item:hover {
@@ -2093,17 +2096,17 @@ style.textContent = `
   .enchant-tool .enchant-item .enchant-item-header {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 4px;
   }
 
   .enchant-tool .enchant-item .enchant-name {
-    font-size: 0.85rem;
+    font-size: 1rem;
     font-weight: bold;
     color: #ffffff;
   }
 
   .enchant-tool .enchant-item .enchant-en {
-    font-size: 0.65rem;
+    font-size: 0.75rem;
     color: #aaaaaa;
   }
 
@@ -2111,26 +2114,27 @@ style.textContent = `
   .enchant-tool .enchant-level-selector {
     display: flex;
     align-items: center;
-    gap: 6px;
-    margin-top: 4px;
+    gap: 8px;
+    margin-top: 6px;
+    flex-wrap: wrap;
   }
 
   .enchant-tool .enchant-level-selector .level-label {
-    font-size: 0.75rem;
-    color: #aaaaaa;
+    font-size: 0.85rem;
+    color: #cccccc;
     font-weight: bold;
   }
 
   .enchant-tool .enchant-level-selector .enchant-level-input {
-    width: 55px;
-    padding: 4px 6px;
-    font-size: 0.85rem;
+    width: 65px;
+    padding: 6px 8px;
+    font-size: 1rem;
     font-weight: bold;
     text-align: center;
     background: #2a2a2a;
     border: 2px solid #444444;
     color: var(--mc-color-diamond);
-    border-radius: 3px;
+    border-radius: 4px;
   }
 
   .enchant-tool .enchant-level-selector .enchant-level-input:focus {
@@ -2141,12 +2145,12 @@ style.textContent = `
 
   .enchant-tool .enchant-level-selector .level-presets {
     display: flex;
-    gap: 3px;
+    gap: 4px;
   }
 
   .enchant-tool .enchant-level-selector .level-preset-btn {
-    padding: 3px 6px;
-    font-size: 0.65rem;
+    padding: 4px 8px;
+    font-size: 0.75rem;
     font-weight: bold;
     border-radius: 3px;
     border: 1px solid #555555;
@@ -2177,25 +2181,29 @@ style.textContent = `
   /* 追加ボタン */
   .enchant-tool .enchant-add-btn {
     align-self: flex-end;
-    padding: 4px 12px;
-    font-size: 1rem;
+    padding: 8px 16px;
+    font-size: 1.1rem;
     font-weight: bold;
     background: linear-gradient(180deg, #6b4ce8 0%, #4a32b3 100%);
     color: white;
-    border: none;
-    border-radius: 4px;
+    border: 2px solid #5d3fd3;
+    border-radius: 6px;
     cursor: pointer;
     transition: all 0.15s;
+    margin-top: auto;
   }
 
   .enchant-tool .enchant-add-btn:hover {
     background: linear-gradient(180deg, #7d5ef5 0%, #5a42c3 100%);
     transform: scale(1.05);
+    box-shadow: 0 0 10px rgba(107, 76, 232, 0.5);
   }
 
   .enchant-tool .enchant-item.selected .enchant-add-btn {
     background: #555555;
+    border-color: #444;
     cursor: not-allowed;
+    opacity: 0.7;
   }
 
   .enchant-tool .enchant-info-hint {
@@ -2219,24 +2227,24 @@ style.textContent = `
   .enchant-tool .selected-enchants {
     display: flex;
     flex-direction: column;
-    gap: var(--mc-space-xs);
-    padding: var(--mc-space-sm);
+    gap: 8px;
+    padding: 12px;
     background: rgba(30,30,30,0.8);
     border: 2px solid #555555;
-    border-radius: 4px;
-    min-height: 60px;
-    max-height: 300px;
-    overflow-y: auto;
+    border-radius: 6px;
+    min-height: 80px;
+    max-height: none;
+    overflow-y: visible;
   }
 
   .enchant-tool .selected-enchant {
     display: flex;
     align-items: center;
-    gap: var(--mc-space-sm);
-    padding: 8px 12px;
+    gap: 12px;
+    padding: 12px 16px;
     background: linear-gradient(180deg, #3a3a3a 0%, #2a2a2a 100%);
     border-left: 4px solid #6b4ce8;
-    border-radius: 0 4px 4px 0;
+    border-radius: 0 6px 6px 0;
     transition: all 0.2s;
   }
 
@@ -2251,18 +2259,18 @@ style.textContent = `
   .enchant-tool .selected-enchant .enchant-info {
     display: flex;
     flex-direction: column;
-    gap: 2px;
-    min-width: 100px;
+    gap: 4px;
+    min-width: 120px;
   }
 
   .enchant-tool .selected-enchant .enchant-label {
-    font-size: 0.85rem;
+    font-size: 1rem;
     font-weight: bold;
     color: #ffffff;
   }
 
   .enchant-tool .selected-enchant .enchant-level-display {
-    font-size: 0.7rem;
+    font-size: 0.8rem;
     color: var(--mc-color-diamond);
     font-family: var(--mc-font-mono);
   }
@@ -2946,13 +2954,23 @@ style.textContent = `
     color: var(--mc-text-muted);
   }
 
+  @media (max-width: 900px) {
+    .enchant-tool .category-enchants {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
   @media (max-width: 600px) {
     .item-selector {
       grid-template-columns: 1fr;
     }
 
-    .category-enchants {
+    .enchant-tool .category-enchants {
       grid-template-columns: 1fr;
+    }
+
+    .enchant-tool .enchant-item {
+      padding: 12px;
     }
   }
 
