@@ -1182,19 +1182,20 @@ function buildEquipmentNBT(equipment, version = '1.21.5') {
 }
 
 /**
- * アイテムNBTを生成（1.21+ アイテムコンポーネント形式）
- * summonコマンドではlevelsラッパーが必須（giveコマンドとは異なる）
+ * アイテムNBTを生成（1.21.5+ アイテムコンポーネント形式）
+ * 1.21.5以降はlevelsラッパー不要
+ * 形式: {id:"minecraft:diamond_sword",count:1,components:{"minecraft:enchantments":{"minecraft:sharpness":5}}}
  */
 function buildItemNBT(itemId, enchants) {
   // 1.20.5+/1.21+: count は小文字で整数型
   // エンチャントがある場合のみcomponentsを追加
 
-  // エンチャント（1.21+ コンポーネント形式）
-  // summonコマンドでは常にlevelsラッパーが必要
-  // 形式: components:{"minecraft:enchantments":{levels:{"minecraft:protection":4}}}
+  // エンチャント（1.21.5+ コンポーネント形式）
+  // 1.21.5以降はlevelsラッパーが削除された
+  // 形式: components:{"minecraft:enchantments":{"minecraft:sharpness":5}}
   if (enchants && enchants.length > 0) {
     const enchantPairs = enchants.map(e => `"minecraft:${e.id}":${e.level}`).join(',');
-    return `{id:"minecraft:${itemId}",count:1,components:{"minecraft:enchantments":{levels:{${enchantPairs}}}}}`;
+    return `{id:"minecraft:${itemId}",count:1,components:{"minecraft:enchantments":{${enchantPairs}}}}`;
   }
 
   // エンチャントなしの場合はシンプルな形式
@@ -2244,12 +2245,38 @@ style.textContent = `
     height: 32px;
     flex-shrink: 0;
     filter: drop-shadow(1px 1px 2px rgba(0,0,0,0.5));
+    border-radius: 4px;
+    background: #222222;
+    padding: 2px;
   }
 
   .equipment-select {
     flex: 1;
     font-size: 0.95rem;
     padding: 8px 12px;
+    background: #2a2a2a;
+    color: #ffffff;
+    border: 2px solid rgba(255,255,255,0.2);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .equipment-select:hover {
+    border-color: #666666;
+    background-color: #333333;
+  }
+
+  .equipment-select:focus {
+    border-color: var(--mc-color-grass-main);
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(92, 183, 70, 0.3);
+  }
+
+  .equipment-select option {
+    background: #2a2a2a;
+    color: #ffffff;
+    padding: 8px;
   }
 
   .slot-actions {
@@ -2299,9 +2326,23 @@ style.textContent = `
 
   .drop-chance {
     width: 70px;
+    background: #1a1a2e;
+    color: #ffffff;
+    border: 2px solid rgba(255,255,255,0.2);
+    border-radius: 4px;
     padding: 6px 8px;
     font-size: 0.95rem;
     text-align: center;
+  }
+
+  .drop-chance:focus {
+    border-color: var(--mc-color-grass-main);
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(92, 183, 70, 0.3);
+  }
+
+  .drop-chance-wrapper label {
+    color: #cccccc;
   }
 
   /* エンチャントモーダル */

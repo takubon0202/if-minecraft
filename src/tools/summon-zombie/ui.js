@@ -1230,19 +1230,20 @@ function buildEquipmentNBT(equipment, version = '1.21.5') {
 }
 
 /**
- * アイテムNBTを生成（1.21+ アイテムコンポーネント形式）
- * summonコマンドではlevelsラッパーが必須（giveコマンドとは異なる）
+ * アイテムNBTを生成（1.21.5+ アイテムコンポーネント形式）
+ * 1.21.5以降はlevelsラッパー不要
+ * 形式: {id:"minecraft:diamond_sword",count:1,components:{"minecraft:enchantments":{"minecraft:sharpness":5}}}
  */
 function buildItemNBT(itemId, enchants) {
   // 1.20.5+/1.21+: count は小文字で整数型
   // エンチャントがある場合のみcomponentsを追加
 
-  // エンチャント（1.21+ コンポーネント形式）
-  // summonコマンドでは常にlevelsラッパーが必要
-  // 形式: components:{"minecraft:enchantments":{levels:{"minecraft:protection":4}}}
+  // エンチャント（1.21.5+ コンポーネント形式）
+  // 1.21.5以降はlevelsラッパーが削除された
+  // 形式: components:{"minecraft:enchantments":{"minecraft:sharpness":5}}
   if (enchants && enchants.length > 0) {
     const enchantPairs = enchants.map(e => `"minecraft:${e.id}":${e.level}`).join(',');
-    return `{id:"minecraft:${itemId}",count:1,components:{"minecraft:enchantments":{levels:{${enchantPairs}}}}}`;
+    return `{id:"minecraft:${itemId}",count:1,components:{"minecraft:enchantments":{${enchantPairs}}}}`;
   }
 
   // エンチャントなしの場合はシンプルな形式
