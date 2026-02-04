@@ -1580,16 +1580,15 @@ function generateComponentCommand(item, count, customName, useSNBT, unbreakable,
   if (selectedEnchants.length > 0) {
     // エンチャントの本は stored_enchantments を使用
     const isEnchantedBook = item.includes('enchanted_book');
-    const componentName = isEnchantedBook ? 'minecraft:stored_enchantments' : 'minecraft:enchantments';
+    const componentName = isEnchantedBook ? 'stored_enchantments' : 'enchantments';
 
     if (useSimplifiedForm) {
-      // 1.21.5+: 簡略形式（levelsラッパー不要）
+      // 1.21.5+: 簡略形式（levelsラッパー廃止、show_in_tooltipはtooltip_displayへ移動）
       const enchantPairs = selectedEnchants.map(e => `"minecraft:${e.id}":${e.level}`).join(',');
+      components.push(`${componentName}={${enchantPairs}}`);
       if (hideEnchants) {
-        // show_in_tooltip使用時は長い形式が必要
-        components.push(`${componentName}={levels:{${enchantPairs}},show_in_tooltip:false}`);
-      } else {
-        components.push(`${componentName}={${enchantPairs}}`);
+        // 1.21.5+: tooltip_displayコンポーネントで非表示を制御
+        components.push(`tooltip_display={hidden_components:["${componentName}"]}`);
       }
     } else {
       // 1.20.5-1.21.4: 長い形式（levelsラッパー必須）
@@ -1610,10 +1609,11 @@ function generateComponentCommand(item, count, customName, useSNBT, unbreakable,
       const value = parseFloat($(`.attr-value[data-attr="${attrId}"]`, container)?.value) || 0;
       const slot = $(`.attr-slot[data-attr="${attrId}"]`, container)?.value || 'mainhand';
       const operation = $(`.attr-operation[data-attr="${attrId}"]`, container)?.value || 'add_value';
-      // 1.21+ attribute_modifiers 正式構文 (minecraft.wiki/w/Item_format#attribute_modifiers)
-      // type: 属性ID（minecraft:generic.xxx形式、フルパス必須）
-      // id: 一意な識別子（namespace:path形式の文字列）
-      // amount: 数値（小数可）
+      // 1.21+ attribute_modifiers 正式構文 (minecraft.wiki/w/Commands/give)
+      // コンポーネント名: attribute_modifiers（minecraft:プレフィックスなし）
+      // type: 属性ID（minecraft:generic.xxx形式）
+      // id: 一意な識別子（namespace:path形式の文字列）- 必須
+      // amount: 数値
       // operation: add_value, add_multiplied_base, add_multiplied_total
       // slot: any, hand, armor, mainhand, offhand, head, chest, legs, feet, body
       const modifierId = `minecraft:custom_${idCounter}`;
@@ -1621,7 +1621,7 @@ function generateComponentCommand(item, count, customName, useSNBT, unbreakable,
       attrs.push(`{type:"minecraft:${attrId}",id:"${modifierId}",amount:${value},operation:"${operation}",slot:"${slot}"}`);
     });
     if (attrs.length > 0) {
-      components.push(`minecraft:attribute_modifiers={modifiers:[${attrs.join(',')}]}`);
+      components.push(`attribute_modifiers={modifiers:[${attrs.join(',')}]}`);
     }
   }
 

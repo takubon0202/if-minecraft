@@ -1161,16 +1161,17 @@ function buildEquipmentNBT(equipment) {
 }
 
 /**
- * アイテムNBTを生成（1.21+ アイテムコンポーネント形式）
+ * アイテムNBTを生成（1.21.5+ アイテムコンポーネント形式）
  */
 function buildItemNBT(itemId, enchants) {
   const components = [];
 
-  // エンチャント（1.21+ コンポーネント形式）
-  // 形式: "minecraft:enchantments":{"levels":{"minecraft:sharpness":5}}
+  // エンチャント（1.21.5+ コンポーネント形式）
+  // 1.21.5以降: "minecraft:enchantments":{"minecraft:sharpness":5}
+  // ※levelsラッパーは1.21.5で廃止
   if (enchants && enchants.length > 0) {
-    const enchantLevels = enchants.map(e => `"minecraft:${e.id}":${e.level}`).join(',');
-    components.push(`"minecraft:enchantments":{"levels":{${enchantLevels}}}`);
+    const enchantPairs = enchants.map(e => `"minecraft:${e.id}":${e.level}`).join(',');
+    components.push(`"minecraft:enchantments":{${enchantPairs}}`);
   }
 
   if (components.length > 0) {
