@@ -451,21 +451,21 @@ echo "今日は2026年2月4日です。[質問]" | codex exec - --sandbox read-o
 | **gemini-cli-security** | 0.4.0 | セキュリティ脆弱性分析 | `/security:analyze` |
 | **nanobanana** | 1.0.10 | 画像生成・編集・復元 | `/icon`, `/pattern`, `/diagram`, `/edit`, `/restore` |
 
-#### Jules（コード修正特化エージェント）
+#### Jules（コーディングエージェント）
 
-**コード修正専用**の非同期エージェント。バグ修正・リファクタリングをバックグラウンドで実行し、GitHubにPRを作成します。
+バックグラウンドでコーディングタスクを実行する非同期エージェント。
 
 ```bash
 # Gemini CLI対話モードで
-/jules src/tools/enchant/ui.js の属性生成バグを修正して
-/jules TypeScriptのコンパイルエラーを全て修正して
-/jules この関数を小さな関数に分割して
+/jules ポーションツールにカスタムカラー機能を追加して
+/jules src/tools/enchant/ui.js のバグを修正して
+/jules この関数をリファクタリングして
 /jules status  # 進捗確認
 ```
 
-適したタスク: バグ修正、構文エラー修正、リファクタリング、コードスタイル統一、非推奨API修正
+適したタスク: 新機能追加、バグ修正、リファクタリング、テスト追加
 
-**注意**: 新機能追加には使用しない（Claude/Geminiで実装）
+**重要**: Git操作（PR作成、コミット、プッシュ）は全てClaude担当。JulesはGit操作禁止。
 
 #### Security（脆弱性分析）
 
