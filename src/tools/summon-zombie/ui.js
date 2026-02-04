@@ -1233,8 +1233,12 @@ function buildDropChancesNBT(equipment) {
 }
 
 /**
- * 属性NBTを生成（1.21.2+ id/base形式、generic.プレフィックス削除）
- * 形式: Attributes:[{id:"minecraft:max_health",base:100d}]
+ * 属性NBTを生成（1.21+ id/base形式、generic.プレフィックス必須）
+ * 形式: Attributes:[{id:"minecraft:generic.max_health",base:100d}]
+ *
+ * 注意: 1.21.xでは generic. プレフィックスは必須です
+ * - 旧形式: generic.maxHealth (camelCase)
+ * - 新形式: generic.max_health (snake_case)
  */
 function buildAttributesNBT(attributes) {
   const attrList = [];
@@ -1243,18 +1247,19 @@ function buildAttributesNBT(attributes) {
     const attrInfo = ATTRIBUTES.find(a => a.id === id);
     if (!attrInfo) return;
 
-    // 属性IDのマッピング（1.21.2+ 形式: minecraft:xxx - generic.プレフィックス削除）
-    const attrId = id === 'max_health' ? 'minecraft:max_health' :
-                   id === 'attack_damage' ? 'minecraft:attack_damage' :
-                   id === 'movement_speed' ? 'minecraft:movement_speed' :
-                   id === 'knockback_resistance' ? 'minecraft:knockback_resistance' :
-                   id === 'armor' ? 'minecraft:armor' :
-                   id === 'armor_toughness' ? 'minecraft:armor_toughness' :
-                   id === 'follow_range' ? 'minecraft:follow_range' :
-                   id === 'spawn_reinforcements' ? 'minecraft:spawn_reinforcements' :
-                   `minecraft:${id}`;
+    // 属性IDのマッピング（1.21+ 形式: minecraft:generic.xxx または minecraft:zombie.xxx）
+    // generic. プレフィックスは必須
+    const attrId = id === 'max_health' ? 'minecraft:generic.max_health' :
+                   id === 'attack_damage' ? 'minecraft:generic.attack_damage' :
+                   id === 'movement_speed' ? 'minecraft:generic.movement_speed' :
+                   id === 'knockback_resistance' ? 'minecraft:generic.knockback_resistance' :
+                   id === 'armor' ? 'minecraft:generic.armor' :
+                   id === 'armor_toughness' ? 'minecraft:generic.armor_toughness' :
+                   id === 'follow_range' ? 'minecraft:generic.follow_range' :
+                   id === 'spawn_reinforcements' ? 'minecraft:zombie.spawn_reinforcements' :
+                   `minecraft:generic.${id}`;
 
-    // 1.21.2+: Attributes配列内はid/base形式
+    // 1.21+: Attributes配列内はid/base形式
     attrList.push(`{id:"${attrId}",base:${value}d}`);
   });
 
@@ -1267,6 +1272,9 @@ function buildAttributesNBT(attributes) {
 /**
  * カスタム名のJSON Text Componentを生成
  * CustomNameはJSON形式の文字列（SNBTではない）
+ *
+ * 注意: CustomNameはデフォルトで斜体になるため、italic:falseを設定
+ * 複数色の場合は配列形式で、最初に空のベースコンポーネントを追加
  */
 function generateCustomNameJSON(s) {
   // RTEのcharactersがあればそれを使用
@@ -1281,8 +1289,9 @@ function generateCustomNameJSON(s) {
     }
 
     // 複数グループの場合は配列形式
+    // 最初に空のベースコンポーネントを追加して斜体を解除
     const components = groups.map(g => formatGroupToJSON(g));
-    return `[${components.join(',')}]`;
+    return `[{"text":"","italic":false},${components.join(',')}]`;
   }
 
   // フォールバック: プレーンテキスト
