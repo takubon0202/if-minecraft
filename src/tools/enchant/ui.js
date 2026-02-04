@@ -1604,17 +1604,25 @@ function generateComponentCommand(item, count, customName, useSNBT, unbreakable,
 
   if (useAttributes) {
     const attrs = [];
+    let uuidCounter = 1;
     $$('.attr-check:checked', container).forEach(check => {
       const attrId = check.dataset.attr;
       const value = parseFloat($(`.attr-value[data-attr="${attrId}"]`, container)?.value) || 0;
       const slot = $(`.attr-slot[data-attr="${attrId}"]`, container)?.value || 'mainhand';
       const operation = $(`.attr-operation[data-attr="${attrId}"]`, container)?.value || 'add_value';
-      // 1.21+ attribute_modifiers 正式構文: type, amount, operation, slot, id
+      // 1.21+ attribute_modifiers 正式構文
+      // type: 属性ID（minecraft:プレフィックス必須）
+      // amount: 値
+      // operation: add_value, add_multiplied_base, add_multiplied_total
+      // slot: any, hand, armor, mainhand, offhand, head, chest, legs, feet
+      // uuid: ユニークID [I; a, b, c, d]
       const attrIdSafe = attrId.replace(/\./g, '_');
-      attrs.push(`{type:"minecraft:${attrId}",amount:${value},operation:"${operation}",slot:"${slot}",id:"minecraft:${attrIdSafe}"}`);
+      const uuid = `[I;${uuidCounter},${uuidCounter + 100},${uuidCounter + 200},${uuidCounter + 300}]`;
+      uuidCounter++;
+      attrs.push(`{type:"minecraft:${attrId}",uuid:${uuid},name:"${attrIdSafe}",amount:${value}d,operation:"${operation}",slot:"${slot}"}`);
     });
     if (attrs.length > 0) {
-      components.push(`attribute_modifiers={modifiers:[${attrs.join(',')}]}`);
+      components.push(`minecraft:attribute_modifiers={modifiers:[${attrs.join(',')}]}`);
     }
   }
 
