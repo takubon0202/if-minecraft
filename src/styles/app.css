@@ -89,13 +89,16 @@
 
 .version-selector {
   display: flex;
-  align-items: center;
-  gap: var(--mc-space-sm);
-  font-size: 0.9rem;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.85rem;
+  width: 100%;
 }
 
 .version-selector label {
   color: rgba(255, 255, 255, 0.8);
+  white-space: nowrap;
+  font-size: 0.75rem;
 }
 
 .version-selector select {
@@ -103,16 +106,15 @@
   color: var(--mc-text-primary);
   border: 1px solid var(--mc-border-dark);
   padding: 6px 10px;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   cursor: pointer;
+  width: 100%;
 }
 
 .header-controls {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--mc-space-sm);
-  margin-top: var(--mc-space-xs);
+  display: block;
+  margin-top: var(--mc-space-sm);
+  width: 100%;
 }
 
 .nav-search {

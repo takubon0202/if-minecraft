@@ -84,10 +84,8 @@
 
 /* --- Header Controls --- */
 .header-controls {
-  display: flex;
-  align-items: center;
-  gap: var(--mc-space-md);
-  flex-wrap: wrap;
+  display: block;
+  margin-top: var(--mc-space-sm);
 }
 
 /* --- Global Resets & Base Styles --- */
