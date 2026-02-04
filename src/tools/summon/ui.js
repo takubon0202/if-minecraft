@@ -15,6 +15,131 @@ import { RichTextEditor, RICH_TEXT_EDITOR_CSS } from '../../core/rich-text-edito
 // RichTextEditorインスタンス
 let summonNameEditor = null;
 
+// エンチャントモーダル用の現在編集中スロット
+let currentEditSlot = null;
+
+// 装備スロット
+const EQUIPMENT_SLOTS = [
+  { id: 'head', name: 'ヘルメット', image: getInviconUrl('iron_helmet'), itemId: 'iron_helmet' },
+  { id: 'chest', name: 'チェストプレート', image: getInviconUrl('iron_chestplate'), itemId: 'iron_chestplate' },
+  { id: 'legs', name: 'レギンス', image: getInviconUrl('iron_leggings'), itemId: 'iron_leggings' },
+  { id: 'feet', name: 'ブーツ', image: getInviconUrl('iron_boots'), itemId: 'iron_boots' },
+  { id: 'mainhand', name: 'メイン手', image: getInviconUrl('iron_sword'), itemId: 'iron_sword' },
+  { id: 'offhand', name: 'オフハンド', image: getInviconUrl('shield'), itemId: 'shield' },
+];
+
+// 装備アイテム一覧
+const EQUIPMENT_ITEMS = {
+  head: [
+    { id: '', name: '-- なし --', image: null },
+    { id: 'leather_helmet', name: '革のヘルメット', image: getInviconUrl('leather_helmet') },
+    { id: 'chainmail_helmet', name: 'チェーンのヘルメット', image: getInviconUrl('chainmail_helmet') },
+    { id: 'iron_helmet', name: '鉄のヘルメット', image: getInviconUrl('iron_helmet') },
+    { id: 'golden_helmet', name: '金のヘルメット', image: getInviconUrl('golden_helmet') },
+    { id: 'diamond_helmet', name: 'ダイヤのヘルメット', image: getInviconUrl('diamond_helmet') },
+    { id: 'netherite_helmet', name: 'ネザライトのヘルメット', image: getInviconUrl('netherite_helmet') },
+    { id: 'turtle_helmet', name: 'カメの甲羅', image: getInviconUrl('turtle_helmet') },
+    { id: 'carved_pumpkin', name: 'くり抜かれたカボチャ', image: getInviconUrl('carved_pumpkin') },
+    { id: 'player_head', name: 'プレイヤーの頭', image: getInviconUrl('player_head') },
+    { id: 'zombie_head', name: 'ゾンビの頭', image: getInviconUrl('zombie_head') },
+    { id: 'skeleton_skull', name: 'スケルトンの頭蓋骨', image: getInviconUrl('skeleton_skull') },
+    { id: 'wither_skeleton_skull', name: 'ウィザースケルトンの頭蓋骨', image: getInviconUrl('wither_skeleton_skull') },
+    { id: 'creeper_head', name: 'クリーパーの頭', image: getInviconUrl('creeper_head') },
+    { id: 'dragon_head', name: 'ドラゴンの頭', image: getInviconUrl('dragon_head') },
+    { id: 'piglin_head', name: 'ピグリンの頭', image: getInviconUrl('piglin_head') },
+  ],
+  chest: [
+    { id: '', name: '-- なし --', image: null },
+    { id: 'leather_chestplate', name: '革のチェストプレート', image: getInviconUrl('leather_chestplate') },
+    { id: 'chainmail_chestplate', name: 'チェーンのチェストプレート', image: getInviconUrl('chainmail_chestplate') },
+    { id: 'iron_chestplate', name: '鉄のチェストプレート', image: getInviconUrl('iron_chestplate') },
+    { id: 'golden_chestplate', name: '金のチェストプレート', image: getInviconUrl('golden_chestplate') },
+    { id: 'diamond_chestplate', name: 'ダイヤのチェストプレート', image: getInviconUrl('diamond_chestplate') },
+    { id: 'netherite_chestplate', name: 'ネザライトのチェストプレート', image: getInviconUrl('netherite_chestplate') },
+    { id: 'elytra', name: 'エリトラ', image: getInviconUrl('elytra') },
+  ],
+  legs: [
+    { id: '', name: '-- なし --', image: null },
+    { id: 'leather_leggings', name: '革のレギンス', image: getInviconUrl('leather_leggings') },
+    { id: 'chainmail_leggings', name: 'チェーンのレギンス', image: getInviconUrl('chainmail_leggings') },
+    { id: 'iron_leggings', name: '鉄のレギンス', image: getInviconUrl('iron_leggings') },
+    { id: 'golden_leggings', name: '金のレギンス', image: getInviconUrl('golden_leggings') },
+    { id: 'diamond_leggings', name: 'ダイヤのレギンス', image: getInviconUrl('diamond_leggings') },
+    { id: 'netherite_leggings', name: 'ネザライトのレギンス', image: getInviconUrl('netherite_leggings') },
+  ],
+  feet: [
+    { id: '', name: '-- なし --', image: null },
+    { id: 'leather_boots', name: '革のブーツ', image: getInviconUrl('leather_boots') },
+    { id: 'chainmail_boots', name: 'チェーンのブーツ', image: getInviconUrl('chainmail_boots') },
+    { id: 'iron_boots', name: '鉄のブーツ', image: getInviconUrl('iron_boots') },
+    { id: 'golden_boots', name: '金のブーツ', image: getInviconUrl('golden_boots') },
+    { id: 'diamond_boots', name: 'ダイヤのブーツ', image: getInviconUrl('diamond_boots') },
+    { id: 'netherite_boots', name: 'ネザライトのブーツ', image: getInviconUrl('netherite_boots') },
+  ],
+  mainhand: [
+    { id: '', name: '-- なし --', image: null },
+    { id: 'iron_sword', name: '鉄の剣', image: getInviconUrl('iron_sword') },
+    { id: 'golden_sword', name: '金の剣', image: getInviconUrl('golden_sword') },
+    { id: 'diamond_sword', name: 'ダイヤの剣', image: getInviconUrl('diamond_sword') },
+    { id: 'netherite_sword', name: 'ネザライトの剣', image: getInviconUrl('netherite_sword') },
+    { id: 'iron_axe', name: '鉄の斧', image: getInviconUrl('iron_axe') },
+    { id: 'golden_axe', name: '金の斧', image: getInviconUrl('golden_axe') },
+    { id: 'diamond_axe', name: 'ダイヤの斧', image: getInviconUrl('diamond_axe') },
+    { id: 'netherite_axe', name: 'ネザライトの斧', image: getInviconUrl('netherite_axe') },
+    { id: 'trident', name: 'トライデント', image: getInviconUrl('trident') },
+    { id: 'bow', name: '弓', image: getInviconUrl('bow') },
+    { id: 'crossbow', name: 'クロスボウ', image: getInviconUrl('crossbow') },
+    { id: 'mace', name: 'メイス', image: getInviconUrl('mace') },
+  ],
+  offhand: [
+    { id: '', name: '-- なし --', image: null },
+    { id: 'shield', name: '盾', image: getInviconUrl('shield') },
+    { id: 'totem_of_undying', name: '不死のトーテム', image: getInviconUrl('totem_of_undying') },
+    { id: 'torch', name: '松明', image: getInviconUrl('torch') },
+    { id: 'lantern', name: 'ランタン', image: getInviconUrl('lantern') },
+    { id: 'nautilus_shell', name: 'オウムガイの殻', image: getInviconUrl('nautilus_shell') },
+  ],
+};
+
+// エンチャント一覧（カテゴリ別）
+const ENCHANT_CATEGORIES = {
+  weapon: {
+    name: '武器',
+    enchants: [
+      { id: 'sharpness', name: 'ダメージ増加', maxLevel: 5 },
+      { id: 'smite', name: 'アンデッド特効', maxLevel: 5 },
+      { id: 'bane_of_arthropods', name: '虫特効', maxLevel: 5 },
+      { id: 'knockback', name: 'ノックバック', maxLevel: 2 },
+      { id: 'fire_aspect', name: '火属性', maxLevel: 2 },
+      { id: 'looting', name: 'ドロップ増加', maxLevel: 3 },
+      { id: 'sweeping_edge', name: '範囲ダメージ増加', maxLevel: 3 },
+    ]
+  },
+  armor: {
+    name: '防具',
+    enchants: [
+      { id: 'protection', name: 'ダメージ軽減', maxLevel: 4 },
+      { id: 'fire_protection', name: '火炎耐性', maxLevel: 4 },
+      { id: 'blast_protection', name: '爆発耐性', maxLevel: 4 },
+      { id: 'projectile_protection', name: '飛び道具耐性', maxLevel: 4 },
+      { id: 'thorns', name: 'トゲ', maxLevel: 3 },
+      { id: 'respiration', name: '水中呼吸', maxLevel: 3 },
+      { id: 'aqua_affinity', name: '水中採掘', maxLevel: 1 },
+      { id: 'feather_falling', name: '落下耐性', maxLevel: 4 },
+      { id: 'depth_strider', name: '水中歩行', maxLevel: 3 },
+      { id: 'frost_walker', name: '氷渡り', maxLevel: 2 },
+      { id: 'soul_speed', name: 'ソウルスピード', maxLevel: 3 },
+    ]
+  },
+  universal: {
+    name: '汎用',
+    enchants: [
+      { id: 'unbreaking', name: '耐久力', maxLevel: 3 },
+      { id: 'mending', name: '修繕', maxLevel: 1 },
+    ]
+  },
+};
+
 // エンティティカテゴリ（カテゴリ別に整理）
 const ENTITY_CATEGORIES = {
   hostile: {
@@ -217,6 +342,14 @@ let formState = {
   glowing: false,
   effects: [],
   rawNBT: '',
+  equipment: {
+    head: { item: '', enchants: [], dropChance: 0.085 },
+    chest: { item: '', enchants: [], dropChance: 0.085 },
+    legs: { item: '', enchants: [], dropChance: 0.085 },
+    feet: { item: '', enchants: [], dropChance: 0.085 },
+    mainhand: { item: '', enchants: [], dropChance: 0.085 },
+    offhand: { item: '', enchants: [], dropChance: 0.085 },
+  },
 };
 
 let selectedCategory = 'hostile';
@@ -324,10 +457,52 @@ export function render(manifest) {
           ${summonNameEditor.render()}
         </section>
 
-        <!-- ステップ4: 動作設定 -->
+        <!-- ステップ4: 装備設定 -->
+        <section class="form-section mc-section collapsible" data-collapsed="true">
+          <div class="section-header clickable" data-toggle="equipment-content">
+            <span class="step-number">4</span>
+            <h3>装備設定 <span class="optional-badge">任意</span></h3>
+            <span class="collapse-icon">▶</span>
+          </div>
+
+          <div class="section-content" id="equipment-content" style="display: none;">
+            <p class="section-hint">装備可能なモブ（ゾンビ、スケルトン等）のみ有効です。</p>
+            <div class="equipment-grid" id="equipment-grid">
+              ${EQUIPMENT_SLOTS.map(slot => `
+                <div class="equipment-slot" data-slot="${slot.id}">
+                  <div class="slot-header">
+                    <img src="${slot.image}" alt="${slot.name}" class="slot-icon mc-pixelated" width="24" height="24" data-mc-tooltip="${slot.itemId}" onerror="this.style.opacity='0.3'">
+                    <span class="slot-name">${slot.name}</span>
+                  </div>
+                  <div class="equipment-select-wrapper">
+                    <img src="" alt="" class="selected-item-image mc-pixelated" data-slot="${slot.id}" width="24" height="24" style="display: none;" onerror="this.style.opacity='0.3'">
+                    <select class="equipment-select mc-select" data-slot="${slot.id}">
+                      ${EQUIPMENT_ITEMS[slot.id].map(item => `
+                        <option value="${item.id}" data-image="${item.image || ''}">${item.name}</option>
+                      `).join('')}
+                    </select>
+                  </div>
+                  <div class="slot-actions">
+                    <button type="button" class="enchant-btn" data-slot="${slot.id}" title="エンチャント設定">
+                      <img src="${getInviconUrl('enchanted_book')}" alt="Enchant" class="mc-pixelated" width="16" height="16" onerror="this.style.opacity='0.3'">
+                      <span class="enchant-count" data-slot="${slot.id}">0</span>
+                    </button>
+                    <div class="drop-chance-wrapper">
+                      <label>Drop:</label>
+                      <input type="number" class="drop-chance mc-input" data-slot="${slot.id}"
+                             value="8.5" min="0" max="100" step="0.1">%
+                    </div>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        </section>
+
+        <!-- ステップ5: 動作設定 -->
         <section class="form-section mc-section">
           <div class="section-header">
-            <span class="step-number">4</span>
+            <span class="step-number">5</span>
             <h3>動作設定</h3>
           </div>
 
@@ -389,10 +564,10 @@ export function render(manifest) {
           </div>
         </section>
 
-        <!-- ステップ5: エフェクト -->
+        <!-- ステップ6: エフェクト -->
         <section class="form-section mc-section collapsible" data-collapsed="true">
           <div class="section-header clickable" data-toggle="effects-content">
-            <span class="step-number">5</span>
+            <span class="step-number">6</span>
             <h3>エフェクト <span class="optional-badge">任意</span></h3>
             <span class="collapse-icon">▶</span>
           </div>
@@ -412,10 +587,10 @@ export function render(manifest) {
           </div>
         </section>
 
-        <!-- ステップ6: 上級者向け -->
+        <!-- ステップ7: 上級者向け -->
         <section class="form-section mc-section collapsible" data-collapsed="true">
           <div class="section-header clickable" data-toggle="advanced-content">
-            <span class="step-number">6</span>
+            <span class="step-number">7</span>
             <h3>Raw NBT <span class="advanced-badge">上級者向け</span></h3>
             <span class="collapse-icon">▶</span>
           </div>
@@ -427,6 +602,39 @@ export function render(manifest) {
           </div>
         </section>
       </form>
+
+      <!-- エンチャント設定モーダル -->
+      <div class="enchant-modal" id="enchant-modal" style="display: none;">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3 id="modal-title">エンチャント設定</h3>
+            <button type="button" class="modal-close" id="modal-close">&times;</button>
+          </div>
+          <div class="modal-body">
+            <div class="enchant-categories" id="modal-enchant-categories">
+              ${Object.entries(ENCHANT_CATEGORIES).map(([catId, cat]) => `
+                <div class="enchant-category">
+                  <h4>${cat.name}</h4>
+                  <div class="enchant-list">
+                    ${cat.enchants.map(e => `
+                      <div class="enchant-row" data-enchant="${e.id}">
+                        <span class="enchant-name">${e.name}</span>
+                        <input type="number" class="enchant-level mc-input" data-enchant="${e.id}"
+                               value="0" min="0" max="255" placeholder="0">
+                        <span class="enchant-max">Max: ${e.maxLevel}</span>
+                      </div>
+                    `).join('')}
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="mc-btn" id="modal-apply">適用</button>
+          </div>
+        </div>
+      </div>
 
       <!-- Minecraft風ゲーム画面プレビュー -->
       <div class="summon-preview-section">
@@ -573,6 +781,32 @@ export function init(container) {
     }
   });
 
+  // 装備選択
+  delegate(container, 'change', '.equipment-select', (e, target) => {
+    const slot = target.dataset.slot;
+    formState.equipment[slot].item = target.value;
+    updateEquipmentImage(slot, target.value, container);
+    updateCommand(container);
+  });
+
+  // ドロップ確率
+  delegate(container, 'input', '.drop-chance', debounce((e, target) => {
+    const slot = target.dataset.slot;
+    formState.equipment[slot].dropChance = (parseFloat(target.value) || 0) / 100;
+    updateCommand(container);
+  }, 100));
+
+  // エンチャントボタン
+  delegate(container, 'click', '.enchant-btn', (e, target) => {
+    const slot = target.dataset.slot;
+    openEnchantModal(slot, container);
+  });
+
+  // モーダル制御
+  $('#modal-close', container)?.addEventListener('click', () => closeEnchantModal(container));
+  $('.modal-overlay', container)?.addEventListener('click', () => closeEnchantModal(container));
+  $('#modal-apply', container)?.addEventListener('click', () => applyEnchantments(container));
+
   // エフェクト追加
   $('#add-effect', container)?.addEventListener('click', () => {
     const select = $('#effect-add-select', container);
@@ -635,6 +869,14 @@ function resetForm(container) {
     glowing: false,
     effects: [],
     rawNBT: '',
+    equipment: {
+      head: { item: '', enchants: [], dropChance: 0.085 },
+      chest: { item: '', enchants: [], dropChance: 0.085 },
+      legs: { item: '', enchants: [], dropChance: 0.085 },
+      feet: { item: '', enchants: [], dropChance: 0.085 },
+      mainhand: { item: '', enchants: [], dropChance: 0.085 },
+      offhand: { item: '', enchants: [], dropChance: 0.085 },
+    },
   };
   selectedCategory = 'hostile';
 
@@ -691,6 +933,18 @@ function resetForm(container) {
   // Raw NBTをリセット
   const rawInput = $('#summon-raw', container);
   if (rawInput) rawInput.value = '';
+
+  // 装備UIをリセット
+  EQUIPMENT_SLOTS.forEach(slot => {
+    const select = $(`.equipment-select[data-slot="${slot.id}"]`, container);
+    if (select) select.value = '';
+    const img = $(`.selected-item-image[data-slot="${slot.id}"]`, container);
+    if (img) img.style.display = 'none';
+    const dropChance = $(`.drop-chance[data-slot="${slot.id}"]`, container);
+    if (dropChance) dropChance.value = '8.5';
+    const enchantCount = $(`.enchant-count[data-slot="${slot.id}"]`, container);
+    if (enchantCount) enchantCount.textContent = '0';
+  });
 
   // 折りたたみセクションを閉じる
   $$('.collapsible', container).forEach(section => {
@@ -791,6 +1045,170 @@ function renderEffectList(container) {
 }
 
 /**
+ * 装備選択時に画像を更新
+ */
+function updateEquipmentImage(slot, itemId, container) {
+  const imageEl = $(`.selected-item-image[data-slot="${slot}"]`, container);
+  if (!imageEl) return;
+
+  if (itemId) {
+    imageEl.src = getInviconUrl(itemId);
+    imageEl.style.display = 'block';
+  } else {
+    imageEl.style.display = 'none';
+  }
+}
+
+/**
+ * エンチャントモーダルを開く
+ */
+function openEnchantModal(slot, container) {
+  currentEditSlot = slot;
+  const modal = $('#enchant-modal', container);
+  const slotInfo = EQUIPMENT_SLOTS.find(s => s.id === slot);
+
+  $('#modal-title', container).textContent = `${slotInfo?.name || slot} のエンチャント`;
+
+  // 現在のエンチャント値を設定
+  const currentEnchants = formState.equipment[slot]?.enchants || [];
+  $$('.enchant-level', modal).forEach(input => {
+    const enchantId = input.dataset.enchant;
+    const current = currentEnchants.find(e => e.id === enchantId);
+    input.value = current?.level || 0;
+  });
+
+  modal.style.display = 'block';
+}
+
+/**
+ * エンチャントモーダルを閉じる
+ */
+function closeEnchantModal(container) {
+  const modal = $('#enchant-modal', container);
+  modal.style.display = 'none';
+  currentEditSlot = null;
+}
+
+/**
+ * エンチャントを適用
+ */
+function applyEnchantments(container) {
+  if (!currentEditSlot) return;
+
+  const enchants = [];
+  $$('.enchant-level', container).forEach(input => {
+    const level = parseInt(input.value) || 0;
+    if (level > 0) {
+      enchants.push({ id: input.dataset.enchant, level });
+    }
+  });
+
+  formState.equipment[currentEditSlot].enchants = enchants;
+
+  // エンチャント数を更新
+  const countEl = $(`.enchant-count[data-slot="${currentEditSlot}"]`, container);
+  if (countEl) {
+    countEl.textContent = enchants.length;
+  }
+
+  closeEnchantModal(container);
+  updateCommand(container);
+}
+
+/**
+ * 装備NBTを生成（1.21+ エンティティタグはPascalCase）
+ */
+function buildEquipmentNBT(equipment) {
+  const armorItems = [];
+  const handItems = [];
+
+  // 足から頭の順（ArmorItemsの順序）
+  ['feet', 'legs', 'chest', 'head'].forEach(slot => {
+    const eq = equipment[slot];
+    if (eq?.item) {
+      armorItems.push(buildItemNBT(eq.item, eq.enchants));
+    } else {
+      armorItems.push('{}');
+    }
+  });
+
+  // メイン手、オフハンドの順
+  ['mainhand', 'offhand'].forEach(slot => {
+    const eq = equipment[slot];
+    if (eq?.item) {
+      handItems.push(buildItemNBT(eq.item, eq.enchants));
+    } else {
+      handItems.push('{}');
+    }
+  });
+
+  const parts = [];
+
+  // 装備があれば追加（1.21+ PascalCase）
+  const hasArmor = armorItems.some(i => i !== '{}');
+  const hasHands = handItems.some(i => i !== '{}');
+
+  if (hasArmor) {
+    parts.push(`ArmorItems:[${armorItems.join(',')}]`);
+  }
+
+  if (hasHands) {
+    parts.push(`HandItems:[${handItems.join(',')}]`);
+  }
+
+  return parts.length > 0 ? parts.join(',') : null;
+}
+
+/**
+ * アイテムNBTを生成（1.21+ アイテムコンポーネント形式）
+ */
+function buildItemNBT(itemId, enchants) {
+  const components = [];
+
+  // エンチャント（1.21+ コンポーネント形式）
+  // 形式: "minecraft:enchantments":{"levels":{"minecraft:sharpness":5}}
+  if (enchants && enchants.length > 0) {
+    const enchantLevels = enchants.map(e => `"minecraft:${e.id}":${e.level}`).join(',');
+    components.push(`"minecraft:enchantments":{"levels":{${enchantLevels}}}`);
+  }
+
+  if (components.length > 0) {
+    return `{id:"minecraft:${itemId}",count:1,components:{${components.join(',')}}}`;
+  }
+
+  return `{id:"minecraft:${itemId}",count:1}`;
+}
+
+/**
+ * ドロップ確率NBTを生成（1.21+ PascalCase）
+ */
+function buildDropChancesNBT(equipment) {
+  // ArmorDropChances: [feet, legs, chest, head]
+  // HandDropChances: [mainhand, offhand]
+
+  const armorDrops = ['feet', 'legs', 'chest', 'head'].map(slot => {
+    return `${equipment[slot]?.dropChance || 0.085}f`;
+  });
+
+  const handDrops = ['mainhand', 'offhand'].map(slot => {
+    return `${equipment[slot]?.dropChance || 0.085}f`;
+  });
+
+  const parts = [];
+  parts.push(`ArmorDropChances:[${armorDrops.join(',')}]`);
+  parts.push(`HandDropChances:[${handDrops.join(',')}]`);
+
+  return parts.join(',');
+}
+
+/**
+ * 装備が設定されているかチェック
+ */
+function hasEquipment(equipment) {
+  return Object.values(equipment).some(eq => eq.item);
+}
+
+/**
  * コマンドを生成・更新（バージョン対応）
  */
 function updateCommand(container) {
@@ -845,6 +1263,15 @@ function updateCommand(container) {
       }).join(',');
       nbtParts.push(`ActiveEffects:[${effectsList}]`);
     }
+  }
+
+  // 装備（装備可能なモブのみ有効）
+  if (hasEquipment(formState.equipment)) {
+    const equipmentItems = buildEquipmentNBT(formState.equipment);
+    if (equipmentItems) nbtParts.push(equipmentItems);
+
+    const dropChances = buildDropChancesNBT(formState.equipment);
+    if (dropChances) nbtParts.push(dropChances);
   }
 
   // Raw NBT
@@ -1735,6 +2162,224 @@ style.textContent = `
     flex: 1;
   }
 
+  /* 装備グリッド */
+  .equipment-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 16px;
+  }
+
+  .equipment-slot {
+    background: rgba(0,0,0,0.2);
+    border: 2px solid rgba(255,255,255,0.1);
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .slot-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .slot-icon {
+    width: 24px;
+    height: 24px;
+  }
+
+  .slot-name {
+    color: #ffffff;
+    font-weight: 500;
+    font-size: 0.9rem;
+  }
+
+  .equipment-select-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .selected-item-image {
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+  }
+
+  .equipment-select {
+    flex: 1;
+    font-size: 0.85rem;
+    padding: 6px 8px;
+  }
+
+  .slot-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .enchant-btn {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 10px;
+    background: rgba(170, 0, 255, 0.2);
+    border: 2px solid rgba(170, 0, 255, 0.5);
+    color: #cc66ff;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .enchant-btn:hover {
+    background: rgba(170, 0, 255, 0.3);
+    border-color: #cc66ff;
+  }
+
+  .enchant-count {
+    font-size: 0.8rem;
+    font-weight: bold;
+  }
+
+  .drop-chance-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.8rem;
+    color: rgba(255,255,255,0.7);
+  }
+
+  .drop-chance {
+    width: 60px;
+    padding: 4px 6px;
+    font-size: 0.8rem;
+  }
+
+  /* エンチャントモーダル */
+  .enchant-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.7);
+  }
+
+  .modal-content {
+    position: relative;
+    background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+    border: 4px solid #5d3fd3;
+    max-width: 500px;
+    width: 90%;
+    max-height: 80vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    background: linear-gradient(90deg, #5d3fd3 0%, #4a2fb0 100%);
+    border-bottom: 2px solid #3a2890;
+  }
+
+  .modal-header h3 {
+    margin: 0;
+    color: #ffffff;
+    font-size: 1.1rem;
+  }
+
+  .modal-close {
+    background: none;
+    border: none;
+    color: #ffffff;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+  }
+
+  .modal-close:hover {
+    color: #ff5555;
+  }
+
+  .modal-body {
+    padding: 20px;
+    overflow-y: auto;
+    flex: 1;
+  }
+
+  .enchant-categories {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .enchant-category h4 {
+    margin: 0 0 10px 0;
+    color: #cc66ff;
+    font-size: 0.9rem;
+    border-bottom: 1px solid rgba(170, 0, 255, 0.3);
+    padding-bottom: 6px;
+  }
+
+  .enchant-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .enchant-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px;
+    background: rgba(0,0,0,0.2);
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .enchant-name {
+    flex: 1;
+    color: #ffffff;
+    font-size: 0.85rem;
+  }
+
+  .enchant-level {
+    width: 60px;
+    padding: 4px 6px;
+    font-size: 0.85rem;
+    text-align: center;
+  }
+
+  .enchant-max {
+    color: rgba(255,255,255,0.4);
+    font-size: 0.75rem;
+    min-width: 50px;
+  }
+
+  .modal-footer {
+    padding: 16px 20px;
+    border-top: 2px solid rgba(255,255,255,0.1);
+    display: flex;
+    justify-content: flex-end;
+  }
+
   /* 入力フィールド共通 */
   .summon-tool .mc-input {
     background: #1a1a2e;
@@ -1824,6 +2469,14 @@ style.textContent = `
 
     .behavior-grid {
       grid-template-columns: 1fr;
+    }
+
+    .equipment-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .slot-actions {
+      flex-wrap: wrap;
     }
   }
 
