@@ -101,7 +101,7 @@
 | AI | サブスク | 月額 | モデル |
 |----|---------|------|--------|
 | Claude Code | Max | $200 | Claude Opus 4.5 |
-| Codex CLI | ChatGPT Plus | $20 | GPT-5.2 Codex High |
+| Codex CLI | ChatGPT Plus | $20 | GPT-5.3 Codex High |
 | Gemini CLI | Gemini AI Pro | $19.99 | Gemini 3 Pro Preview / Flash Preview |
 
 **合計: 約$240/月（APIキー不要）**

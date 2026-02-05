@@ -62,7 +62,7 @@ src/
 ## CLI設定
 
 ### 使用モデル
-- Codex: gpt-5.2-codex
+- Codex: gpt-5.3-codex
 
 ### コマンド例
 

@@ -8,7 +8,7 @@
     "enabled": true,
     "method": "codex-cli",
     "command": "codex",
-    "model": "gpt-5.2-codex-high",
+    "model": "gpt-5.3-codex-high",
     "subscription": "ChatGPT Plus ($20/月)",
     "approvalPolicy": "never",
     "autoInvoke": {
