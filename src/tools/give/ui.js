@@ -25,6 +25,7 @@ let formState = {
 const GIVE_PRESETS = [
   { id: 'max_sword', name: '最強の剣', item: 'netherite_sword', enchants: [{id:'sharpness',level:255},{id:'fire_aspect',level:2},{id:'looting',level:10}], unbreakable: true },
   { id: 'max_pick', name: '最強ツルハシ', item: 'netherite_pickaxe', enchants: [{id:'efficiency',level:255},{id:'fortune',level:10}], unbreakable: true },
+  { id: 'max_spear', name: '最強の槍', item: 'netherite_spear', enchants: [{id:'sharpness',level:255},{id:'lunge',level:3},{id:'fire_aspect',level:2},{id:'looting',level:10}], unbreakable: true },
   { id: 'max_armor', name: '最強チェスト', item: 'netherite_chestplate', enchants: [{id:'protection',level:255}], unbreakable: true },
   { id: 'god_apple', name: '金リンゴ', item: 'enchanted_golden_apple', enchants: [], unbreakable: false },
 ];

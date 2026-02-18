@@ -71,6 +71,15 @@ const ITEM_DATA = {
   trident: { name: 'トライデント', attack: 9, speed: 1.1, durability: 250, rarity: 'common' },
   mace: { name: 'メイス', attack: 6, speed: 0.6, durability: 500, rarity: 'common', desc: '落下ダメージボーナス' },
 
+  // 槍
+  wooden_spear: { name: '木の槍', attack: 1, speed: 1.54, durability: 59, rarity: 'common', desc: '突撃攻撃（リーチ2〜4.5）' },
+  stone_spear: { name: '石の槍', attack: 2, speed: 1.33, durability: 131, rarity: 'common', desc: '突撃攻撃（リーチ2〜4.5）' },
+  copper_spear: { name: '銅の槍', attack: 2, speed: 1.18, durability: 190, rarity: 'common', desc: '突撃攻撃（リーチ2〜4.5）' },
+  iron_spear: { name: '鉄の槍', attack: 3.5, speed: 1.05, durability: 250, rarity: 'common', desc: '突撃攻撃（リーチ2〜4.5）' },
+  golden_spear: { name: '金の槍', attack: 1, speed: 1.05, durability: 32, rarity: 'common', desc: '突撃攻撃（リーチ2〜4.5）' },
+  diamond_spear: { name: 'ダイヤモンドの槍', attack: 4, speed: 0.95, durability: 1561, rarity: 'common', desc: '突撃攻撃（リーチ2〜4.5）' },
+  netherite_spear: { name: 'ネザライトの槍', attack: 5, speed: 0.87, durability: 2031, rarity: 'common', desc: '突撃攻撃（リーチ2〜4.5）' },
+
   // その他
   shield: { name: '盾', durability: 336, rarity: 'common', desc: '攻撃をブロック' },
   fishing_rod: { name: '釣り竿', durability: 64, rarity: 'common' },

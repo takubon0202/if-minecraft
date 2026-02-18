@@ -27,12 +27,13 @@ const CATEGORY_ICONS = {
   bow: 'bow',
   crossbow: 'crossbow',
   trident: 'trident',
+  spear: 'netherite_spear',
   fishing: 'fishing_rod',
   universal: 'enchanted_book',
   curse: 'wither_skeleton_skull',
 };
 
-// 全42種エンチャント（カテゴリ別）- defaultMaxはMinecraftのデフォルト最大レベル
+// 全43種エンチャント（カテゴリ別）- defaultMaxはMinecraftのデフォルト最大レベル
 const ENCHANT_CATEGORIES = {
   weapon: {
     name: '武器（剣）',
@@ -138,6 +139,19 @@ const ENCHANT_CATEGORIES = {
       { id: 'channeling', name: '召雷', en: 'Channeling', defaultMax: 1, desc: '雷雨時に雷を落とす' },
     ]
   },
+  spear: {
+    name: '槍',
+    iconItem: 'netherite_spear',
+    enchants: [
+      { id: 'lunge', name: '突進', en: 'Lunge', defaultMax: 3, desc: '突き攻撃時に前方へ突進（レベルごとに距離増加）' },
+      { id: 'sharpness', name: 'ダメージ増加', en: 'Sharpness', defaultMax: 5, desc: '近接攻撃ダメージ増加' },
+      { id: 'smite', name: 'アンデッド特効', en: 'Smite', defaultMax: 5, desc: 'アンデッド系に追加ダメージ' },
+      { id: 'bane_of_arthropods', name: '虫特効', en: 'Bane of Arthropods', defaultMax: 5, desc: '虫系に追加ダメージ' },
+      { id: 'knockback', name: 'ノックバック', en: 'Knockback', defaultMax: 2, desc: '攻撃時のノックバック増加' },
+      { id: 'fire_aspect', name: '火属性', en: 'Fire Aspect', defaultMax: 2, desc: '攻撃対象に発火' },
+      { id: 'looting', name: 'ドロップ増加', en: 'Looting', defaultMax: 3, desc: 'Mobのドロップ増加' },
+    ]
+  },
   fishing: {
     name: '釣り竿',
     iconItem: 'fishing_rod',
@@ -181,6 +195,18 @@ const ITEM_CATEGORIES = {
     name: 'メイス',
     items: [
       { id: 'mace', name: 'メイス' },
+    ]
+  },
+  spear: {
+    name: '槍',
+    items: [
+      { id: 'wooden_spear', name: '木の槍' },
+      { id: 'stone_spear', name: '石の槍' },
+      { id: 'copper_spear', name: '銅の槍' },
+      { id: 'iron_spear', name: '鉄の槍' },
+      { id: 'golden_spear', name: '金の槍' },
+      { id: 'diamond_spear', name: 'ダイヤの槍' },
+      { id: 'netherite_spear', name: 'ネザライトの槍' },
     ]
   },
   pickaxe: {
@@ -417,6 +443,35 @@ const PRESETS = [
       { id: 'wind_burst', level: 3 },
       { id: 'unbreaking', level: 3 },
       { id: 'mending', level: 1 },
+    ]
+  },
+  {
+    id: 'max-spear',
+    name: '最強槍',
+    category: 'attack',
+    item: 'netherite_spear',
+    desc: 'ダメージ増加255、突進3、火属性、ドロップ増加',
+    enchants: [
+      { id: 'sharpness', level: 255 },
+      { id: 'lunge', level: 3 },
+      { id: 'fire_aspect', level: 2 },
+      { id: 'knockback', level: 2 },
+      { id: 'looting', level: 3 },
+      { id: 'unbreaking', level: 3 },
+      { id: 'mending', level: 1 },
+    ]
+  },
+  {
+    id: 'charge-spear',
+    name: '突撃槍',
+    category: 'attack',
+    item: 'diamond_spear',
+    desc: '突進3で高速突撃、火属性付き',
+    enchants: [
+      { id: 'lunge', level: 3 },
+      { id: 'sharpness', level: 5 },
+      { id: 'fire_aspect', level: 2 },
+      { id: 'unbreaking', level: 3 },
     ]
   },
   {
