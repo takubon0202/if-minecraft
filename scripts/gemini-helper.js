@@ -30,6 +30,9 @@ const MODELS = {
   FLASH: 'gemini-3-flash-preview'  // 高速処理用
 };
 
+// タイムアウト設定（ミリ秒）- 10分
+const TIMEOUT_MS = 10 * 60 * 1000;
+
 // デフォルト設定
 const CONFIG = {
   model: MODELS.PRO,  // デフォルトはGemini 3 Pro Preview
@@ -126,7 +129,8 @@ function runGeminiWithPrompt(prompt, model, yolo = false) {
   const gemini = spawn('gemini', args, {
     stdio: 'inherit',
     shell: true,
-    cwd: process.cwd()
+    cwd: process.cwd(),
+    timeout: TIMEOUT_MS
   });
 
   gemini.on('close', (code) => {

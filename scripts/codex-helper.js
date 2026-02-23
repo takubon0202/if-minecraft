@@ -16,6 +16,9 @@ const path = require('path');
 const { spawn, execSync } = require('child_process');
 
 // プロジェクト情報
+// タイムアウト設定（ミリ秒）- 10分
+const TIMEOUT_MS = 10 * 60 * 1000;
+
 const PROJECT_CONTEXT = `# プロジェクト情報
 Minecraftコマンド解説・ジェネレーターサイト
 
@@ -81,7 +84,7 @@ function runCodexInteractive() {
 function runCodexWithPrompt(prompt) {
   console.log('Codex CLI を非対話モードで実行中...\n');
   // 非対話モード（codex exec）を使用 - Claude Code連携に最適
-  const codex = spawn('codex', ['exec', prompt], { stdio: 'inherit', shell: true, cwd: process.cwd() });
+  const codex = spawn('codex', ['exec', prompt], { stdio: 'inherit', shell: true, cwd: process.cwd(), timeout: TIMEOUT_MS });
   codex.on('close', (code) => {
     if (code !== 0) {
       // 使用量上限エラーをチェック

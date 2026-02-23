@@ -63,6 +63,20 @@ const ENTITY_SPRITE_MAP = {
 };
 
 /**
+ * Inviconが存在しないアイテム用のItemSprite画像マッピング
+ * ItemSprite_形式のURLを返す（槍など新アイテム）
+ */
+const ITEM_SPRITE_MAP = {
+  'wooden_spear': 'wooden-spear',
+  'stone_spear': 'stone-spear',
+  'copper_spear': 'copper-spear',
+  'iron_spear': 'iron-spear',
+  'golden_spear': 'golden-spear',
+  'diamond_spear': 'diamond-spear',
+  'netherite_spear': 'netherite-spear',
+};
+
+/**
  * アイテムID → Wiki画像名のマッピング
  * Wiki上の名前がアイテムIDと異なる場合に使用
  */
@@ -107,13 +121,7 @@ const ITEM_NAME_MAP = {
   'trident': 'Trident',
   'fishing_rod': 'Fishing_Rod',
   'mace': 'Mace',
-  'wooden_spear': 'Wooden_Spear',
-  'stone_spear': 'Stone_Spear',
-  'copper_spear': 'Copper_Spear',
-  'iron_spear': 'Iron_Spear',
-  'golden_spear': 'Golden_Spear',
-  'diamond_spear': 'Diamond_Spear',
-  'netherite_spear': 'Netherite_Spear',
+  // 槍はInvicon未対応 → ITEM_SPRITE_MAP（ItemSprite形式）で処理
   'shield': 'Shield',
   'shears': 'Shears',
   'flint_and_steel': 'Flint_and_Steel',
@@ -664,6 +672,12 @@ function toPascalCase(itemId) {
  */
 export function getInviconUrl(itemId) {
   if (!itemId) return `${WIKI_BASE}/Invicon_Barrier.png`;
+
+  // ItemSprite形式のアイテムを確認（Inviconが存在しない新アイテム）
+  const itemSprite = ITEM_SPRITE_MAP[itemId];
+  if (itemSprite) {
+    return `${WIKI_BASE}/ItemSprite_${itemSprite}.png`;
+  }
 
   // EntitySprite形式のエンティティを確認（Inviconが存在しないもの）
   const entitySprite = ENTITY_SPRITE_MAP[itemId];
