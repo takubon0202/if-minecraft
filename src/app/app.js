@@ -191,6 +191,7 @@ function loadFallbackData() {
     'minecraft:iron_ingot', 'minecraft:gold_ingot', 'minecraft:stone',
     'minecraft:dirt', 'minecraft:grass_block', 'minecraft:oak_log',
     'minecraft:apple', 'minecraft:bread', 'minecraft:cooked_beef',
+    'minecraft:golden_dandelion',
   ]);
   dataStore.set('entities', [
     'minecraft:zombie', 'minecraft:skeleton', 'minecraft:creeper',
@@ -226,7 +227,7 @@ function restoreState() {
   }
 
   // バージョンを復元
-  const savedVersion = storage.load('version', '1.21');
+  const savedVersion = storage.load('version', '26.1');
   workspaceStore.set('version', savedVersion);
 
   // バージョンセレクターを更新

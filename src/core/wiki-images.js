@@ -411,6 +411,9 @@ const ITEM_NAME_MAP = {
   'torchflower_seeds': 'Torchflower_Seeds',
   'sniffer_egg': 'Sniffer_Egg',
 
+  // === 26.1 Tiny Takeover ===
+  'golden_dandelion': 'Golden_Dandelion',
+
   // === ブロック（特殊名称） ===
   'grass_block': 'Grass_Block',
   'dirt_path': 'Dirt_Path',

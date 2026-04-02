@@ -2,8 +2,8 @@
 
 ## プロジェクト概要
 
-Minecraft Java Edition 1.21.11対応のコマンド生成ツールポータルサイト。
-将来のバージョン（1.26.1等）にも対応できる設計。
+Minecraft Java Edition 26.1.1対応のコマンド生成ツールポータルサイト。
+26.x以降の新バージョン体系（旧1.x形式廃止）にも対応。
 
 ## 技術スタック
 
@@ -23,11 +23,11 @@ Minecraft Java Edition 1.21.11対応のコマンド生成ツールポータル�
 
 - **使用可能**: `gemini-3-pro-preview`, `gemini-3-flash-preview` のみ
 - **使用禁止**: Gemini 2.5系（gemini-2.5-pro, gemini-2.5-flash等）は絶対に使用しない
-- **リサーチ時**: 必ず「今日は2026年1月31日です」をプロンプトに含める
+- **リサーチ時**: 必ず「今日は2026年4月2日です」をプロンプトに含める
 
 ```bash
 # 正しい使用法
-gemini -m gemini-3-pro-preview "今日は2026年1月31日です。[質問]"
+gemini -m gemini-3-pro-preview "今日は2026年4月2日です。[質問]"
 ```
 
 ## ディレクトリ構造
@@ -59,8 +59,8 @@ npm run mc:data:validate # データ検証
 
 ## 対応バージョン
 
-- Minecraft Java Edition 1.21.11（現在）
-- 将来バージョン対応設計
+- Minecraft Java Edition 26.1.1（最新 - Tiny Takeover）
+- 1.12.2 〜 26.1.1 の全バージョン対応
 
 ## 重要な注意事項
 

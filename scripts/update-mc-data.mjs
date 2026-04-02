@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Minecraft Data Update Script
- * Minecraft 1.21.11 のデータを取得・更新
+ * Minecraft 26.1 のデータを取得・更新（データソース: PrismarineJS 1.21）
  */
 
 import fs from 'fs/promises';
@@ -11,8 +11,10 @@ import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = path.join(__dirname, '..', 'src', 'data');
 
-// Minecraft バージョン
-const MC_VERSION = '1.21.11';
+// Minecraft バージョン（表示用）
+const MC_VERSION = '26.1';
+// mcdata のデータソースバージョン（PrismarineJS が 26.x 未対応の間は 1.21 を使用）
+const MC_DATA_SOURCE_VERSION = '1.21';
 
 // データソース（公式マニフェストまたはコミュニティAPI）
 const SOURCES = {
@@ -40,8 +42,8 @@ async function getVersionUrl(targetVersion) {
   const manifest = await fetchJson(SOURCES.versionManifest);
   const version = manifest.versions.find(v => v.id === targetVersion);
   if (!version) {
-    // 近いバージョンを探す
-    const similar = manifest.versions.find(v => v.id.startsWith('1.21'));
+    // 近いバージョンを探す（26.x 系 → 1.21 系の順）
+    const similar = manifest.versions.find(v => v.id.startsWith('26.')) || manifest.versions.find(v => v.id.startsWith('1.21'));
     if (similar) {
       console.warn(`Version ${targetVersion} not found, using ${similar.id}`);
       return similar.url;
@@ -57,7 +59,7 @@ async function getVersionUrl(targetVersion) {
 async function getItems() {
   try {
     // 1.21 のデータを使用
-    const url = `${SOURCES.mcdataBase}/1.21/items.json`;
+    const url = `${SOURCES.mcdataBase}/${MC_DATA_SOURCE_VERSION}/items.json`;
     const items = await fetchJson(url);
     return items.map(item => `minecraft:${item.name}`);
   } catch (e) {
@@ -71,7 +73,7 @@ async function getItems() {
  */
 async function getEntities() {
   try {
-    const url = `${SOURCES.mcdataBase}/1.21/entities.json`;
+    const url = `${SOURCES.mcdataBase}/${MC_DATA_SOURCE_VERSION}/entities.json`;
     const entities = await fetchJson(url);
     return entities.map(entity => `minecraft:${entity.name}`);
   } catch (e) {
@@ -85,7 +87,7 @@ async function getEntities() {
  */
 async function getBlocks() {
   try {
-    const url = `${SOURCES.mcdataBase}/1.21/blocks.json`;
+    const url = `${SOURCES.mcdataBase}/${MC_DATA_SOURCE_VERSION}/blocks.json`;
     const blocks = await fetchJson(url);
     return blocks.map(block => `minecraft:${block.name}`);
   } catch (e) {
@@ -99,7 +101,7 @@ async function getBlocks() {
  */
 async function getEnchantments() {
   try {
-    const url = `${SOURCES.mcdataBase}/1.21/enchantments.json`;
+    const url = `${SOURCES.mcdataBase}/${MC_DATA_SOURCE_VERSION}/enchantments.json`;
     const enchants = await fetchJson(url);
     return enchants.map(ench => ({
       id: `minecraft:${ench.name}`,
@@ -118,7 +120,7 @@ async function getEnchantments() {
  */
 async function getEffects() {
   try {
-    const url = `${SOURCES.mcdataBase}/1.21/effects.json`;
+    const url = `${SOURCES.mcdataBase}/${MC_DATA_SOURCE_VERSION}/effects.json`;
     const effects = await fetchJson(url);
     return effects.map(effect => ({
       id: `minecraft:${effect.name}`,
@@ -148,6 +150,7 @@ function getFallbackItems() {
     'minecraft:firework_rocket', 'minecraft:potion', 'minecraft:splash_potion',
     'minecraft:lingering_potion', 'minecraft:experience_bottle', 'minecraft:written_book',
     'minecraft:map', 'minecraft:compass', 'minecraft:clock', 'minecraft:name_tag',
+    'minecraft:golden_dandelion',
   ];
 }
 

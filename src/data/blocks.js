@@ -1,8 +1,8 @@
 /**
  * Minecraft ブロックデータ
- * バージョン: 1.12 ～ 1.21.11対応
+ * バージョン: 1.12 ～ 26.1.1対応
  * WorldEdit/コマンド生成ツール用
- * 最終更新: 2026年1月31日
+ * 最終更新: 2026年4月2日
  */
 
 // ブロックカテゴリ定義
@@ -27,6 +27,7 @@ export const BLOCK_CATEGORIES = {
   pale_garden: { name: 'ペールガーデン（1.21.4+）', icon: 'pale_oak_planks', color: '#D4C4B0' },
   spring_to_life: { name: 'スプリングトゥライフ（1.21.5+）', icon: 'firefly_bush', color: '#90EE90' },
   copper_age: { name: 'カッパーエイジ（1.21.9+）', icon: 'copper_bars', color: '#B87333' },
+  tiny_takeover: { name: 'タイニーテイクオーバー（26.1+）', icon: 'golden_dandelion', color: '#FFD700' },
   functional: { name: '機能ブロック', icon: 'crafting_table', color: '#8B4513' },
   fluid: { name: '液体', icon: 'water_bucket', color: '#0000FF' },
 };
@@ -721,6 +722,9 @@ export const ALL_BLOCKS = [
   { id: 'waxed_exposed_copper_torch', name: '錆止めされた風化した銅の松明', category: 'copper_age', minVersion: '1.21.9' },
   { id: 'waxed_weathered_copper_torch', name: '錆止めされた錆びた銅の松明', category: 'copper_age', minVersion: '1.21.9' },
   { id: 'waxed_oxidized_copper_torch', name: '錆止めされた酸化した銅の松明', category: 'copper_age', minVersion: '1.21.9' },
+
+  // === タイニーテイクオーバー（26.1+） ===
+  { id: 'golden_dandelion', name: '金のタンポポ', category: 'tiny_takeover', minVersion: '26.1' },
 ];
 
 /**
@@ -781,6 +785,7 @@ export function searchBlocks(version, query) {
  * 対応バージョン一覧
  */
 export const SUPPORTED_VERSIONS = [
+  '26.1.1', '26.1',
   '1.21.11', '1.21.10', '1.21.9', '1.21.8', '1.21.7', '1.21.6', '1.21.5',
   '1.21.4', '1.21.3', '1.21.2', '1.21.1', '1.21', '1.20.6', '1.20.4', '1.20.2', '1.20.1', '1.20',
   '1.19.4', '1.19.3', '1.19.2', '1.19.1', '1.19', '1.18.2', '1.18.1', '1.18',

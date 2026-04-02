@@ -1,6 +1,6 @@
 /**
  * Minecraft バージョン互換性モジュール
- * 1.12.2から1.21.x までの主要バージョンに対応
+ * 1.12.2から26.1.1 までの主要バージョンに対応
  */
 
 /**
@@ -8,8 +8,11 @@
  * 主要なコマンド形式の変更があったバージョンを基準に分類
  */
 export const MC_VERSIONS = [
-  // 最新（コンポーネント形式）
-  { value: '1.21', label: '1.21.x (最新)', group: 'latest' },
+  // 最新（26.x - Tiny Takeover）
+  { value: '26.1', label: '26.1.1 (最新 - Tiny Takeover)', group: 'tiny-takeover' },
+
+  // 1.21.x（コンポーネント形式）
+  { value: '1.21', label: '1.21.x', group: 'latest' },
   { value: '1.20.5', label: '1.20.5 - 1.20.6', group: 'component' },
 
   // NBT形式（1.16以降）
@@ -32,8 +35,13 @@ export const MC_VERSIONS = [
  * バージョングループ
  */
 export const VERSION_GROUPS = {
+  'tiny-takeover': {
+    label: '26.x (Tiny Takeover)',
+    description: 'コンポーネント形式、World Clock、/swing、AgeLocked',
+    features: ['component', 'snake_case_events', 'hex_colors', 'string_ids', 'world_clock', 'swing_command', 'age_locked', 'mob_inventory_slot'],
+  },
   latest: {
-    label: '1.21+ (最新コンポーネント形式)',
+    label: '1.21.x (コンポーネント形式)',
     description: 'コンポーネント形式、click_event/hover_event',
     features: ['component', 'snake_case_events', 'hex_colors', 'string_ids'],
   },
@@ -88,13 +96,24 @@ export function isVersionInRange(version, min, max) {
 
 /**
  * バージョンのグループを取得
+ * 注意: 26.x 以降はメジャーバージョンが2桁（旧 1.x 形式廃止）
  */
 export function getVersionGroup(version) {
+  // 26.x 以降（Tiny Takeover 以降）
+  if (compareVersions(version, '26.1') >= 0) return 'tiny-takeover';
+  // 1.21.x
   if (compareVersions(version, '1.21') >= 0) return 'latest';
   if (compareVersions(version, '1.20.5') >= 0) return 'component';
   if (compareVersions(version, '1.16') >= 0) return 'nbt-modern';
   if (compareVersions(version, '1.13') >= 0) return 'nbt-legacy';
   return 'legacy';
+}
+
+/**
+ * バージョンが 26.1 以降かチェック（新バージョン体系）
+ */
+export function isVersion26Plus(version) {
+  return compareVersions(version, '26.1') >= 0;
 }
 
 /**
@@ -153,6 +172,23 @@ export const COMMAND_FEATURES = {
   title: {
     available: { minVersion: '1.8', description: '/titleコマンド' },
     times_subcommand: { minVersion: '1.8', description: 'times サブコマンド' },
+  },
+
+  // /swing コマンド（26.1+）
+  swing: {
+    available: { minVersion: '26.1', description: '/swingコマンド（エンティティの腕を振る）' },
+  },
+
+  // /time コマンド（26.1でWorld Clock対応に大幅変更）
+  time: {
+    world_clock: { minVersion: '26.1', description: 'World Clockシステム（pause/resume/rate）' },
+    legacy_format: { maxVersion: '1.21.11', description: '旧形式（set/add/query）' },
+  },
+
+  // エンティティNBT
+  entity: {
+    age_locked: { minVersion: '26.1', description: 'AgeLocked NBTタグ（成長停止）' },
+    mob_inventory_slot: { minVersion: '26.1', description: 'mob.inventory.* スロット（villager.* を置換）' },
   },
 };
 
@@ -265,6 +301,7 @@ export function formatItemForVersion(version, itemData) {
   const fullId = id.includes(':') ? id : `minecraft:${id}`;
 
   switch (group) {
+    case 'tiny-takeover':
     case 'latest':
     case 'component':
       return formatItemComponent(fullId, count, components || nbt);
@@ -571,9 +608,9 @@ function hexToMcColor(hex) {
 /**
  * バージョン選択UIをレンダリング
  */
-export function renderVersionSelector(selectedVersion = '1.21', id = 'mc-version-select') {
+export function renderVersionSelector(selectedVersion = '26.1', id = 'mc-version-select') {
   const groups = {
-    '最新': MC_VERSIONS.filter(v => v.group === 'latest' || v.group === 'component'),
+    '最新': MC_VERSIONS.filter(v => v.group === 'tiny-takeover' || v.group === 'latest' || v.group === 'component'),
     'モダン (1.16-1.20.4)': MC_VERSIONS.filter(v => v.group === 'nbt-modern'),
     'クラシック (1.13-1.15)': MC_VERSIONS.filter(v => v.group === 'nbt-legacy'),
     'レガシー (1.12.x)': MC_VERSIONS.filter(v => v.group === 'legacy'),
@@ -600,6 +637,7 @@ export function renderVersionSelector(selectedVersion = '1.21', id = 'mc-version
 export function getVersionNote(version) {
   const group = getVersionGroup(version);
   const notes = {
+    'tiny-takeover': 'コンポーネント形式、World Clock、/swing、AgeLocked NBT',
     latest: 'コンポーネント形式、click_event/hover_event（スネークケース）',
     component: 'コンポーネント形式への移行期、clickEvent/hoverEvent',
     'nbt-modern': 'NBT形式、16進カラーコード対応、clickEvent/hoverEvent',
@@ -616,6 +654,7 @@ export default {
   compareVersions,
   isVersionInRange,
   getVersionGroup,
+  isVersion26Plus,
   supportsFeature,
   isFeatureAvailable,
   formatItemForVersion,
