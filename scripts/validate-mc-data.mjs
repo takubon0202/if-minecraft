@@ -114,7 +114,7 @@ function validateVersion(data) {
 
   if (!data.version) {
     errors.push('Missing version field');
-  } else if (!/^1\.\d+(\.\d+)?$/.test(data.version)) {
+  } else if (!/^\d+\.\d+(\.\d+)?$/.test(data.version)) {
     errors.push(`Invalid version format: ${data.version}`);
   }
 
