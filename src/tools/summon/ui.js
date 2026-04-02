@@ -273,6 +273,18 @@ const ENTITY_CATEGORIES = {
   },
 };
 
+// IsBaby タグを使うゾンビ系エンティティ（永遠に子供、AgeLocked不要）
+// その他の繁殖可能Mobは Age:-24000 を使用
+const ZOMBIE_TYPE_ENTITIES = [
+  'zombie', 'zombie_villager', 'husk', 'drowned', 'piglin', 'zoglin',
+];
+
+// AgeLocked を使えないエンティティ（#cannot_be_age_locked タグ）
+const CANNOT_AGE_LOCK = [
+  'zombie', 'zombie_villager', 'husk', 'drowned', 'piglin', 'zoglin',
+  'skeleton_horse', 'zombie_horse', 'villager',
+];
+
 // JSONテキストの色
 const TEXT_COLORS = [
   { id: 'black', name: '黒', hex: '#000000' },
@@ -845,9 +857,11 @@ export function init(container) {
     formState.isBaby = e.target.checked;
     const ageLockedWrapper = $('#summon-agelocked-wrapper', container);
     const ageLockedCheck = $('#summon-agelocked', container);
-    const version = workspaceStore.get('version') || '1.21';
+    const version = workspaceStore.get('version') || '26.1';
+    // AgeLocked: 26.1+かつBabyかつゾンビ系以外のみ表示
+    const canAgeLock = e.target.checked && isVersion26Plus(version) && !CANNOT_AGE_LOCK.includes(formState.entity);
     if (ageLockedWrapper) {
-      ageLockedWrapper.style.display = (e.target.checked && isVersion26Plus(version)) ? '' : 'none';
+      ageLockedWrapper.style.display = canAgeLock ? '' : 'none';
     }
     if (!e.target.checked && ageLockedCheck) {
       ageLockedCheck.checked = false;
@@ -1375,12 +1389,18 @@ function updateCommand(container) {
   if (formState.persistenceRequired) nbtParts.push('PersistenceRequired:1b');
   if (formState.glowing) nbtParts.push('Glowing:1b');
 
-  // 子供（IsBaby）
+  // 子供（エンティティ種別で形式が異なる）
   if (formState.isBaby) {
-    nbtParts.push('IsBaby:1b');
-    // AgeLocked（26.1+ 金のタンポポ効果）
-    if (formState.ageLocked && isVersion26Plus(version)) {
-      nbtParts.push('AgeLocked:1b');
+    if (ZOMBIE_TYPE_ENTITIES.includes(formState.entity)) {
+      // ゾンビ系: IsBaby タグ（永遠に子供、AgeLocked不要）
+      nbtParts.push('IsBaby:1b');
+    } else {
+      // 繁殖可能Mob: Age タグ（負の値=子供）
+      nbtParts.push('Age:-24000');
+      // AgeLocked（26.1+ 金のタンポポ効果、繁殖可能Mobのみ）
+      if (formState.ageLocked && isVersion26Plus(version)) {
+        nbtParts.push('AgeLocked:1b');
+      }
     }
   }
 
@@ -1595,11 +1615,12 @@ function updateSummonPreview(container) {
     if (entityInfo) break;
   }
 
-  // AgeLocked表示をバージョンに応じて更新
-  const version = workspaceStore.get('version') || '1.21';
+  // AgeLocked表示をバージョン・エンティティ種別に応じて更新
+  const version = workspaceStore.get('version') || '26.1';
   const ageLockedWrapper = $('#summon-agelocked-wrapper', container);
   if (ageLockedWrapper) {
-    ageLockedWrapper.style.display = (formState.isBaby && isVersion26Plus(version)) ? '' : 'none';
+    const canAgeLock = formState.isBaby && isVersion26Plus(version) && !CANNOT_AGE_LOCK.includes(formState.entity);
+    ageLockedWrapper.style.display = canAgeLock ? '' : 'none';
   }
 
   // アイコン設定

@@ -10,10 +10,10 @@ import { getInviconUrl } from '../../core/wiki-images.js';
 
 // ターゲットセレクター
 const TARGET_SELECTORS = [
+  { value: '@s', label: '@s (自分自身)' },
   { value: '@a', label: '@a (全プレイヤー)' },
   { value: '@p', label: '@p (最も近いプレイヤー)' },
   { value: '@r', label: '@r (ランダムなプレイヤー)' },
-  { value: '@s', label: '@s (自分自身)' },
   { value: '@e', label: '@e (全エンティティ)' },
   { value: 'custom', label: 'カスタム...' },
 ];
@@ -144,7 +144,7 @@ function resetForm(container) {
   const targetSelect = $('#swing-target', container);
   const customInput = $('#swing-custom-target', container);
 
-  if (targetSelect) targetSelect.value = '@a';
+  if (targetSelect) targetSelect.value = '@s';
   if (customInput) {
     customInput.value = '';
     customInput.style.display = 'none';
@@ -164,9 +164,9 @@ function updateCommand() {
   const customInput = $('#swing-custom-target');
   const hand = document.querySelector('input[name="swing-hand"]:checked')?.value || 'mainhand';
 
-  let target = targetSelect?.value || '@a';
+  let target = targetSelect?.value || '@s';
   if (target === 'custom') {
-    target = customInput?.value?.trim() || '@a';
+    target = customInput?.value?.trim() || '@s';
   }
 
   const command = `/swing ${target} ${hand}`;

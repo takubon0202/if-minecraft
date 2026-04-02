@@ -50,9 +50,9 @@ export function generateSummonCommand(state) {
   if (silent) nbtParts.push('Silent:1b');
   if (invulnerable) nbtParts.push('Invulnerable:1b');
   if (persistenceRequired) nbtParts.push('PersistenceRequired:1b');
-  // 子供（Baby）
+  // 子供（Baby）- ゾンビ系はIsBaby、その他はAge
   if (isBaby) nbtParts.push('IsBaby:1b');
-  // 成長停止（26.1+ AgeLocked）
+  // 成長停止（26.1+ AgeLocked）- 繁殖可能Mobのみ有効
   if (ageLocked) nbtParts.push('AgeLocked:1b');
 
   // エフェクト（1.20.5+ active_effects snake_case形式）

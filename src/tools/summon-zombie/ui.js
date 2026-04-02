@@ -655,16 +655,7 @@ export function render(manifest) {
               </div>
             </label>
 
-            <label class="behavior-option" id="opt-agelocked-wrapper" style="display: none;">
-              <input type="checkbox" id="opt-agelocked">
-              <div class="option-content">
-                <img src="${getInviconUrl('golden_dandelion')}" alt="" class="option-icon mc-pixelated">
-                <div class="option-text">
-                  <span class="option-name">成長停止（AgeLocked）<span class="version-badge">26.1+</span></span>
-                  <span class="option-desc">子供のまま成長しない</span>
-                </div>
-              </div>
-            </label>
+            <!-- ゾンビは永遠に子供のため AgeLocked は不要 -->
 
             <label class="behavior-option">
               <input type="checkbox" id="opt-glowing">
@@ -849,7 +840,7 @@ export function init(container) {
     { id: '#opt-persistence', key: 'persistenceRequired' },
     { id: '#opt-canbreakdoors', key: 'canBreakDoors' },
     { id: '#opt-isbaby', key: 'isBaby' },
-    { id: '#opt-agelocked', key: 'ageLocked' },
+    // AgeLocked はゾンビには不要（永遠に子供）
     { id: '#opt-glowing', key: 'glowing' },
   ];
 
@@ -860,25 +851,7 @@ export function init(container) {
     });
   });
 
-  // IsBabyチェック時にAgeLocked表示切り替え
-  $('#opt-isbaby', container)?.addEventListener('change', (e) => {
-    const ageLockedWrapper = $('#opt-agelocked-wrapper', container);
-    if (ageLockedWrapper) {
-      const version = workspaceStore.get('version') || '1.21';
-      if (e.target.checked && isVersion26Plus(version)) {
-        ageLockedWrapper.style.display = '';
-      } else {
-        ageLockedWrapper.style.display = 'none';
-        // IsBabyがオフになったらAgeLockedもリセット
-        const ageLockedCheckbox = $('#opt-agelocked', container);
-        if (ageLockedCheckbox && ageLockedCheckbox.checked) {
-          ageLockedCheckbox.checked = false;
-          state.ageLocked = false;
-          updateCommand();
-        }
-      }
-    }
-  });
+  // ゾンビは永遠に子供のため AgeLocked 表示切り替えは不要
 
   // リッチテキストエディター初期化（名前設定用）
   if (zombieNameEditor) {
@@ -1220,7 +1193,7 @@ function generateSummonZombieCommand(s) {
   if (s.persistenceRequired) nbtParts.push('PersistenceRequired:1b');
   if (s.glowing) nbtParts.push('Glowing:1b');
   if (s.isBaby) nbtParts.push('IsBaby:1b');
-  if (s.ageLocked && isVersion26Plus(version)) nbtParts.push('AgeLocked:1b');
+  // ゾンビは永遠に子供のため AgeLocked は出力しない
   if (s.canBreakDoors) nbtParts.push('CanBreakDoors:1b');
 
   // 装備（1.21.5+はequipment形式、それ以前はArmorItems/HandItems形式）
