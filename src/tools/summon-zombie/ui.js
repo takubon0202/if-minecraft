@@ -9,7 +9,7 @@ import { setOutput } from '../../app/sidepanel.js';
 import { getInviconUrl, getSpawnEggUrl } from '../../core/wiki-images.js';
 import { applyTooltip } from '../../core/mc-tooltip.js';
 import { RichTextEditor, RICH_TEXT_EDITOR_CSS } from '../../core/rich-text-editor.js';
-import { compareVersions } from '../../core/version-compat.js';
+import { compareVersions, isVersion26Plus } from '../../core/version-compat.js';
 
 // ゾンビタイプ
 const ZOMBIE_TYPES = [
@@ -353,6 +353,7 @@ let state = {
   persistenceRequired: true,
   canBreakDoors: false,
   isBaby: false,
+  ageLocked: false,
 };
 
 // 現在編集中の装備スロット
@@ -654,6 +655,17 @@ export function render(manifest) {
               </div>
             </label>
 
+            <label class="behavior-option" id="opt-agelocked-wrapper" style="display: none;">
+              <input type="checkbox" id="opt-agelocked">
+              <div class="option-content">
+                <img src="${getInviconUrl('golden_dandelion')}" alt="" class="option-icon mc-pixelated">
+                <div class="option-text">
+                  <span class="option-name">成長停止（AgeLocked）<span class="version-badge">26.1+</span></span>
+                  <span class="option-desc">子供のまま成長しない</span>
+                </div>
+              </div>
+            </label>
+
             <label class="behavior-option">
               <input type="checkbox" id="opt-glowing">
               <div class="option-content">
@@ -747,6 +759,7 @@ export function init(container) {
     persistenceRequired: true,
     canBreakDoors: false,
     isBaby: false,
+    ageLocked: false,
   };
 
   // プリセット選択
@@ -836,6 +849,7 @@ export function init(container) {
     { id: '#opt-persistence', key: 'persistenceRequired' },
     { id: '#opt-canbreakdoors', key: 'canBreakDoors' },
     { id: '#opt-isbaby', key: 'isBaby' },
+    { id: '#opt-agelocked', key: 'ageLocked' },
     { id: '#opt-glowing', key: 'glowing' },
   ];
 
@@ -844,6 +858,26 @@ export function init(container) {
       state[key] = e.target.checked;
       updateCommand();
     });
+  });
+
+  // IsBabyチェック時にAgeLocked表示切り替え
+  $('#opt-isbaby', container)?.addEventListener('change', (e) => {
+    const ageLockedWrapper = $('#opt-agelocked-wrapper', container);
+    if (ageLockedWrapper) {
+      const version = workspaceStore.get('version') || '1.21';
+      if (e.target.checked && isVersion26Plus(version)) {
+        ageLockedWrapper.style.display = '';
+      } else {
+        ageLockedWrapper.style.display = 'none';
+        // IsBabyがオフになったらAgeLockedもリセット
+        const ageLockedCheckbox = $('#opt-agelocked', container);
+        if (ageLockedCheckbox && ageLockedCheckbox.checked) {
+          ageLockedCheckbox.checked = false;
+          state.ageLocked = false;
+          updateCommand();
+        }
+      }
+    }
   });
 
   // リッチテキストエディター初期化（名前設定用）
@@ -891,6 +925,7 @@ function resetForm(container) {
     persistenceRequired: true,
     canBreakDoors: false,
     isBaby: false,
+    ageLocked: false,
   };
 
   // 属性セクションを非表示
@@ -1027,6 +1062,7 @@ function applyPreset(presetId, container) {
       persistenceRequired: true,
       canBreakDoors: false,
       isBaby: false,
+      ageLocked: false,
     };
     // RTEをクリア
     if (zombieNameEditor) {
@@ -1130,6 +1166,13 @@ function syncUIFromState(container) {
   $('#opt-persistence', container).checked = state.persistenceRequired;
   $('#opt-canbreakdoors', container).checked = state.canBreakDoors;
   $('#opt-isbaby', container).checked = state.isBaby;
+  $('#opt-agelocked', container).checked = state.ageLocked;
+  // AgeLocked表示切り替え
+  const ageLockedWrapper = $('#opt-agelocked-wrapper', container);
+  if (ageLockedWrapper) {
+    const version = workspaceStore.get('version') || '1.21';
+    ageLockedWrapper.style.display = (state.isBaby && isVersion26Plus(version)) ? '' : 'none';
+  }
   $('#opt-glowing', container).checked = state.glowing;
 }
 
@@ -1177,6 +1220,7 @@ function generateSummonZombieCommand(s) {
   if (s.persistenceRequired) nbtParts.push('PersistenceRequired:1b');
   if (s.glowing) nbtParts.push('Glowing:1b');
   if (s.isBaby) nbtParts.push('IsBaby:1b');
+  if (s.ageLocked && isVersion26Plus(version)) nbtParts.push('AgeLocked:1b');
   if (s.canBreakDoors) nbtParts.push('CanBreakDoors:1b');
 
   // 装備（1.21.5+はequipment形式、それ以前はArmorItems/HandItems形式）

@@ -7,6 +7,8 @@
  * /summon コマンドを生成
  * 1.21+ NBT: エンティティタグはPascalCase, アイテムデータはsnake_case
  * @param {Object} state - フォーム状態
+ * @param {boolean} [state.isBaby] - 子供モブ（IsBaby:1b）
+ * @param {boolean} [state.ageLocked] - 成長停止（AgeLocked:1b, 26.1+）
  * @returns {string} - 生成されたコマンド
  */
 export function generateSummonCommand(state) {
@@ -18,6 +20,8 @@ export function generateSummonCommand(state) {
     silent,
     invulnerable,
     persistenceRequired,
+    isBaby,
+    ageLocked,
     effects,
     rawNBT,
   } = state;
@@ -46,6 +50,10 @@ export function generateSummonCommand(state) {
   if (silent) nbtParts.push('Silent:1b');
   if (invulnerable) nbtParts.push('Invulnerable:1b');
   if (persistenceRequired) nbtParts.push('PersistenceRequired:1b');
+  // 子供（Baby）
+  if (isBaby) nbtParts.push('IsBaby:1b');
+  // 成長停止（26.1+ AgeLocked）
+  if (ageLocked) nbtParts.push('AgeLocked:1b');
 
   // エフェクト（1.20.5+ active_effects snake_case形式）
   if (effects.length > 0) {

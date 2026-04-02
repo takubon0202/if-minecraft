@@ -9,7 +9,7 @@ import { workspaceStore } from '../../core/store.js';
 import { setOutput } from '../../app/sidepanel.js';
 import { getInviconUrl, getSpawnEggUrl } from '../../core/wiki-images.js';
 import { applyTooltip, addItemData } from '../../core/mc-tooltip.js';
-import { compareVersions, getVersionGroup, getVersionNote } from '../../core/version-compat.js';
+import { compareVersions, getVersionGroup, getVersionNote, isVersion26Plus } from '../../core/version-compat.js';
 import { RichTextEditor, RICH_TEXT_EDITOR_CSS } from '../../core/rich-text-editor.js';
 
 // RichTextEditorインスタンス
@@ -340,6 +340,8 @@ let formState = {
   invulnerable: false,
   persistenceRequired: false,
   glowing: false,
+  isBaby: false,
+  ageLocked: false,
   effects: [],
   rawNBT: '',
   equipment: {
@@ -610,6 +612,28 @@ export function render(manifest) {
                 </div>
               </div>
             </label>
+
+            <label class="behavior-option">
+              <input type="checkbox" id="summon-isbaby">
+              <div class="option-content">
+                <img src="${getInviconUrl('egg')}" alt="" class="option-icon mc-pixelated">
+                <div class="option-text">
+                  <span class="option-name">子供（Baby）</span>
+                  <span class="option-desc">子供として召喚</span>
+                </div>
+              </div>
+            </label>
+
+            <label class="behavior-option" id="summon-agelocked-wrapper" style="display: none;">
+              <input type="checkbox" id="summon-agelocked">
+              <div class="option-content">
+                <img src="${getInviconUrl('golden_dandelion')}" alt="" class="option-icon mc-pixelated">
+                <div class="option-text">
+                  <span class="option-name">成長停止 <span class="version-badge">26.1+</span></span>
+                  <span class="option-desc">金のタンポポ効果（AgeLocked）</span>
+                </div>
+              </div>
+            </label>
           </div>
         </section>
 
@@ -816,6 +840,27 @@ export function init(container) {
     });
   });
 
+  // Baby/AgeLocked チェックボックス
+  $('#summon-isbaby', container)?.addEventListener('change', (e) => {
+    formState.isBaby = e.target.checked;
+    const ageLockedWrapper = $('#summon-agelocked-wrapper', container);
+    const ageLockedCheck = $('#summon-agelocked', container);
+    const version = workspaceStore.get('version') || '1.21';
+    if (ageLockedWrapper) {
+      ageLockedWrapper.style.display = (e.target.checked && isVersion26Plus(version)) ? '' : 'none';
+    }
+    if (!e.target.checked && ageLockedCheck) {
+      ageLockedCheck.checked = false;
+      formState.ageLocked = false;
+    }
+    updateCommand(container);
+  });
+
+  $('#summon-agelocked', container)?.addEventListener('change', (e) => {
+    formState.ageLocked = e.target.checked;
+    updateCommand(container);
+  });
+
   // 折りたたみセクション
   delegate(container, 'click', '.section-header.clickable', (e, target) => {
     const contentId = target.dataset.toggle;
@@ -917,6 +962,8 @@ function resetForm(container) {
     invulnerable: false,
     persistenceRequired: true,
     glowing: false,
+    isBaby: false,
+    ageLocked: false,
     effects: [],
     rawNBT: '',
     equipment: {
@@ -972,6 +1019,12 @@ function resetForm(container) {
   if (persistenceCheck) persistenceCheck.checked = true;
   const glowingCheck = $('#summon-glowing', container);
   if (glowingCheck) glowingCheck.checked = false;
+  const isBabyCheck = $('#summon-isbaby', container);
+  if (isBabyCheck) isBabyCheck.checked = false;
+  const ageLockedCheck = $('#summon-agelocked', container);
+  if (ageLockedCheck) ageLockedCheck.checked = false;
+  const ageLockedWrapper = $('#summon-agelocked-wrapper', container);
+  if (ageLockedWrapper) ageLockedWrapper.style.display = 'none';
 
   // エフェクトリストをクリア
   renderEffectList(container);
@@ -1322,9 +1375,18 @@ function updateCommand(container) {
   if (formState.persistenceRequired) nbtParts.push('PersistenceRequired:1b');
   if (formState.glowing) nbtParts.push('Glowing:1b');
 
+  // 子供（IsBaby）
+  if (formState.isBaby) {
+    nbtParts.push('IsBaby:1b');
+    // AgeLocked（26.1+ 金のタンポポ効果）
+    if (formState.ageLocked && isVersion26Plus(version)) {
+      nbtParts.push('AgeLocked:1b');
+    }
+  }
+
   // エフェクト（バージョンで形式が異なる）
   if (formState.effects.length > 0) {
-    if (versionGroup === 'latest' || versionGroup === 'component') {
+    if (versionGroup === 'latest' || versionGroup === 'tiny-takeover' || versionGroup === 'component') {
       // 1.20.5+ active_effects形式
       const effectsList = formState.effects.map(e =>
         `{id:"minecraft:${e.id}",amplifier:${e.amplifier}b,duration:${e.duration}}`
@@ -1533,6 +1595,13 @@ function updateSummonPreview(container) {
     if (entityInfo) break;
   }
 
+  // AgeLocked表示をバージョンに応じて更新
+  const version = workspaceStore.get('version') || '1.21';
+  const ageLockedWrapper = $('#summon-agelocked-wrapper', container);
+  if (ageLockedWrapper) {
+    ageLockedWrapper.style.display = (formState.isBaby && isVersion26Plus(version)) ? '' : 'none';
+  }
+
   // アイコン設定
   if (iconImg) {
     iconImg.src = getSpawnEggUrl(formState.entity);
@@ -1590,6 +1659,8 @@ function updateSummonPreview(container) {
     if (formState.invulnerable) attrs.push('無敵');
     if (formState.persistenceRequired) attrs.push('永続');
     if (formState.glowing) attrs.push('発光');
+    if (formState.isBaby) attrs.push('子供');
+    if (formState.ageLocked) attrs.push('成長停止');
 
     if (attrs.length === 0) {
       attrsEl.innerHTML = '<p class="text-muted">属性なし</p>';
@@ -1620,7 +1691,7 @@ function updateSummonPreview(container) {
   if (previewSlot) {
     const customName = summonNameEditor?.getPlainText() || '';
     const hasCustomization = customName || formState.effects.length > 0 ||
-      formState.noAI || formState.invulnerable || formState.glowing;
+      formState.noAI || formState.invulnerable || formState.glowing || formState.isBaby;
     if (hasCustomization) {
       previewSlot.classList.add('customized');
     } else {
@@ -1637,6 +1708,8 @@ function updateSummonPreview(container) {
     if (formState.invulnerable) attrCount++;
     if (formState.persistenceRequired) attrCount++;
     if (formState.glowing) attrCount++;
+    if (formState.isBaby) attrCount++;
+    if (formState.ageLocked) attrCount++;
     statAttrsEl.textContent = attrCount;
   }
   if (statEffectsEl) statEffectsEl.textContent = formState.effects.length;

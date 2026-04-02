@@ -28,6 +28,7 @@ import * as enchant from '../tools/enchant/manifest.js';
 import * as potion from '../tools/potion/manifest.js';
 import * as smithing from '../tools/smithing/manifest.js';
 import * as execute from '../tools/execute/manifest.js';
+import * as swing from '../tools/swing/manifest.js';
 // テキスト系
 import * as jsonText from '../tools/json-text/manifest.js';
 import * as tellraw from '../tools/tellraw/manifest.js';
@@ -60,6 +61,7 @@ async function init() {
   registerTool(potion);
   registerTool(smithing);
   registerTool(execute);
+  registerTool(swing);
   // テキスト系
   registerTool(jsonText);
   registerTool(tellraw);
